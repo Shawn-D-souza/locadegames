@@ -1,0 +1,18 @@
+/* Visual recipes too long for a class list, as Tailwind utilities (`sun-rays`, `text-lip-ink`). */
+
+/* Rays in the player's color, faded out toward the edge (SunRays). */
+@utility sun-rays {
+  background: repeating-conic-gradient(var(--player) 0deg 9deg, transparent 9deg 18deg);
+  mask-image: radial-gradient(closest-side, black 35%, transparent 100%);
+}
+
+/* A solid lip under big text, like the buttons have (the round intro's countdown numeral). */
+@utility text-lip-ink {
+  text-shadow: 0 var(--lip-large) 0 var(--color-ink);
+}
+
+/* Screen titles: the title size, shrinking with the screen on very narrow phones so they never get cut off. */
+@utility text-title-fit {
+  font-size: min(var(--type-title-size), var(--fluid-title-fit));
+  line-height: var(--type-title-line-height);
+}

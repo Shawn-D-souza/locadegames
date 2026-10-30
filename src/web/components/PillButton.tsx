@@ -1,0 +1,32 @@
+import { clsx } from "clsx";
+import type { ButtonHTMLAttributes } from "react";
+import { Icon, type IconName } from "./Icon";
+
+interface PillButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "deep" | "share";
+  icon?: IconName;
+  fullWidth?: boolean;
+}
+
+const VARIANT_CLASSES = { primary: "bg-coral", deep: "bg-ink", share: "bg-grass-green" } as const;
+
+/** Rounded-rectangle action button: flat fill, thin ink outline, solid ink lip (DESIGN.md §5). Disabled looks flat and muted, not see-through. */
+export function PillButton({ variant = "primary", icon, fullWidth, className, children, ...rest }: PillButtonProps) {
+  return (
+    <button
+      type="button"
+      className={clsx(
+        "inline-flex min-h-tap items-center justify-center gap-3 rounded-control border-thin border-ink px-6 text-button tracking-button text-white uppercase",
+        "shadow-lip-medium transition-[translate,box-shadow] duration-fast ease-spring enabled:cursor-pointer enabled:active:translate-y-lip-medium enabled:active:shadow-pressed",
+        "disabled:cursor-not-allowed disabled:border-ink-muted disabled:bg-ink-muted disabled:shadow-none",
+        VARIANT_CLASSES[variant],
+        fullWidth && "w-full",
+        className,
+      )}
+      {...rest}
+    >
+      {icon && <Icon name={icon} className="size-(--type-button-size)" />}
+      {children}
+    </button>
+  );
+}

@@ -1,0 +1,5 @@
+# Copy to .dev.vars for `npm run dev:server`. Never commit .dev.vars.
+ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+# Optional locally: lets the usage cron call the real Analytics API.
+# CF_API_TOKEN=
+# CF_ACCOUNT_ID=

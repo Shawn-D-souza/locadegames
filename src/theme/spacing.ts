@@ -1,0 +1,51 @@
+/** 8px base unit (DESIGN.md §7). */
+export const BASE_UNIT = 8;
+
+export const spacing = {
+  0: 0,
+  1: BASE_UNIT * 0.5,
+  2: BASE_UNIT,
+  3: BASE_UNIT * 1.5,
+  4: BASE_UNIT * 2,
+  6: BASE_UNIT * 3,
+  8: BASE_UNIT * 4,
+  12: BASE_UNIT * 6,
+} as const;
+
+/** Screen widths for layout changes; `max-phone:` styles apply on screens narrower than a normal phone (small phones). */
+export const breakpoints = {
+  phone: 380,
+} as const;
+
+/** Named sizes; Tailwind classes use the names (`min-h-tap`, `max-w-content`, `size-mark-badge`). */
+export const layout = {
+  /** Smallest tap target. */
+  tap: 60,
+  /** Screen side margin. */
+  gutter: 16,
+  /** Card inner padding. */
+  card: 20,
+  /** Dot-grid background: distance between dots and dot radius. */
+  dotGap: 24,
+  dotRadius: 1.5,
+  /** Edit pencil inside the name field. */
+  icon: 24,
+  /** Square outlined icon buttons (back, settings, copy). */
+  iconButton: 48,
+  /** Largest the invite QR code gets; it also shrinks to fit short (landscape) screens. */
+  qr: 320,
+  /** Height the rest of the QR popup needs (margins, padding, title, CLOSE); the QR gets what's left of the screen. */
+  qrReserve: 232,
+  /** Widest the content column gets. */
+  content: 560,
+  /** Widest the game board gets. */
+  board: 420,
+  /** White disc holding a player's X or O on their match card. */
+  markBadge: 44,
+  /** One confetti piece on the champion screen. */
+  confetti: 10,
+  avatar: 44,
+  avatarSmall: 28,
+  /** Game tiles reflow: two columns on phones, more on wider screens. */
+  gameTile: 140,
+} as const;

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.env.local
+.env.*.local
+*.tsbuildinfo
+.DS_Store
+
+# npm run screenshots output (local reference, replaced on every run)
+screenshots/

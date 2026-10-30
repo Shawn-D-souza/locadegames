@@ -1,0 +1,256 @@
+/*
+ * Every animation in the app, used as Tailwind classes (`animate-pop-in`). Keyframes read best as CSS, so they
+ * live here, in one place. Timings are theme variables; a finished match's win line starts at `--line-at` and
+ * its celebration at `--celebrate-at` (global.css). Elements that are centered or tilted with Tailwind's
+ * translate / rotate keep that while these play: keyframes animate `transform`, `scale` or `opacity` on top.
+ */
+@theme {
+  /* Something new appears: a player joining, a popup, a toast, a mark placed. */
+  --animate-pop-in: pop-in var(--duration-slow) var(--ease-spring);
+  /* Results: the champion card pops in, then confetti falls (`--drift`, `--delay`). */
+  --animate-reveal: pop-in var(--duration-celebrate) var(--ease-spring) calc(var(--duration-stagger) * 2) both;
+  --animate-confetti: confetti-fall var(--duration-confetti) var(--ease-out) calc(var(--duration-stagger) * (2 + var(--delay))) both;
+  /* The dot on a live match's LIVE badge (points screen). */
+  --animate-live: live-pulse var(--duration-pulse) var(--ease-out) infinite alternate;
+  /* Joining a room: three dots hop one after the other. */
+  --animate-dot: dot-hop var(--duration-dot-hop) var(--ease-out) calc(var(--duration-fast) * var(--order)) infinite alternate both;
+
+  /* A match ending. The board thumps as the last move lands, then fills with the winner's color or shakes. */
+  --animate-board-win:
+    thump var(--duration-fast) var(--ease-out) var(--duration-slow),
+    board-fill var(--duration-celebrate) var(--ease-out) var(--celebrate-at) both;
+  --animate-board-draw:
+    thump var(--duration-fast) var(--ease-out) var(--duration-slow),
+    board-shake var(--duration-celebrate) var(--ease-out) var(--celebrate-at);
+  --animate-win-line: line-draw var(--duration-line-draw) var(--ease-out) var(--line-at) forwards;
+  --animate-fade-back: fade-back var(--duration-celebrate) var(--ease-out) var(--celebrate-at) forwards;
+  /* Winner's phone: the winning marks grow and glow, or jump one after another along the line (`--hop-order`). */
+  --animate-mark-glow: mark-glow var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) forwards;
+  --animate-mark-pop-glow:
+    pop-in var(--duration-slow) var(--ease-spring),
+    mark-glow var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) forwards;
+  --animate-mark-hop: mark-hop var(--duration-hop) var(--ease-out)
+    calc(var(--celebrate-at) + var(--hop-order) * var(--duration-hop-stagger)) both;
+  /* The result tag stamps in (a draw's comes with the shake) or, for a loss, slides up; its points pop as they tick. */
+  --animate-stamp: stamp var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) both;
+  --animate-stamp-draw: stamp var(--duration-celebrate) var(--ease-spring) var(--duration-slow) both;
+  --animate-slide-up: slide-up var(--duration-celebrate) var(--ease-out) var(--celebrate-at) both;
+  --animate-tick: bounce var(--duration-slow) var(--ease-spring);
+  /* Seat cards: the winner's grows and a crown drops on; the loser's shakes and fades; the pieces jump, droop or shrug. */
+  --animate-card-win: card-grow var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) forwards;
+  --animate-crown: crown-drop var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) both;
+  --animate-card-lose:
+    sad-shake var(--duration-celebrate) var(--ease-out) var(--celebrate-at),
+    fade-back var(--duration-celebrate) var(--ease-out) calc(var(--celebrate-at) + var(--duration-celebrate)) forwards;
+  --animate-piece-hop: piece-hop var(--duration-hop) var(--ease-out) var(--celebrate-at) both;
+  --animate-piece-droop: piece-droop var(--duration-hop) var(--ease-out) var(--celebrate-at) forwards;
+  --animate-piece-shrug: piece-shrug var(--duration-hop) var(--ease-out) var(--duration-slow) both;
+  /* Sun rays behind a winning board: spring in, then turn slowly. */
+  --animate-rays:
+    rays-in var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) both,
+    rays-turn var(--duration-rays) linear var(--celebrate-at) infinite;
+
+  @keyframes pop-in {
+    from {
+      transform: scale(var(--transform-pop-from-scale));
+      opacity: 0;
+    }
+  }
+
+  @keyframes bounce {
+    50% {
+      transform: scale(var(--transform-celebrate-scale));
+    }
+  }
+
+  @keyframes confetti-fall {
+    from {
+      transform: translate(0, calc(-1 * var(--space-8))) rotate(0deg);
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    to {
+      transform: translate(calc(var(--drift) * var(--layout-board)), 100vh) rotate(var(--transform-confetti-spin));
+      opacity: 0;
+    }
+  }
+
+  @keyframes live-pulse {
+    to {
+      opacity: var(--opacity-disconnected);
+    }
+  }
+
+  @keyframes dot-hop {
+    to {
+      transform: translateY(var(--transform-dot-hop-height));
+    }
+  }
+
+  @keyframes thump {
+    50% {
+      transform: scale(var(--transform-impact-scale));
+    }
+  }
+
+  @keyframes board-fill {
+    from {
+      background-color: var(--color-white);
+    }
+    to {
+      background-color: var(--player);
+    }
+  }
+
+  @keyframes board-shake {
+    20%,
+    60% {
+      transform: translateX(calc(-1 * var(--space-2)));
+    }
+    40%,
+    80% {
+      transform: translateX(var(--space-2));
+    }
+  }
+
+  @keyframes line-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes fade-back {
+    to {
+      opacity: var(--opacity-defeated);
+    }
+  }
+
+  @keyframes mark-glow {
+    50% {
+      transform: scale(var(--transform-celebrate-scale));
+    }
+    to {
+      transform: scale(var(--transform-win-scale));
+      filter: drop-shadow(0 0 var(--space-2) var(--player));
+    }
+  }
+
+  /* A happy squash-and-stretch jump that lands a little bigger, glowing. */
+  @keyframes mark-hop {
+    15% {
+      transform: scale(var(--transform-stretch), var(--transform-squash));
+    }
+    45% {
+      transform: translateY(var(--transform-hop-height)) scale(var(--transform-squash), var(--transform-stretch));
+    }
+    70% {
+      transform: scale(var(--transform-stretch), var(--transform-squash));
+    }
+    85% {
+      transform: scale(var(--transform-celebrate-scale));
+    }
+    to {
+      transform: scale(var(--transform-win-scale));
+      filter: drop-shadow(0 0 var(--space-2) var(--player));
+    }
+  }
+
+  @keyframes stamp {
+    from {
+      scale: var(--transform-stamp-from-scale);
+      opacity: 0;
+    }
+  }
+
+  /* From below the board's edge up to where the tag sits (it is centered with translate). */
+  @keyframes slide-up {
+    from {
+      translate: -50% 100%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes card-grow {
+    50% {
+      transform: scale(var(--transform-celebrate-scale));
+    }
+    to {
+      transform: scale(var(--transform-win-scale));
+    }
+  }
+
+  @keyframes crown-drop {
+    from {
+      translate: -30% -250%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes sad-shake {
+    25%,
+    75% {
+      transform: translateX(calc(-1 * var(--space-1)));
+    }
+    50% {
+      transform: translateX(var(--space-1));
+    }
+  }
+
+  @keyframes piece-hop {
+    15% {
+      transform: scale(var(--transform-stretch), var(--transform-squash));
+    }
+    45% {
+      transform: translateY(var(--transform-hop-height)) rotate(180deg) scale(var(--transform-squash), var(--transform-stretch));
+    }
+    70% {
+      transform: rotate(360deg) scale(var(--transform-stretch), var(--transform-squash));
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* The piece sags, tips over and stays tipped. */
+  @keyframes piece-droop {
+    30% {
+      transform: scale(var(--transform-stretch), var(--transform-squash));
+    }
+    65% {
+      transform: rotate(var(--transform-droop-tilt)) scale(var(--transform-squash), var(--transform-squash));
+    }
+    85% {
+      transform: rotate(calc(var(--transform-droop-tilt) * 0.6)) scale(var(--transform-squash), var(--transform-squash));
+    }
+    to {
+      transform: rotate(var(--transform-droop-tilt)) scale(var(--transform-squash), var(--transform-squash));
+    }
+  }
+
+  /* Two small shrugs. */
+  @keyframes piece-shrug {
+    25%,
+    65% {
+      transform: translateY(calc(-1 * var(--space-1))) rotate(calc(-1 * var(--transform-shrug-tilt)));
+    }
+    45%,
+    85% {
+      transform: translateY(0) rotate(var(--transform-shrug-tilt));
+    }
+  }
+
+  @keyframes rays-in {
+    from {
+      scale: 0;
+      opacity: 0;
+    }
+  }
+
+  @keyframes rays-turn {
+    to {
+      rotate: 360deg;
+    }
+  }
+}

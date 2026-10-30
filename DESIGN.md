@@ -2,16 +2,16 @@
 
 > **Note:** This document is a guideline, not a final authority. The project owner is the final decision-maker on all design matters. If any part of this spec conflicts with the owner's direction or feedback, the owner's direction takes precedence and the implementation (and this document) must be updated accordingly.
 
-A loud, friendly, toy-like visual language for online multiplayer party games, where each player plays on their own device. Everything feels chunky, rounded and tappable. Color identifies *who* (players), shape identifies *what* (actions), and nothing is ever sharp, thin or subtle.
+A clean, friendly, arcade-notebook visual language for online multiplayer party games, where each player plays on their own device. One deep indigo ink draws every outline and word on a pale dotted page; one coral button says "do this"; player colors say *who*. Shapes are rounded and tappable, outlines are thin, and depth is a single solid lip.
 
 ---
 
 ## 1. Principles
 
 1. **Players are colors.** Each player gets a reserved color identity (see Section 2) used consistently across lobbies, game boards, scoreboards and results, on every device. The system supports any number of players.
-2. **Chunky over delicate.** Thick strokes, fat type, big hit targets, heavy rounded corners.
+2. **Ink on paper.** Thin indigo outlines (2px, 3px for the field being edited), rounded rectangles, big hit targets. Calm, not cartoony.
 3. **Flat with a single drop.** Flat fills; depth comes only from a solid offset "lip" or a darker outline, never from gradients or soft blur.
-4. **Calm frame, loud content.** Menus sit on pale lavender-indigo backgrounds so saturated cards and buttons pop.
+4. **Calm frame, one loud action.** Menus sit on a pale dotted background inside white outlined cards; each screen has one coral main action, everything else is ink or muted.
 5. **One player, one screen.** Every screen is designed for a single person on their own device. The player always knows who they are, whose turn it is, and what everyone else is doing.
 
 ---
@@ -23,7 +23,7 @@ Players are assigned colors in join order. The first four are the core set; the 
 
 | Player | Name | Hex |
 |---|---|---|
-| P1 | Red | `#FF5A5A` |
+| P1 | Red | `#D7263D` |
 | P2 | Blue | `#00BFEF` |
 | P3 | Green | `#78C840` |
 | P4 | Yellow | `#FFC02E` |
@@ -65,89 +65,117 @@ Secondary accents are deliberately distinct from player colors; on in-game scree
 | Waiting | `#FFC02E` | Not ready / reconnecting |
 | Offline | `#8A94A6` | Disconnected (player chip greys out) |
 
-### Brand theme: Indigo
-Indigo is the app's signature color. All UI chrome (backgrounds, cards, text, tracks, icon buttons) is built from this indigo family, so the app feels indigo everywhere while player colors stay reserved for players.
+### Brand theme: Indigo ink + Coral
+Deep indigo is the app's ink: text, outlines, button lips, the logo and the background dots all use it, so the app reads clearly as indigo (not blue). Coral is the single action color.
 
-| Name | Hex | Use |
+| Token | Hex | Use |
 |---|---|---|
-| Indigo | `#4F46E5` | Brand color, primary buttons, active states, slider tracks |
-| Deep Indigo | `#2E2A8C` | Card bodies, dark pills, premium buttons |
-| Indigo Ink | `#312E81` | Headings, body text |
-| Soft Indigo | `#A5A8F0` | Icon buttons (back, close, menu), secondary glyphs |
-| Lavender Wash | `#EEF0FF` | Screen background |
-| Indigo Mist | `#DCDFFB` | Header bottom border, blob shapes |
-| Night Indigo | `#1E1B4B` | Game board interior, dark mode base |
-| White | `#FFFFFF` | Card frames, panels, headers |
+| `ink` | `#312C85` | Text, outlines, button lips, logo, background dots, secondary (dark) buttons |
+| `coral` | `#F25555` | The main action button on a screen (`CREATE ROOM`). Slightly darker than the mockup's `#FF6467` so white text stays readable |
+| `inkMuted` | `#9895C2` | Disabled buttons (flat, no outline or lip) |
+| `inkSoft` | `#ADABCE` | Placeholders (`000 000`), quiet icons |
+| `line` | `#D6D5E7` | Dashed dividers, light rules |
+| `sectionLabel` | `#45556C` | Section labels on card edges |
+| `subtle` | `#90A1B9` | Secondary text (`OR`, `(YOU)`), the edit pencil |
+| `background` | `#F1F5F9` | Screen background, under an ink dot grid |
+| `white` | `#FFFFFF` | Cards, fields, panels |
 | Off Gray | `#C7C9D9` / `#5F6075` | Toggle off track / knob |
 
-Indigo is not a player color; no player is ever assigned it.
+Neither ink nor coral is a player color. Coral sits near Player 1 Red, so P1 is a deeper crimson (`#D7263D`) to keep them apart.
 
 ### Rules
 - Never use a player color for a non-player meaning on a screen where players are present.
-- Backgrounds are pale or a single saturated field; never patterned and busy at the same time.
-- Patterned backgrounds (repeating mascot icons) run at ~15% contrast against the base.
+- Menu screens use the `background` color with a small ink dot grid (game screens use a flat player wash instead) (24px apart, 1.5px dots). Content always sits in white outlined cards on top of it.
+- Never a patterned background and busy content at the same time.
 
 ---
 
 ## 3. Typography
 
-- **Display / Buttons:** Ultra-heavy rounded or geometric sans (Black/Heavy weight), ALL CAPS, tight tracking. Examples of the feel: Lilita One, Baloo 2 ExtraBold, Fredoka Bold.
-- **Body / Labels:** Same family at Bold, sentence case (settings rows, player names, legal text).
-- **Numerals:** Oversized and treated as illustrations — big, bold, often in player colors.
+- **Logo / headings:** Roboto Condensed ExtraBold, ALL CAPS, ink. No sticker outline.
+- **Everything else:** Roboto Mono (Bold for names, buttons and labels; Medium for small secondary text). The monospace gives the arcade/terminal feel.
+- **Buttons:** Roboto Mono Bold, ALL CAPS, wide tracking (0.08em).
+- **Numerals:** oversized and treated as illustrations, often in player colors.
 
-| Token | Size (mobile) | Weight | Case |
+| Token | Size (mobile) | Font | Case |
 |---|---|---|---|
-| `display` | 40–56 | Black | UPPER |
-| `title` | 32 | Black | UPPER |
-| `button` | 22–26 | Black | UPPER |
-| `label` | 22 | Bold | Sentence |
-| `caption` | 14 | Bold | Sentence |
+| `display` | 44 | Condensed ExtraBold | UPPER |
+| `title` | 28 | Condensed ExtraBold | UPPER |
+| `button` | 20 | Mono Bold, tracking 0.08em | UPPER |
+| `label` | 18 | Mono Bold | As typed |
+| `code` | 26 | Mono Bold, tracking 0.12em | Digits |
+| `caption` | 14 | Mono, tracking 0.06em | UPPER for labels like `OR`, `(YOU)` |
+| `badge` | 12 | Mono Bold, tracking 0.06em | UPPER, inside small pills |
 
-- Logo-style text gets a thick white outline plus a dark outer stroke ("sticker" treatment).
-- Text on colored pills is white; text on dark pills takes a tint of the card's theme color.
-- Player names truncate with an ellipsis; they never shrink below `caption`.
-
----
+- Text on coral and ink buttons is white.
+- Player names on the match cards and the champion card wrap onto a second line; in single-line rows (player bars, points) they truncate with an ellipsis. In the points table on small phones (under 380px) names drop to `caption` so they fit next to `YOU` (owner decision). They never shrink below `caption`.
+- Screen titles in the header shrink with the screen on very narrow phones (320px), so `LOCADE GAMES` is never cut off.
+- Small phones (narrower than 380px, `max-phone:`): the HOST badge shows only its crown, a live match's LIVE badge only its pulsing dot, badges and bars get tighter padding, so names have room.
+- Sideways, the QR popup shrinks the code to fit and drops the room code box under it.
 
 ## 4. Shape & Depth
 
-- **Radius:** generous. Pills are fully rounded; cards 28–36px; panels 48px+.
-- **Outlines:** 4–6px solid dark strokes (Deep Indigo or a dark player variant) around primary buttons and game pieces.
-- **Lip shadow:** a solid, non-blurred offset of 4–8px straight down in a darker shade. No soft drop shadows.
-- **Blobs:** soft organic white/Indigo Mist shapes behind content groups to break the grid.
+- **Radius:** buttons and fields 16px (rounded rectangles, not pills); cards 28px; panels 40px; chips stay fully rounded.
+- **Outlines:** 2px solid ink around cards, buttons and fields; 3px on the field being edited. Game pieces may use a dark player variant.
+- **Lip shadow:** only on things you can tap (a lip means "press me"). A solid, non-blurred 6px offset straight down in ink under active buttons; pressing squashes the button onto it. No soft drop shadows. Disabled buttons have no lip.
+- **Dividers:** 2px dashed `line` rules with a short `subtle` word in the middle (`OR`).
 - **Sunburst fan:** a radial-sunburst disk in a player's color, used behind that player's avatar on turn banners and results.
-
----
 
 ## 5. Components
 
 ### Mode card
-Deep Indigo rounded body → giant colored numeral or icon breaking out the top edge, flanked by "speed lines" → full-width colored pill label at the bottom (`QUICK MATCH`, `PRIVATE ROOM`, `TEAM PLAY`).
+Ink rounded body → giant colored numeral or icon breaking out the top edge, flanked by "speed lines" → full-width colored pill label at the bottom (`QUICK MATCH`, `PRIVATE ROOM`, `TEAM PLAY`).
 
 ### Game tile
-White frame (~12px) around a square illustration with rounded corners → bottom-anchored pill label in a dark, semi-transparent shade of the illustration's dominant color, with the title in a bright tint of that color.
+Square white tile, always the same size (votes never resize it), 3px ink outline and small lip → the game's art filling it, drawn in the app's own style (pale fills, ink outlines, player colors; tic-tac-toe is a small copy of the real board) → game name in display caps under the art (never on it). Votes: up to 3 suggester avatars overlapping on the top-right corner (your own first), then `+n`. The game you suggested gets a coral outline. Too few players online: a white `NEEDS 2+` tab on the top edge and the tile greys out for the host. Tiles stay two across even on small phones.
 
-### Player chip
-Rounded pill: avatar circle in the player's color (thick dark outline) → display name → optional score or status dot. The local player's own chip is marked with a `YOU` tag and a thicker outline. Disconnected players grey out at 40% opacity.
+Art is code (an SVG / React drawing) for simple board and card games; action games may use an image instead, as long as it follows the same style.
 
-### Lobby / room
-- Large room code in `display` type inside a white panel, with copy and share pill buttons.
-- Players listed as a wrapping grid of player chips, each with a ready state (Online green check / Waiting yellow dot).
-- Host is marked with a small crown badge.
-- One dominant CTA at the bottom: `START` for the host, `READY` for others.
+### Room hub
+- Header: back (leave room), `LOCADE GAMES`, settings gear.
+- `ROOM` card: the code in a big outlined box, then three outlined icon buttons: copy, share, QR. QR opens a popup with a large black-on-white code of the invite link.
+- `PLAYERS (n)` card: player bars in join order.
+- `GAMES` card: outlined game tiles. The host taps a tile to start it straight away (no extra START button); others tap to suggest, and their avatars show under the tile.
 
-### Pill button
-Fully rounded, solid fill, optional left icon in a circle, ALL CAPS label. Primary CTAs use Indigo; premium/utility CTAs use Deep Indigo; invite/share CTAs use Grass Green with a pale halo ring.
+### Settings
+Gear in the header opens a menu. For now it lists Music, Sound effects and Haptics as `COMING SOON`.
+
+### Button
+Rounded rectangle (16px), solid fill, 2px ink outline, 6px ink lip, white ALL CAPS mono label, optional left icon. Main action = coral; secondary action = ink; invite/share = Grass Green. In an "are you sure?" popup the two buttons are stacked full width (owner decision, after trying a white QUIT button, a text link and side-by-side buttons): the way out in ink on top (`QUIT`, `LEAVE`), the safe choice in coral below (`KEEP PLAYING`, `STAY`). Disabled = flat `inkMuted`, no outline or lip.
+
+### Card
+White, 2px ink outline, 28px radius, 20px padding, no shadow. Groups a screen's controls on the dotted background.
+
+### Section card
+A card whose ALL CAPS label (`label` color) sits on its top-left edge like a folder tab, sitting on top of the outline (its bottom on the line, its page-color box hiding the line under it; nothing hangs into the card): `ROOM`, `PLAYERS (2)`, `GAMES`. Screens stack these on the dotted background.
+
+### Tab card
+A card with its headline as an ink pill tab centered on its top edge (`CHAMPION!`, `OOPS!!`, `SERVERS FULL!`). Text never sits straight on the dot grid (owner: hard to read); it goes in a card or a white box.
+
+### Error, servers full, joining
+All three have the header (back arrow home, `LOCADE GAMES`, settings gear). **Error:** a white tab card `OOPS!!` with a coral sad face and the message, coral `HOME` at the bottom. **Servers full:** a tab card `SERVERS FULL!` with the yellow `Zzz` and `BACK AT 5:30 AM` (the player's own time; nothing more, owner decision), coral `OK!` at the bottom. **Joining a room:** a white tab card `JOINING ROOM` with the room code and three ink dots hopping one after another (owner pick).
+
+### Player bar
+Full-width rounded bar in the player's color with a 2px ink outline. Name at the left (white or ink, whichever reads better on that color; checked by a test). Badges at the right are small outlined pills (`Badge`) with their own fill so they read on any color: `YOU` (ink fill, white text), `HOST` with a crown, `AWAY`, trophy count (white fill, ink text). Your own bar is marked only by the `YOU` badge: bars are not tappable, so they never get a lip. Away players fade to 40%.
+
+### Name field
+Your name shown as a finished field: name in ink, `(YOU)` in `subtle`, an edit pencil at the right. Tapping it turns it into a text input (3px outline); empty means your first-visit random name.
+
+### Text field
+White, 2px ink outline, 16px radius; focus thickens the outline to 3px. The room-code field is centered, big spaced digits with a `000 000` placeholder and no visible label.
+
+### Icons
+[Lucide](https://lucide.dev) at 2px stroke, mapped to app names in `Icon.tsx` (screens never import Lucide directly).
 
 ### Icon button
-Square-ish rounded tile (Indigo with Deep Indigo outline) or bare Soft Indigo glyph for back / close / menu. Glyphs are thick and round-capped.
+Square rounded tile, white, 2px ink outline, 3px ink lip, ink glyph (back, settings, copy, share, QR). Glyphs are round-capped. A wide version fills a row (room code actions).
 
 ### Header
-White bar, title in Indigo Ink `title` style, back/close at left, 4px Indigo Mist line underneath.
+No bar: sits on the dotted background. Back at left, title in condensed ink `title` style, settings gear at right.
 
 ### Settings controls
-- **Slider:** thick rounded Indigo track, gray remainder, large white circular thumb with a Deep Indigo outline.
-- **Toggle:** fat pill track; on = Indigo track + white knob; off = light gray track + dark gray knob.
+- **Slider:** rounded ink track, gray remainder, large white circular thumb with an ink outline.
+- **Toggle:** pill track; on = ink track + white knob; off = light gray track + dark gray knob.
 
 ### Ribbons & badges
 Diagonal corner ribbon, "NEW!" in Player Yellow, slightly tilted.
@@ -155,15 +183,44 @@ Diagonal corner ribbon, "NEW!" in Player Yellow, slightly tilted.
 ### HUD counters
 Dark rounded bar with white bold number, icon (gem, coin) overlapping the right end.
 
-### Turn banner
-- **Your turn:** a huge circle in your color bleeding off the top edge, with curved white `YOUR TURN!` text and your avatar on a sunburst fan.
-- **Someone else's turn:** a slim pill at the top in that player's color showing their avatar and `NAME'S TURN`, so it never competes with your own controls.
+### Match screen
+Calm on purpose (owner decision: no header, no turn banner, no timer bar while playing). The only control is a small ✕ icon button in the top-left corner during your own live match; it (and the phone's back button) asks "Quit this game?" first: you lose the match, sit out the rest and stay in the room. No dot grid here: the whole screen is a flat, very light **wash** of the color of whoever's turn it is (60% toward white, owner decision: strong enough to tell turns apart at a glance, while ink text stays readable; tested), easing to the other player's wash each turn. One centered column:
+1. **Seat cards:** the two players side by side in two equal cards, you always on the left (watchers see the higher seed on the left). Everything about the match lives in these cards, with no extra text around them (owner decision). Each card: the player's piece (X or O, in their color) on a white disc and the name; a `YOU` (or `AWAY`) ink tab sits on the top edge. No status words (owner decision): the card of the player whose turn it is simply fills with their color, and the other stays white. In the last 5 seconds a small ink pill with the seconds appears under the name (its row keeps its height so nothing jumps). Not tappable, so no lip.
+2. **Board.** On your turn the empty cells also rise (they get a lip).
+
+Results start the moment the match ends, and **each phone gets its own ending** (owner decision). The ending happens **on the board itself and nothing on the screen moves** (owner decision: a word between the cards and the board pushed the board down; a full-screen splash hid the board, and everyone should see how it was won). The style is **"All in"** (owner decision, picked on the preview page):
+
+1. The last mark pops in and the board gives a small **thump**, then everything **holds still** for a moment (`freeze`), so the win lands before the party.
+2. The **win line slashes** through the row in the winner's color (ink outline).
+3. The board **fills with the winner's color**, the winning cells turn white, the other cells fade back, and the **result tag** stamps onto the board's bottom edge (like the section labels sit on their cards).
+
+| Who | Ending |
+|---|---|
+| Winner | sparks fly off the line as it draws; turning **sun rays** in their color appear behind the board and the cards; **fluttering confetti** bursts out of the board (canvas, turning over like paper); a **ring of gold stars** bursts where the tag lands; the winning marks **jump one after another** (squash and stretch) and stay bigger with a soft glow; their piece on the card does a **spinning jump**; a crown drops onto their card, which bounces and stays a little bigger; the tag is in their color, tilted, with a trophy, `YOU WIN!` and points that **tick up** `+0 → +1 → +2` |
+| Loser | the board still fills with the winner's color (they see who won and how); a quiet white tag slides up: `YOU LOST`, a grey `+0`; their piece on the card **droops and tips over**; their card gives one small sad shake, then fades a little; no mocking, no particles |
+| Draw (both) | the board stays white, thumps and gives one small shake; ink tag `DRAW!`, `+1`; both pieces **shrug**; neither card is lit and the wash gives way to the plain dot grid (nobody won) |
+| Watchers | board in the winner's color; ink tag `ANA WINS!`; no particles |
+
+Points show only in a tournament (more than one round). If a player quit, the tag adds a small second line (`Ana quit`). Vibration and sound come later, separately (owner decision).
+
+There is no CONTINUE button (owner decision: it felt like the game froze). The result stays for `resultShowMs` (4 s, celebration included), then moves on by itself: to the points table, or, after the last match of a tournament, to the champion screen (the last match is never cut off). A tap anywhere skips the wait. If a player quit, one short line under the cards says so. While a match is live, watchers get a `WATCHING LIVE` badge (ink, pulsing coral dot) centered above the cards, so it never looks like their own match, a header with only the back arrow and the settings gear, and `BACK TO SCORES` at the bottom too (owner pick).
+
+### Game board (tic-tac-toe)
+White outlined card. Cells are flat pale wells with a 2px ink outline; on your turn the empty cells turn white and get a small lip because you can tap them, and pressing squashes them. Pieces are drawn in the player's color with an ink outline; the winning line fills with that player's tint.
+
+### Round intro
+The break before every round after the first (owner decision: everyone enters together and the round starts at one exact moment). Same calm column as the match screen, on the plain dot grid, no header: `ROUND 2 OF 3` title, your two seat cards (you on the left, nobody lit, no timer row) with an ink `VS` pill between them, or, in a white box, "You sit this round out" with "+2 points" under it, a big centered countdown numeral to the shared start (each new second pops), then the `POINTS` section card. When the countdown ends, every match of the round opens at once.
+
+### Tournament standings
+Shown between your matches, built like the room hub. The header title is `ROUND 2 OF 3` (back = leave). Two section cards:
+- **`POINTS`:** a bar per player in their color (like the player bars): place in a small white circle, name, `YOU` badge, points in bold display type. Players level on points share a place; players who left are greyed with a dash for a place.
+- **`PLAYING NOW`** (`THIS ROUND` once none is live): a white card per match with both players (avatar + name), the winner ticked, a quitter marked `QUIT`, a draw marked `DRAW`. A live match has a `LIVE` badge with a pulsing coral dot and a lip, and opens on tap. Whoever sits out gets a dashed card ("Sits out · +2 points"). One short hint under them ("Tap a match to watch.").
 
 ### Scoreboard & results
-Vertical list of player chips ranked by score, the leader enlarged with a crown. On results, the top three get a podium in their colors; the local player's row is always visible (pinned if it scrolls off).
+The results screen, built like the room hub (owner decision: no podium, no LEAVE). Header `RESULTS`; then the **champion card** (owner's pick of three tried layouts), its headline an ink pill tab on the card's top edge. One champion: `CHAMPION!`, the card in their color, their avatar on a white disc with a tilted crown on its corner, and beside it the name in condensed title type with `YOU` under it. A shared title: `SHARED TITLE!` (`DRAW! SHARED TITLE` after a drawn 2-player match), a white card with one bar per champion in their color, each with a crown (like the room's player bars), so nobody's color wins. Below it the final `POINTS` card (the same colored bars as the points screen). The host gets two buttons at the bottom: coral `PLAY AGAIN!` (same game, everyone) and ink `BACK TO ROOM` (everyone back to the room); the host's back arrow does the same. Everyone else sees "Waiting for the host to pick the next game." and their back arrow takes only them to the room (to suggest the next game); the host's pick then takes everyone along. The card pops in, then confetti in the champions' colors falls once (outlined ink pills, never blocking taps).
 
 ### Connection feedback
-Small status dot on each player chip. Reconnecting shows a yellow pill toast at the top; connection lost shows a white modal with a single `RECONNECT` button.
+Small status dot on each player chip. Reconnecting shows a yellow pill toast at the top, between the corner buttons so it never covers them (the same for short notices like "Not your turn yet!"); connection lost shows a white modal with `RECONNECT` and `HOME`.
 
 ---
 
@@ -194,7 +251,8 @@ Small status dot on each player chip. Reconnecting shows a yellow pill toast at 
 - Rewards and "NEW!" items wobble or pulse gently.
 - Players joining the lobby pop in; leaving players shrink out.
 - Other players' moves are animated briefly so remote actions feel present, not instant jumps.
-- Quick (150–250ms); no slow fades.
+- Waiting (joining a room) shows three dots hopping one after another, never a spinner.
+- Quick (150–250ms); no slow fades. The exception is celebration moments (win line, champion card, confetti), which play once and never block input.
 
 ---
 
