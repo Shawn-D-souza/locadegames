@@ -39,7 +39,7 @@ The pictures land in `screenshots/` (one folder per size); open `screenshots/ind
 
 1. **Log in:** `npx wrangler login` (opens the browser; approve access).
 2. **Create the KV namespace:** `npx wrangler kv namespace create USAGE`.
-   Copy the `id` it prints into `wrangler.jsonc`, replacing `REPLACE_WITH_USAGE_KV_ID`. The id isn't secret, so it's fine to commit.
+   Copy the `id` it prints into `wrangler.jsonc` (already done: `256ce48e…`). The id isn't secret, so it's fine to commit.
 3. **Deploy:** `npm run deploy:server`.
    - The first time, Wrangler may ask you to pick a `workers.dev` subdomain. Choose one.
    - Note the URL it prints, e.g. `https://locade-server.<subdomain>.workers.dev`. You need it in step 3.

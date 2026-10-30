@@ -79,13 +79,18 @@ describe("player names", () => {
 });
 
 describe("origins", () => {
-  const allow = "https://locadegames.pages.dev, https://*.locadegames.pages.dev";
-  it("matches exact and preview origins only", () => {
-    expect(isOriginAllowed("https://locadegames.pages.dev", allow)).toBe(true);
-    expect(isOriginAllowed("https://abc123.locadegames.pages.dev", allow)).toBe(true);
-    expect(isOriginAllowed("https://evil.com", allow)).toBe(false);
-    expect(isOriginAllowed("https://a.b.locadegames.pages.dev", allow)).toBe(false);
-    expect(isOriginAllowed("https://locadegames.pages.dev.evil.com", allow)).toBe(false);
-    expect(isOriginAllowed(null, allow)).toBe(false);
+  const self = "https://locadegames.shawn.workers.dev";
+  const allow = "http://localhost:5173, https://*.example.dev";
+  it("always allows the site itself", () => {
+    expect(isOriginAllowed(self, "", self)).toBe(true);
+  });
+  it("matches exact and one-label wildcard origins only", () => {
+    expect(isOriginAllowed("http://localhost:5173", allow, self)).toBe(true);
+    expect(isOriginAllowed("https://abc123.example.dev", allow, self)).toBe(true);
+    expect(isOriginAllowed("https://evil.com", allow, self)).toBe(false);
+    expect(isOriginAllowed("https://a.b.example.dev", allow, self)).toBe(false);
+    expect(isOriginAllowed("https://abc.example.dev.evil.com", allow, self)).toBe(false);
+    expect(isOriginAllowed("https://locadegames.shawn.workers.dev.evil.com", allow, self)).toBe(false);
+    expect(isOriginAllowed(null, allow, self)).toBe(false);
   });
 });

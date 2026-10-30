@@ -1,6 +1,10 @@
-/** Matches an Origin against a comma-separated allow list; "*" matches exactly one subdomain label. */
-export function isOriginAllowed(origin: string | null, allowList: string): boolean {
+/**
+ * The site itself (same origin: the Worker serves the web client too) is always allowed. Other origins must match the
+ * comma-separated allow list, where "*" matches exactly one subdomain label.
+ */
+export function isOriginAllowed(origin: string | null, allowList: string, selfOrigin: string): boolean {
   if (!origin) return false;
+  if (origin === selfOrigin) return true;
   return allowList
     .split(",")
     .map((entry) => entry.trim())

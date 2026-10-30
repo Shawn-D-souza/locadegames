@@ -10,8 +10,8 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RegionServer"] }],
   "kv_namespaces": [
-    // Replace with the id printed by `npx wrangler kv namespace create USAGE` (see docs/SETUP.md).
-    { "binding": "USAGE", "id": "REPLACE_WITH_USAGE_KV_ID" }
+    // Created with `npx wrangler kv namespace create USAGE` (see docs/SETUP.md). Not a secret.
+    { "binding": "USAGE", "id": "256ce48eccf14ec4b7d3ca4777f06e7c" }
   ],
   // Free-tier usage check every 10 minutes.
   "triggers": { "crons": ["*/10 * * * *"] },

@@ -20,6 +20,7 @@ A platform of online multiplayer mini-games: real-time action games (2D now, may
 
 - **Now:** the free Cloudflare Pages subdomain (`<project>.pages.dev`).
 - **Later:** buy `locadegames.com` once the platform earns enough, then point it at Cloudflare.
+- **Plan for the domain (owner decision):** players only ever see the `pages.dev` address; the game server's `workers.dev` address is never shown. Once the domain is bought, the site moves onto the Worker as static assets (Cloudflare's recommendation; one deploy, one origin, free asset requests) under `locadegames.com`, and `locadegames.pages.dev` redirects every path there (`_redirects`: `/* https://locadegames.com/:splat 301`). The Worker already accepts requests from its own origin, so that move needs no origin settings.
 
 ---
 

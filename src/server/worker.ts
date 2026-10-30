@@ -13,7 +13,7 @@ export default {
     const url = new URL(request.url);
     const origin = request.headers.get("Origin");
     // "*" here only so a misconfigured client can read why it was refused.
-    if (!isOriginAllowed(origin, env.ALLOWED_ORIGINS)) return jsonError("BAD_ORIGIN", 403, { "Access-Control-Allow-Origin": "*" });
+    if (!isOriginAllowed(origin, env.ALLOWED_ORIGINS, url.origin)) return jsonError("BAD_ORIGIN", 403, { "Access-Control-Allow-Origin": "*" });
     const cors = corsHeaders(origin!);
 
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
