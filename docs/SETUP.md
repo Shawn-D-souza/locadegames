@@ -81,7 +81,7 @@ From now on, every push to `main` redeploys the site, and other branches get pre
 
 ---
 
-## 4. Automatic Worker deploys (we'll set this up together)
+## 4. Automatic Worker deploys (done: set up when the Worker was created from GitHub, preview builds off)
 
 Plan: use Cloudflare's built-in **Workers Builds**. That way no Cloudflare API token has to be stored in GitHub.
 

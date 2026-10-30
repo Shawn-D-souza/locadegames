@@ -179,11 +179,11 @@ _Last updated: 2026-10-30_
 
 | Service | Used for | Plan | Status | Usage vs limits |
 |---|---|---|---|---|
-| Cloudflare Pages | Frontend hosting (`locadegames.pages.dev`) | Free | Not set up (see `docs/SETUP.md` §3) | — (free plan: 500 builds/month) |
-| Cloudflare Workers | `locade-server`: matchmaking + usage cron | Free | Not deployed (see `docs/SETUP.md` §2) | — (free plan: 100,000 requests/day; resets 00:00 UTC) |
-| Cloudflare Durable Objects | `RegionServer`, one per region, SQLite-backed | Free | Not deployed | — (free plan: 100,000 requests/day, 13,000 GB-s/day, 5M rows read/day, 100k rows written/day, 5 GB storage) |
-| Workers KV | `USAGE` namespace: free-tier status | Free | Not created | — (free plan: 100,000 reads/day, 1,000 writes/day; cron uses ≤144 writes/day) |
-| Cloudflare GraphQL Analytics API | Daily usage measurement | Free | Token not created | — |
+| Cloudflare Pages | Frontend hosting (`locadegames.pages.dev`) | Free | Live at `https://locadegames.pages.dev`; deploys on every push to `main` (GitHub connected) | — (free plan: 500 builds/month) |
+| Cloudflare Workers | `locade-server`: matchmaking + usage cron | Free | Live at `https://locade-server.bringuonline.workers.dev` (on the owner's existing account subdomain; players never see it); Workers Builds deploys on every push to `main`, preview builds off | — (free plan: 100,000 requests/day; resets 00:00 UTC) |
+| Cloudflare Durable Objects | `RegionServer`, one per region, SQLite-backed | Free | Live | — (free plan: 100,000 requests/day, 13,000 GB-s/day, 5M rows read/day, 100k rows written/day, 5 GB storage) |
+| Workers KV | `USAGE` namespace: free-tier status | Free | Created (id in `wrangler.jsonc`) | — (free plan: 100,000 reads/day, 1,000 writes/day; cron uses ≤144 writes/day) |
+| Cloudflare GraphQL Analytics API | Daily usage measurement | Free | Token `locade-usage-read` (Account Analytics: Read) stored as Worker secrets `CF_API_TOKEN` + `CF_ACCOUNT_ID` | — |
 | Supabase | Accounts, profiles, leaderboards | Free | Not set up (not used yet) | — (free plan: 500 MB database, 50,000 monthly active users; projects pause after ~1 week of inactivity) |
 | Domain | `locadegames.com` | — | Not bought (using `pages.dev`) | — |
 | GitHub | Source code | Free | Local git repo; not pushed yet | — |
@@ -201,7 +201,9 @@ Free-plan limits above are approximate; confirm in each dashboard and record act
 
 ### What runs where
 
-Nothing is deployed yet.
+- Website: Cloudflare Pages, `https://locadegames.pages.dev` (built with `VITE_SERVER_URL=https://locade-server.bringuonline.workers.dev`).
+- Game server: Worker `locade-server` at `https://locade-server.bringuonline.workers.dev` (Durable Objects, KV `USAGE`, cron every 10 min).
+- Both deploy themselves on every push to `main`. Online for private testing only; no public launch until there are more games (owner decision).
 
 ### Next to migrate (once revenue covers it)
 
