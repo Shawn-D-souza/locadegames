@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Locade Games logo: an X, an O, a pawn and a die in player colors, outlined in ink, on one solid ink lip.
+       Also the favicon. PNG icons and the link preview are made from it: npm run icons. -->
+  <defs>
+    <filter id="lip" x="-10%" y="-10%" width="120%" height="130%">
+      <feOffset in="SourceAlpha" dy="16" result="shape"/>
+      <feFlood flood-color="#312C85"/>
+      <feComposite in2="shape" operator="in"/>
+    </filter>
+  </defs>
+  <g transform="translate(13 7) scale(0.95)">
+    <use href="#pieces" filter="url(#lip)"/>
+    <g id="pieces">
+      <g transform="translate(146 142)" fill="none" stroke-linecap="round">
+        <path d="M-52 -52 L52 52 M52 -52 L-52 52" stroke="#312C85" stroke-width="64"/>
+        <path d="M-52 -52 L52 52 M52 -52 L-52 52" stroke="#D7263D" stroke-width="36"/>
+      </g>
+      <g transform="translate(366 142)" fill="none">
+        <circle r="54" stroke="#312C85" stroke-width="64"/>
+        <circle r="54" stroke="#00BFEF" stroke-width="36"/>
+      </g>
+      <g transform="translate(146 370)" fill="#78C840" stroke="#312C85" stroke-width="16" stroke-linejoin="round">
+        <path d="M-26 -40 C-26 -10 -58 26 -62 64 H62 C58 26 26 -10 26 -40 Z"/>
+        <circle cy="-72" r="40"/>
+        <rect x="-80" y="60" width="160" height="40" rx="16"/>
+      </g>
+      <g transform="translate(366 352) rotate(8)">
+        <rect x="-84" y="-84" width="168" height="168" rx="40" fill="#FFFFFF" stroke="#312C85" stroke-width="16"/>
+        <g fill="#312C85">
+          <circle cx="-40" cy="-40" r="17"/>
+          <circle r="17"/>
+          <circle cx="40" cy="40" r="17"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

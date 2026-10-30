@@ -90,6 +90,9 @@ Neither ink nor coral is a player color. Coral sits near Player 1 Red, so P1 is 
 
 ---
 
+### Logo
+An X (P1 Red), an O (P2 Blue), a pawn (P3 Green) and a die (white, ink pips, slightly turned) in a 2×2 group: lots of small games, played with friends. Thick ink outlines and one solid ink lip under the whole group, like the buttons. Source: `src/web/public/logo.svg`; icons and the link preview are generated from it (`npm run icons`). Icons put it on the pale `background` (no dot grid); the link preview puts it beside a white card with `LOCADE GAMES` on the dot grid.
+
 ## 3. Typography
 
 - **Logo / headings:** Roboto Condensed ExtraBold, ALL CAPS, ink. No sticker outline.
