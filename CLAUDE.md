@@ -197,7 +197,7 @@ Free-plan limits above are approximate; confirm in each dashboard and record act
 - Styling moved from CSS Modules to Tailwind CSS 4 on our own theme (same look). Every screen is photographed at 7 sizes (320px phone to desktop, plus sideways) with `npm run screenshots`; not yet checked on a real phone.
 - Free-tier protection: cron + KV status + "Servers full" screen.
 - Verified locally with `wrangler dev`: room-full rejection, ping auto-response, reconnect by token, cron path, `SERVERS_FULL` gate; 3-player tournament end to end under the old knockout rules (early timeout claim refused, auto move, champion + trophy, back to room); the Swiss rules are covered by unit tests only so far. Unit tests pass. The new screens have not been checked on a real phone yet.
-- Not yet verified: the analytics GraphQL field names against a real account (`activeTime`, `rowsRead`, `rowsWritten` on `durableObjectsPeriodicGroups`). Check the first cron log after deploy.
+- Live (2026-10-30): the owner played a game on two phones on `locadegames.pages.dev`. The first cron run on the real account wrote `usage-status` with all five metrics and none failed, so the analytics field names work (Durable Object numbers still showed 0 minutes after the first games; Cloudflare's analytics lag a few minutes, so watch them fill in).
 
 ### What runs where
 
