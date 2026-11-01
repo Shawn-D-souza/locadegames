@@ -3,8 +3,12 @@
  * live here, in one place. Timings are theme variables; a finished match's win line starts at `--line-at` and
  * its celebration at `--celebrate-at` (global.css). Elements that are centered or tilted with Tailwind's
  * translate / rotate keep that while these play: keyframes animate `transform`, `scale` or `opacity` on top.
+ *
+ * `inline`: each `animate-*` class gets the value itself, so the variables in it (`--celebrate-at`, `--delay`,
+ * `--order`) are read on the element. Without it they are read once on the page root, and setting them on
+ * an element (a kill stamp that plays at once, each confetti piece's delay) would do nothing.
  */
-@theme {
+@theme inline {
   /* Something new appears: a player joining, a popup, a toast, a mark placed. */
   --animate-pop-in: pop-in var(--duration-slow) var(--ease-spring);
   /* Results: the champion card pops in, then confetti falls (`--drift`, `--delay`). */

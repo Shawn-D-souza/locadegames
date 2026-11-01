@@ -47,4 +47,9 @@ export default defineConfig(
     files: ["*.{js,ts}", "scripts/**/*.mjs", "tests/**/*.ts"],
     languageOptions: { globals: globals.node },
   },
+  {
+    // Playtests also hand code to the browser page (`page.evaluate`), which uses `window`.
+    files: ["scripts/playtest/**/*.mjs"],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
 );

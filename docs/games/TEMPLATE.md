@@ -32,6 +32,7 @@ The game's own visuals (built from the shared design language): board or arena, 
 
 | Path | Purpose |
 |---|---|
+| `scripts/playtest/<game>.mjs` | Playtest: its big moments end to end (add it to `GAMES` in `scripts/playtest.mjs`) |
 
 ## Ideas for later
 

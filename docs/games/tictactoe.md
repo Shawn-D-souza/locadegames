@@ -31,3 +31,4 @@ Format: **tournament** (Swiss-style, 1v1 matches; see the tournament rules in [`
 | `src/web/games/tictactoe/TicTacToeArt.tsx` | Tile art |
 | `src/web/components/Board.tsx`, `BoardCell.tsx`, `WinLine.tsx`, `Mark.tsx` | The board, its cells, the win line, the X / O glyphs (used by the match screen and the celebration preview) |
 | `tests/tictactoe.test.ts` | Rules: moves, wins, draws, errors |
+| `scripts/playtest/tictactoe.mjs` | Playtest: 2 players; start, a match to a win, each phone's result, the results, back to the room |

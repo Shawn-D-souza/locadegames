@@ -6,17 +6,21 @@ import "@fontsource/roboto-mono/700.css";
 import { App } from "./App";
 import "./styles/global.css";
 
-/** Dev-only tool pages (`?preview=celebrations`); the production build drops this branch and its code entirely. */
+/** Dev-only tool pages (`?preview=celebrations`, `?preview=territory`); the production build drops this branch and its code entirely. */
 function devPreview(): ReactNode | null {
-  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "celebrations") {
-    const CelebrationPreview = lazy(() => import("./preview/CelebrationPreview").then((m) => ({ default: m.CelebrationPreview })));
-    return (
-      <Suspense>
-        <CelebrationPreview />
-      </Suspense>
-    );
-  }
-  return null;
+  if (!import.meta.env.DEV) return null;
+  const page = new URLSearchParams(window.location.search).get("preview");
+  const Preview =
+    page === "celebrations"
+      ? lazy(() => import("./preview/CelebrationPreview").then((m) => ({ default: m.CelebrationPreview })))
+      : page === "territory"
+        ? lazy(() => import("./preview/territory/TerritoryPreview").then((m) => ({ default: m.TerritoryPreview })))
+        : null;
+  return Preview ? (
+    <Suspense>
+      <Preview />
+    </Suspense>
+  ) : null;
 }
 
 createRoot(document.getElementById("root")!).render(<StrictMode>{devPreview() ?? <App />}</StrictMode>);

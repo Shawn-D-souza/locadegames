@@ -103,6 +103,8 @@ Full screen, drawn on a canvas (Canvas 2D), every color from the theme. No heade
 | `src/web/games/territory/hud/` | `LandTable`, `MatchClock`, `CountdownDisc`, `StatusCard` (out card), `KnockoutFeed` (notices under the clock), `KillPop` (your knockout's stamp + stars), `TerritoryEnding` (the result tag, share count-up, confetti) |
 | `tests/territory.test.ts` | Movement, exact captures, enemy islands, wall captures, land pieces and keeping the part you're on, sliced land vanishing, knockout by taking all land, knockout when only a sliver is left, cuts, head blocking, ranking, wire format |
 | `tests/territoryNetcode.test.ts` | Replica rebuilds the server state exactly, gap detection, prediction lands on the server's spot (steering and head-on blocking), predicted capture equals the server's |
+| `src/web/preview/territory/` | Dev-only `?preview=territory`: `TerritoryPreview` (WIN / LOSE / WATCH / KILL, replay), `TerritoryStage` (one moment on the real renderer and HUD pieces), `territoryScene.ts` (a scripted 3-player match made with the shared simulation, as a frame and a finished arena) |
+| `scripts/playtest/territory.mjs` | Playtest: 3 players; countdown, a loop becoming land, a cut (stamp, notice, out card), a quit, the winner's ending, the results |
 | `scripts/screenshots.mjs` | Shots 25–33: countdown, trail, captured, quit popup, out, watching, ended, results |
 
 ## Ideas for later

@@ -31,7 +31,7 @@ export function KillPop({ label, colorId }: KillPopProps) {
       className="pointer-events-none absolute inset-x-0 top-1/4 flex justify-center"
       style={{ ...playerStyle(colorId), "--celebrate-at": "0ms" } as CSSProperties}
     >
-      <span className="rotate-(--transform-stamp-tilt) animate-stamp rounded-pill border-thin border-ink bg-player px-4 py-1 font-display text-title font-black text-player-text uppercase shadow-lip-medium">
+      <span className="max-w-[calc(100%-var(--space-8))] rotate-(--transform-stamp-tilt) animate-stamp rounded-pill border-thin border-ink bg-player px-4 py-1 text-center font-display text-title font-black text-player-text uppercase shadow-lip-medium">
         {label}
       </span>
       <Particles spawn={stars} />
