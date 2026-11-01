@@ -1,4 +1,5 @@
 import type { ClientMessage, ServerMessage } from "../../shared/protocol/messages";
+import type { Bytes } from "../../shared/protocol/bytes";
 import { parseServerMessage } from "../../shared/protocol/parse";
 import { ROOM_CONFIG } from "../../shared/rooms/config";
 import { CLIENT_CONFIG } from "../config";
@@ -14,10 +15,12 @@ export function buildRoomSocketUrl(code: string, name: string, token: string | n
 export interface RoomSocketHandlers {
   onOpen(): void;
   onMessage(message: ServerMessage): void;
+  /** Real-time game frames (binary). */
+  onBinary(data: ArrayBuffer): void;
   onClose(code: number): void;
 }
 
-/** WebSocket wrapper: JSON messages, keepalive pings, no callbacks after close(). */
+/** WebSocket wrapper: JSON room messages, binary game frames, keepalive pings, no callbacks after close(). */
 export class RoomSocket {
   private readonly ws: WebSocket;
   private readonly pingTimer: ReturnType<typeof setInterval>;
@@ -25,8 +28,13 @@ export class RoomSocket {
 
   constructor(url: string, handlers: RoomSocketHandlers) {
     this.ws = new WebSocket(url);
+    this.ws.binaryType = "arraybuffer";
     this.ws.onopen = () => handlers.onOpen();
     this.ws.onmessage = (event) => {
+      if (event.data instanceof ArrayBuffer) {
+        handlers.onBinary(event.data);
+        return;
+      }
       if (event.data === ROOM_CONFIG.pongMessage) return;
       const message = typeof event.data === "string" ? parseServerMessage(event.data) : null;
       if (message) handlers.onMessage(message);
@@ -42,6 +50,10 @@ export class RoomSocket {
 
   send(message: ClientMessage): void {
     if (this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(message));
+  }
+
+  sendBinary(data: Bytes): void {
+    if (this.ws.readyState === WebSocket.OPEN) this.ws.send(data);
   }
 
   close(): void {

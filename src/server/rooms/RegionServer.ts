@@ -4,14 +4,30 @@ import { normalizeRoomCode } from "../../shared/rooms/roomCode";
 import type { Env } from "../env";
 import { matchRoomSocketPath } from "../http/paths";
 import { rejectSocket } from "../http/rejectSocket";
+import type { Ticker } from "./ports";
 import { HibernationTransport, readAttachment, safeSend, type SocketAttachment } from "./hibernationTransport";
 import { RoomService } from "./roomService";
 import { SqliteRoomStore } from "./sqliteRoomStore";
 
+/** setInterval while a real-time match runs; stopped otherwise so the object can hibernate. */
+class IntervalTicker implements Ticker {
+  private timer: ReturnType<typeof setInterval> | null = null;
+
+  start(intervalMs: number, onTick: () => void): void {
+    this.timer ??= setInterval(onTick, intervalMs);
+  }
+
+  stop(): void {
+    if (this.timer !== null) clearInterval(this.timer);
+    this.timer = null;
+  }
+}
+
 /**
  * Thin Durable Object adapter: one instance per region hosts many rooms.
  * All rules live in RoomService/roomLogic; this file only wires sockets and storage.
- * Uses the WebSocket Hibernation API so idle turn-based rooms cost no duration.
+ * Uses the WebSocket Hibernation API so idle turn-based rooms cost no duration; a real-time match keeps
+ * the object awake (its loop timer) only while it runs.
  */
 export class RegionServer extends DurableObject<Env> {
   private readonly rooms: RoomService;
@@ -20,7 +36,7 @@ export class RegionServer extends DurableObject<Env> {
     super(ctx, env);
     // Keepalive pings are answered without waking the object or counting as requests.
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(ROOM_CONFIG.pingMessage, ROOM_CONFIG.pongMessage));
-    this.rooms = new RoomService(new SqliteRoomStore(ctx.storage.sql), new HibernationTransport(ctx), Date.now);
+    this.rooms = new RoomService(new SqliteRoomStore(ctx.storage.sql), new HibernationTransport(ctx), Date.now, new IntervalTicker());
   }
 
   /** RPC from the matchmaking Worker. */
@@ -60,8 +76,8 @@ export class RegionServer extends DurableObject<Env> {
   override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     const attachment = readAttachment(ws);
     if (attachment?.playerId == null) return;
-    const raw = typeof message === "string" ? message : "";
-    this.rooms.receive(attachment.code, attachment.playerId, raw);
+    if (typeof message === "string") this.rooms.receive(attachment.code, attachment.playerId, message);
+    else this.rooms.receiveBinary(attachment.code, attachment.playerId, message);
   }
 
   override async webSocketClose(ws: WebSocket): Promise<void> {

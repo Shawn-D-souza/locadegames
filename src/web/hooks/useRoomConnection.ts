@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import type { Bytes } from "../../shared/protocol/bytes";
 import { CLOSE_CODES, FINAL_CLOSE_CODES } from "../../shared/protocol/errors";
 import type { ClientMessage } from "../../shared/protocol/messages";
 import { CLIENT_CONFIG } from "../config";
@@ -6,12 +7,18 @@ import { buildRoomSocketUrl, RoomSocket } from "../services/roomSocket";
 import { clearRoomToken, loadRoomToken, saveRoomToken } from "../services/sessionStore";
 import { connectionReducer, initialConnectionState } from "./connectionState";
 
-/** Owns the room WebSocket: connect, keep the latest room state, auto-reconnect with backoff. */
+export type BinaryListener = (data: ArrayBuffer) => void;
+
+/**
+ * Owns the room WebSocket: connect, keep the latest room state, auto-reconnect with backoff.
+ * Binary game frames skip React state (20 a second); a live game subscribes to them directly.
+ */
 export function useRoomConnection(code: string, name: string) {
   const [state, dispatch] = useReducer(connectionReducer, initialConnectionState);
   const [attempt, setAttempt] = useState(0);
   const socketRef = useRef<RoomSocket | null>(null);
   const retriesRef = useRef(0);
+  const binaryListeners = useRef(new Set<BinaryListener>());
 
   useEffect(() => {
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -25,6 +32,9 @@ export function useRoomConnection(code: string, name: string) {
         onMessage: (message) => {
           if (message.type === "welcome") saveRoomToken(code, message.token);
           dispatch({ type: "message", message, receivedAt: Date.now() });
+        },
+        onBinary: (data) => {
+          for (const listener of binaryListeners.current) listener(data);
         },
         onClose: (closeCode) => {
           if (FINAL_CLOSE_CODES.includes(closeCode)) {
@@ -53,6 +63,13 @@ export function useRoomConnection(code: string, name: string) {
   }, [code, name, attempt]);
 
   const send = useCallback((message: ClientMessage) => socketRef.current?.send(message), []);
+  const sendBinary = useCallback((data: Bytes) => socketRef.current?.sendBinary(data), []);
+  const subscribeBinary = useCallback((listener: BinaryListener) => {
+    binaryListeners.current.add(listener);
+    return () => {
+      binaryListeners.current.delete(listener);
+    };
+  }, []);
 
   const reconnect = useCallback(() => {
     retriesRef.current = 0;
@@ -82,5 +99,5 @@ export function useRoomConnection(code: string, name: string) {
 
   const clearError = useCallback(() => dispatch({ type: "clearError" }), []);
 
-  return { ...state, send, reconnect, leave, clearError };
+  return { ...state, send, sendBinary, subscribeBinary, reconnect, leave, clearError };
 }

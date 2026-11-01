@@ -19,8 +19,18 @@ export interface RoomStore {
 export interface RoomTransport {
   broadcast(code: string, message: ServerMessage): void;
   sendTo(code: string, playerId: PlayerId, message: ServerMessage): void;
+  /** Real-time game frames (binary) to everyone in the room, players and watchers. */
+  broadcastBinary(code: string, data: Uint8Array): void;
+  sendBinary(code: string, playerId: PlayerId, data: Uint8Array): void;
   /** Detaches and closes every connection currently held by `playerId`. */
   dropPlayer(code: string, playerId: PlayerId, closeCode: CloseCode, reason: string): void;
+}
+
+/** A repeating timer for real-time matches. Runs only while a match does, so the host can sleep otherwise. */
+export interface Ticker {
+  /** Starts calling `onTick` every `intervalMs` (no-op if already running). */
+  start(intervalMs: number, onTick: () => void): void;
+  stop(): void;
 }
 
 /** A connection that has not been assigned a player yet. */

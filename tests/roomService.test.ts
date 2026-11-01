@@ -4,6 +4,9 @@ import { CLOSE_CODES } from "../src/shared/protocol/errors";
 import { ROOM_CONFIG } from "../src/shared/rooms/config";
 import { currentRound, findActiveMatch } from "../src/shared/tournament/tournament";
 import { RoomService } from "../src/server/rooms/roomService";
+import { TERRITORY_CONFIG } from "../src/shared/games/territory/config";
+import { decodeServerMessage, encodeClientMessage } from "../src/shared/games/territory/wire";
+import { FakeTicker } from "./support/fakeTicker";
 import { FakeTransport, lastRoom, type FakeConnection } from "./support/fakeTransport";
 import { MemoryRoomStore } from "./support/memoryRoomStore";
 
@@ -18,6 +21,7 @@ describe("RoomService", () => {
   let transport: FakeTransport;
   let service: RoomService;
   let tokenCount: number;
+  let ticker: FakeTicker;
 
   const join = (name: string, token: string | null = null): FakeConnection => {
     const conn = transport.connect(CODE);
@@ -36,7 +40,8 @@ describe("RoomService", () => {
     now = 1_000_000;
     store = new MemoryRoomStore();
     transport = new FakeTransport();
-    service = new RoomService(store, transport, () => now);
+    ticker = new FakeTicker();
+    service = new RoomService(store, transport, () => now, ticker);
     tokenCount = 0;
     expect(service.createRoom(CODE)).toBe(true);
   });
@@ -213,5 +218,72 @@ describe("RoomService", () => {
     service.createRoom("405678");
     expect(store.get(CODE)).toBeNull();
     expect(store.get("405678")).not.toBeNull();
+  });
+
+  describe("real-time arena (Territory)", () => {
+    const frames = (conn: FakeConnection) => conn.frames.map((f) => decodeServerMessage(f));
+    const binary = (conn: FakeConnection, data: Uint8Array) =>
+      service.receiveBinary(CODE, conn.playerId!, data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer);
+
+    it("runs one match for everyone, streams snapshots and ends when one player is left", () => {
+      const host = join("Host");
+      const guest = join("Guest");
+      send(host, { type: "start", gameId: "territory" });
+      const arena = lastRoom(guest)!.arena!;
+      expect(arena.entrants.map((e) => e.id)).toEqual([0, 1]);
+      expect(arena.startsAt).toBe(now + TERRITORY_CONFIG.countdownMs);
+      expect(frames(guest)[0]?.kind).toBe("full");
+      expect(ticker.running).toBe(true);
+
+      // Countdown: no steps yet; then one snapshot per step.
+      ticker.fire();
+      expect(guest.frames).toHaveLength(1);
+      now = arena.startsAt + 3 * TERRITORY_CONFIG.tickMs;
+      ticker.fire();
+      expect(frames(guest).slice(1).map((m) => m?.kind === "snapshot" && m.tick)).toEqual([1, 2, 3]);
+
+      // Steering is applied on the step it is stamped for.
+      binary(guest, encodeClientMessage({ kind: "input", seq: 1, tick: 5, target: 1_000 }));
+      now += 2 * TERRITORY_CONFIG.tickMs;
+      ticker.fire();
+      const last = frames(guest).at(-1);
+      expect(last?.kind === "snapshot" && last.heads.find((h) => h.id === 1)).toMatchObject({ target: 1_000, inputSeq: 1 });
+
+      // A quit takes the player out on the next step; the last one in wins and gets a trophy.
+      send(guest, { type: "quit" });
+      now += TERRITORY_CONFIG.tickMs;
+      ticker.fire();
+      const room = lastRoom(host)!;
+      expect(room.phase).toBe("finished");
+      expect(room.arena!.championIds).toEqual([0]);
+      expect(room.arena!.results.map((r) => [r.id, r.place, r.quit])).toEqual([
+        [0, 1, false],
+        [1, 2, true],
+      ]);
+      expect(room.players.find((p) => p.id === 0)!.trophies).toBe(1);
+      expect(ticker.running).toBe(false);
+    });
+
+    it("sends the whole live state to a player who comes back, and answers pings", () => {
+      const host = join("Host");
+      join("Guest");
+      send(host, { type: "start", gameId: "territory" });
+      service.disconnect(CODE, 1);
+      const back = join("Guest");
+      expect(frames(back).map((m) => m?.kind)).toEqual(["full"]);
+      binary(back, encodeClientMessage({ kind: "ping", clientTime: 123 }));
+      expect(frames(back).at(-1)).toMatchObject({ kind: "pong", clientTime: 123, serverTime: now });
+    });
+
+    it("returns the room to the lobby if the live match was lost (server restart)", () => {
+      const host = join("Host");
+      join("Guest");
+      send(host, { type: "start", gameId: "territory" });
+      // A fresh service over the same store: the in-memory match is gone.
+      service = new RoomService(store, transport, () => now, new FakeTicker());
+      send(host, { type: "suggest", gameId: "tictactoe" });
+      expect(lastRoom(host)!.phase).toBe("lobby");
+      expect(lastRoom(host)!.arena).toBeNull();
+    });
   });
 });

@@ -1,4 +1,7 @@
-import { getGame, type GameId } from "../../shared/games/catalog";
+import type { Arena, ArenaResult } from "../../shared/arena/types";
+import { getGame, isTournamentGame, type ArenaGameId, type GameId } from "../../shared/games/catalog";
+import { arenaRadiusFor } from "../../shared/games/territory/arena";
+import { TERRITORY_CONFIG } from "../../shared/games/territory/config";
 import type { RoomError } from "../../shared/protocol/errors";
 import type { ClientMessage, RoomView } from "../../shared/protocol/messages";
 import { ROOM_CONFIG } from "../../shared/rooms/config";
@@ -38,6 +41,7 @@ export function createRoomRecord(code: string, now: number): RoomRecord {
     players: [],
     nextJoinOrder: 0,
     tournament: null,
+    arena: null,
   };
 }
 
@@ -113,6 +117,25 @@ function withTournament(record: RoomRecord, tournament: Tournament): RoomRecord 
   return { ...record, players, phase: "finished", tournament };
 }
 
+/** A real-time match ended: results in, a trophy for each champion (everyone sharing first place). */
+export function finishArena(record: RoomRecord, results: ArenaResult[], now: number): RoomRecord {
+  if (!record.arena || record.arena.finished) return record;
+  const championIds = results.filter((r) => r.place === 1).map((r) => r.id);
+  const players = record.players.map((p) => (championIds.includes(p.id) ? { ...p, trophies: p.trophies + 1 } : p));
+  const arena: Arena = { ...record.arena, finished: true, results, championIds };
+  return touch({ ...record, players, phase: "finished", arena }, now);
+}
+
+/** The live match was lost (the server restarted mid-game): everyone goes back to the room. */
+export function abandonArena(record: RoomRecord, now: number): RoomRecord {
+  return touch({ ...record, phase: "lobby", arena: null }, now);
+}
+
+/** Whether `id` is still in this room's live real-time match (they may quit it). */
+function inLiveArena(record: RoomRecord, id: PlayerId): boolean {
+  return record.phase === "playing" && !!record.arena && !record.arena.finished && record.arena.entrants.some((e) => e.id === id);
+}
+
 function leaveRoom(record: RoomRecord, id: PlayerId, now: number): RoomRecord {
   const players = record.players.filter((p) => p.id !== id);
   const nextHost = [...players].sort((a, b) => a.joinOrder - b.joinOrder)[0]?.id ?? null;
@@ -127,9 +150,28 @@ function startGame(record: RoomRecord, gameId: GameId, now: number): RoomUpdate 
   // Only connected players enter; anyone away joins the next one.
   const entrants = record.players.filter((p) => p.connected);
   if (entrants.length < getGame(gameId).minPlayers) return { ok: false, error: "NOT_ENOUGH_PLAYERS" };
-  const tournament = startTournament(gameId, entrants, now);
   const players = record.players.map((p) => ({ ...p, suggestion: null }));
-  return { ok: true, record: { ...record, players, phase: "playing", tournament } };
+  if (!isTournamentGame(gameId)) {
+    return { ok: true, record: { ...record, players, phase: "playing", tournament: null, arena: newArena(gameId, entrants, now) } };
+  }
+  const tournament = startTournament(gameId, entrants, now);
+  return { ok: true, record: { ...record, players, phase: "playing", tournament, arena: null } };
+}
+
+/** Everyone in the room plays one match; start positions follow join order. */
+function newArena(gameId: ArenaGameId, entrants: PlayerRecord[], now: number): Arena {
+  const startsAt = now + TERRITORY_CONFIG.countdownMs;
+  return {
+    gameId,
+    startedAt: now,
+    startsAt,
+    endsAt: startsAt + TERRITORY_CONFIG.matchMs,
+    radius: arenaRadiusFor(entrants.length),
+    entrants: [...entrants].sort((a, b) => a.joinOrder - b.joinOrder).map(({ id, name }) => ({ id, name })),
+    finished: false,
+    results: [],
+    championIds: [],
+  };
 }
 
 export function applyClientMessage(record: RoomRecord, id: PlayerId, msg: ClientMessage, now: number): RoomUpdate {
@@ -162,6 +204,12 @@ export function applyClientMessage(record: RoomRecord, id: PlayerId, msg: Client
       break;
     }
     case "quit": {
+      // A real-time match takes the quitter out on its next step (the live state is not in the record).
+      if (record.arena) {
+        if (!inLiveArena(record, id)) return { ok: false, error: "NOT_IN_MATCH" };
+        next = record;
+        break;
+      }
       const t = record.tournament;
       if (record.phase !== "playing" || !t) return { ok: false, error: "WRONG_PHASE" };
       if (t.left.includes(id) || !t.entrants.some((e) => e.id === id)) return { ok: false, error: "NOT_IN_MATCH" };
@@ -171,7 +219,7 @@ export function applyClientMessage(record: RoomRecord, id: PlayerId, msg: Client
     case "backToRoom":
       if (!isHost) return { ok: false, error: "NOT_HOST" };
       if (record.phase !== "finished") return { ok: false, error: "WRONG_PHASE" };
-      next = { ...record, phase: "lobby", tournament: null };
+      next = { ...record, phase: "lobby", tournament: null, arena: null };
       break;
     case "leave":
       next = leaveRoom(record, id, now);
@@ -193,6 +241,7 @@ export function toRoomView(record: RoomRecord, now: number): RoomView {
       suggestion,
     })),
     tournament: record.tournament,
+    arena: record.arena,
     serverNow: now,
   };
 }

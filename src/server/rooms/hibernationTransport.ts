@@ -13,7 +13,7 @@ export function readAttachment(ws: WebSocket): SocketAttachment | null {
   return (ws.deserializeAttachment() as SocketAttachment | null) ?? null;
 }
 
-export function safeSend(ws: WebSocket, data: string): void {
+export function safeSend(ws: WebSocket, data: string | Uint8Array): void {
   try {
     ws.send(data);
   } catch {
@@ -32,6 +32,14 @@ export class HibernationTransport implements RoomTransport {
 
   sendTo(code: string, playerId: PlayerId, message: ServerMessage): void {
     const data = JSON.stringify(message);
+    for (const ws of this.attached(code, playerId)) safeSend(ws, data);
+  }
+
+  broadcastBinary(code: string, data: Uint8Array): void {
+    for (const ws of this.attached(code)) safeSend(ws, data);
+  }
+
+  sendBinary(code: string, playerId: PlayerId, data: Uint8Array): void {
     for (const ws of this.attached(code, playerId)) safeSend(ws, data);
   }
 

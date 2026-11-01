@@ -1,4 +1,4 @@
-import type { GameId } from "../games/catalog";
+import type { TournamentGameId } from "../games/catalog";
 import type { GameState } from "../games/registry";
 import type { PlayerId } from "../rooms/types";
 
@@ -37,7 +37,7 @@ export interface Round {
  * most points after the last round wins. Players level at the top share the title.
  */
 export interface Tournament {
-  gameId: GameId;
+  gameId: TournamentGameId;
   /** Server time it started; also tells one tournament from the next. */
   startedAt: number;
   /** In seed order: most trophies, then earliest joiner. */

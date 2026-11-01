@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { CLOSE_CODES } from "../../shared/protocol/errors";
 import type { PlayerId } from "../../shared/rooms/types";
 import { currentRound, isLive } from "../../shared/tournament/tournament";
@@ -11,7 +11,9 @@ import { useRoomConnection } from "../hooks/useRoomConnection";
 import { useBackButtonGuard } from "../hooks/useBackButtonGuard";
 import { useBefore } from "../hooks/useBefore";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
+import { loadTerritory } from "../games/territory/loadTerritory";
 import { closeMessage, roomErrorMessage } from "../utils/messages";
+import { ArenaResultsScreen } from "./ArenaResultsScreen";
 import { ChampionScreen } from "./ChampionScreen";
 import { JoiningScreen } from "./JoiningScreen";
 import { LobbyScreen } from "./LobbyScreen";
@@ -26,6 +28,8 @@ interface RoomScreenProps {
   onExit(message?: string): void;
 }
 
+const TerritoryScreen = lazy(() => loadTerritory().then((m) => ({ default: m.TerritoryScreen })));
+
 /** A match within a specific tournament (match ids restart each tournament). */
 type MatchRef = { startedAt: number; matchId: number };
 
@@ -36,6 +40,9 @@ const refersTo = (ref: MatchRef | null, t: Tournament, match: Match) =>
 function myMatch(t: Tournament, myId: PlayerId): Match | undefined {
   return currentRound(t).matches.find((m) => m.players.includes(myId));
 }
+
+/** What quitting a real-time match costs. */
+const ARENA_QUIT_COST = "You'll be out of this match.";
 
 /** What quitting costs: one game with 2 players, the whole tournament with more. */
 const quitCost = (t: Tournament) => (t.entrants.length > 2 ? "You'll be out of the tournament." : "You'll lose this game.");
@@ -48,7 +55,8 @@ function stillCompeting(t: Tournament, myId: PlayerId): boolean {
 /** Composes the room's screens (hub, match, standings, champion) with connection feedback. */
 export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const connection = useRoomConnection(code, name);
-  const { status, closeCode, lastError, clearError, room, playerId, clockOffsetMs, send, reconnect, leave } = connection;
+  const { status, closeCode, lastError, clearError, room, playerId, clockOffsetMs, send, sendBinary, subscribeBinary, reconnect, leave } =
+    connection;
   const [watching, setWatching] = useState<MatchRef | null>(null);
   const [dismissed, setDismissed] = useState<MatchRef | null>(null);
   /** The last own match seen live. Its result still shows when the next round has already started. */
@@ -58,7 +66,18 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   /** The finished game (its `startedAt`) whose results you left for the room; the others may still be on them. */
   const [leftResults, setLeftResults] = useState<number | null>(null);
+  // Real-time match (its `startedAt`): seen live, its ending shown, and whether you are still in it.
+  const [arenaSeenLive, setArenaSeenLive] = useState<number | null>(null);
+  const [arenaEndSeen, setArenaEndSeen] = useState<number | null>(null);
+  const [arenaStillIn, setArenaStillIn] = useState(false);
+  const [confirmArenaQuit, setConfirmArenaQuit] = useState<number | null>(null);
   useTimeoutClaims(room, playerId, clockOffsetMs, send);
+
+  const liveArena = room?.phase === "playing" && room.arena && !room.arena.finished ? room.arena : null;
+  if (liveArena && arenaSeenLive !== liveArena.startedAt) setArenaSeenLive(liveArena.startedAt);
+  const inLiveArena = !!liveArena && arenaStillIn;
+  // Tied to the match it was asked for, so it closes by itself if the match ends first.
+  const arenaQuitAsked = inLiveArena && confirmArenaQuit === liveArena.startedAt;
 
   // Your own live match on screen: the ✕ and the back button both ask before quitting.
   const running = room?.phase === "playing" ? room.tournament : null;
@@ -80,7 +99,10 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const askQuit = () => {
     if (running && liveMine) setConfirmQuit({ startedAt: running.startedAt, matchId: liveMine.id });
   };
-  useBackButtonGuard(playingNow, askQuit);
+  const askArenaQuit = () => {
+    if (liveArena) setConfirmArenaQuit(liveArena.startedAt);
+  };
+  useBackButtonGuard(playingNow || inLiveArena, inLiveArena ? askArenaQuit : askQuit);
   // Tied to the match it was asked for, so it closes by itself if that match ends first.
   const quitAsked = playingNow && refersTo(confirmQuit, running!, liveMine!);
 
@@ -100,7 +122,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
     onExit();
   };
   const requestLeave = () => {
-    if (running && playerId !== null && stillCompeting(running, playerId)) setConfirmLeave(true);
+    if ((running && playerId !== null && stillCompeting(running, playerId)) || inLiveArena) setConfirmLeave(true);
     else leaveNow();
   };
   const quitNow = () => {
@@ -109,13 +131,41 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
     setDismissed(confirmQuit);
     setConfirmQuit(null);
   };
+  const quitArenaNow = () => {
+    send({ type: "quit" });
+    setConfirmArenaQuit(null);
+  };
 
   let content;
   if (!room || playerId === null) {
     content = <JoiningScreen code={code} onBack={leaveNow} />;
-  } else if (room.phase === "lobby" || !room.tournament) {
+  } else if (room.phase === "lobby" || (!room.tournament && !room.arena)) {
     content = <LobbyScreen room={room} myId={playerId} send={send} onLeave={requestLeave} />;
-  } else {
+  } else if (room.arena) {
+    const a = room.arena;
+    // A finished match stays on screen for its ending (if you saw it live), then the results, then the room.
+    if (!a.finished || (arenaSeenLive === a.startedAt && arenaEndSeen !== a.startedAt)) {
+      content = (
+        <Suspense fallback={<JoiningScreen code={code} onBack={requestLeave} />}>
+          <TerritoryScreen
+          arena={a}
+          myId={playerId}
+          clockOffsetMs={clockOffsetMs}
+          sendBinary={sendBinary}
+          subscribeBinary={subscribeBinary}
+          onQuit={askArenaQuit}
+          onLeave={requestLeave}
+          onContinue={() => setArenaEndSeen(a.startedAt)}
+          onStillInChange={setArenaStillIn}
+          />
+        </Suspense>
+      );
+    } else if (leftResults !== a.startedAt) {
+      content = <ArenaResultsScreen room={room} arena={a} myId={playerId} send={send} onBack={() => setLeftResults(a.startedAt)} />;
+    } else {
+      content = <LobbyScreen room={room} myId={playerId} send={send} onLeave={requestLeave} />;
+    }
+  } else if (room.tournament) {
     // The last match stays on screen when the tournament ends, so everyone sees how it finished;
     // after its result it moves on to the champion screen.
     const t = room.tournament;
@@ -191,7 +241,24 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
           <p className="text-center">{quitCost(running)}</p>
         </Modal>
       )}
-      {confirmLeave && running && (
+      {arenaQuitAsked && (
+        <Modal
+          title="Quit this game?"
+          actions={
+            <div className="flex w-full flex-col gap-4">
+              <PillButton fullWidth variant="deep" onClick={quitArenaNow}>
+                QUIT
+              </PillButton>
+              <PillButton fullWidth onClick={() => setConfirmArenaQuit(null)}>
+                KEEP PLAYING
+              </PillButton>
+            </div>
+          }
+        >
+          <p className="text-center">{ARENA_QUIT_COST}</p>
+        </Modal>
+      )}
+      {confirmLeave && (running || inLiveArena) && (
         <Modal
           title="Leave the room?"
           actions={
@@ -205,7 +272,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
             </div>
           }
         >
-          <p className="text-center">{quitCost(running)}</p>
+          <p className="text-center">{running ? quitCost(running) : ARENA_QUIT_COST}</p>
         </Modal>
       )}
       {status === "lost" && (

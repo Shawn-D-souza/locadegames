@@ -1,4 +1,4 @@
-import type { GameId } from "./catalog";
+import type { TournamentGameId } from "./catalog";
 import { ticTacToeGame } from "./tictactoe/game";
 import type { TicTacToeState } from "./tictactoe/types";
 import type { MatchGame } from "./types";
@@ -7,6 +7,6 @@ import type { MatchGame } from "./types";
 export type GameState = TicTacToeState;
 
 /** Rules for each game in the catalog. */
-export const MATCH_GAMES: Record<GameId, MatchGame<GameState, unknown>> = {
+export const MATCH_GAMES: Record<TournamentGameId, MatchGame<GameState, unknown>> = {
   tictactoe: ticTacToeGame as MatchGame<GameState, unknown>,
 };

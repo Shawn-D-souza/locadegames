@@ -5,6 +5,8 @@ import type { PendingConnection, RoomTransport } from "../../src/server/rooms/po
 export interface FakeConnection extends PendingConnection {
   playerId: PlayerId | null;
   received: ServerMessage[];
+  /** Binary (real-time game) frames, in order. */
+  frames: Uint8Array[];
   closedWith: number | null;
 }
 
@@ -16,6 +18,7 @@ export class FakeTransport implements RoomTransport {
     const conn: FakeConnection = {
       playerId: null,
       received: [],
+      frames: [],
       closedWith: null,
       attach: (playerId) => (conn.playerId = playerId),
       send: (message) => conn.received.push(message),
@@ -30,6 +33,12 @@ export class FakeTransport implements RoomTransport {
   }
   sendTo(code: string, playerId: PlayerId, message: ServerMessage) {
     for (const c of this.open(code)) if (c.playerId === playerId) c.received.push(message);
+  }
+  broadcastBinary(code: string, data: Uint8Array) {
+    for (const c of this.open(code)) c.frames.push(data);
+  }
+  sendBinary(code: string, playerId: PlayerId, data: Uint8Array) {
+    for (const c of this.open(code)) if (c.playerId === playerId) c.frames.push(data);
   }
   dropPlayer(code: string, playerId: PlayerId, closeCode: number) {
     for (const c of this.open(code)) {

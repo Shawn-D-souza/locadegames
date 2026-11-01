@@ -1,3 +1,4 @@
+import type { Arena } from "../../shared/arena/types";
 import type { GameId } from "../../shared/games/catalog";
 import type { RoomPhase } from "../../shared/protocol/messages";
 import type { PlayerId } from "../../shared/rooms/types";
@@ -27,4 +28,6 @@ export interface RoomRecord {
   players: PlayerRecord[];
   nextJoinOrder: number;
   tournament: Tournament | null;
+  /** The real-time match, for arena games (the live state is in server memory, not here). */
+  arena: Arena | null;
 }

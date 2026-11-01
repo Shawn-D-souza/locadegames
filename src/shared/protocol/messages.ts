@@ -1,9 +1,10 @@
+import type { Arena } from "../arena/types";
 import type { GameId } from "../games/catalog";
 import type { PlayerId } from "../rooms/types";
 import type { Tournament } from "../tournament/types";
 import type { HttpError, RoomError } from "./errors";
 
-/** lobby: picking a game · playing: a tournament is running · finished: champion screen. */
+/** lobby: picking a game · playing: a tournament or real-time match is running · finished: results screen. */
 export type RoomPhase = "lobby" | "playing" | "finished";
 
 export interface PlayerView {
@@ -23,6 +24,8 @@ export interface RoomView {
   hostId: PlayerId | null;
   players: PlayerView[];
   tournament: Tournament | null;
+  /** The real-time match (arena games); its live play streams separately as binary frames. */
+  arena: Arena | null;
   /** Server clock when this view was sent, so clients can show turn timers. */
   serverNow: number;
 }

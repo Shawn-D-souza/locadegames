@@ -9,6 +9,7 @@ import { PillButton } from "../components/PillButton";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { SectionCard } from "../components/SectionCard";
 import { StandingsTable } from "../components/StandingsTable";
+import { entrantName } from "../utils/tournamentText";
 
 interface ChampionScreenProps {
   room: RoomView;
@@ -38,7 +39,12 @@ export function ChampionScreen({ room, tournament, myId, send, onBack }: Champio
   return (
     <ScreenLayout header={<Header title="Results" onBack={isHost ? backToRoom : onBack} backLabel="Back to room" />} footer={footer}>
       <Confetti colorIds={tournament.championIds} />
-      <ChampionCard tournament={tournament} myId={myId} />
+      <ChampionCard
+        championIds={tournament.championIds}
+        nameOf={(id) => entrantName(tournament, id)}
+        twoPlayers={tournament.entrants.length === 2}
+        myId={myId}
+      />
       <SectionCard label="Points">
         <StandingsTable standings={standings(tournament)} myId={myId} />
         {!isHost && <p className="text-center text-caption">Waiting for the host to pick the next game.</p>}

@@ -16,7 +16,11 @@ interface ResultTagProps {
   /** Points tick up from 0 after the tag lands (`landsAtMs` from when the match ended), each tick popping. */
   countUp?: boolean;
   landsAtMs?: number;
+  /** How the number reads (tournament points: `+2`; a land share: `34%`). */
+  format?: (value: number) => string;
 }
+
+const asPoints = (value: number) => `+${value}`;
 
 /**
  * Your win: in your color with an ink lip, slightly tilted like a stamp. Your loss: a quiet white pill that slides up.
@@ -30,7 +34,7 @@ const TONE_CLASSES: Record<ResultTone, string> = {
 };
 
 /** How a match ended, on a pill that sits on the board's bottom edge, so nothing on the screen moves. */
-export function ResultTag({ tone, label, points, detail, countUp = false, landsAtMs = 0 }: ResultTagProps) {
+export function ResultTag({ tone, label, points, detail, countUp = false, landsAtMs = 0, format = asPoints }: ResultTagProps) {
   const shown = useCountUp(points ?? 0, landsAtMs + durations.celebrate, durations.countUp, countUp && points !== null);
   return (
     // Straddles the board's bottom edge like the section labels sit on their cards.
@@ -56,7 +60,7 @@ export function ResultTag({ tone, label, points, detail, countUp = false, landsA
             countUp && "animate-tick",
           )}
         >
-          +{shown}
+          {format(shown)}
         </span>
       )}
     </div>

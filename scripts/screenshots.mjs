@@ -235,6 +235,53 @@ try {
     if (i === 4) await shoot(guest, "24-room-many-votes-guest");
   }
   await shoot(busyHost, "23-room-many-votes-host");
+
+  // Territory (real time): three players, the countdown, a trail out, a capture, quitting, watching, results.
+  const arenaHost = await page();
+  await arenaHost.goto(BASE);
+  await arenaHost.getByRole("button", { name: /create room/i }).click();
+  await wait(1500);
+  const arenaCode = new URL(arenaHost.url()).searchParams.get("room");
+  const arenaGuests = [];
+  for (let i = 0; i < 2; i++) {
+    const guest = await page();
+    await guest.goto(BASE + "?room=" + arenaCode);
+    await guest.getByRole("button", { name: /join room/i }).click();
+    await wait(1000);
+    arenaGuests.push(guest);
+  }
+  await arenaHost.getByRole("button", { name: /territory/i }).click();
+  await wait(1500);
+  await shoot(arenaHost, "25-territory-countdown");
+  await wait(1800);
+  // Out of the land, down and back up: a loop that becomes land.
+  await arenaHost.keyboard.down("ArrowDown");
+  await wait(900);
+  await arenaHost.keyboard.up("ArrowDown");
+  await shoot(arenaHost, "26-territory-trail");
+  // Back past the land, then up into it from below: home.
+  await arenaHost.keyboard.down("ArrowLeft");
+  await wait(1500);
+  await arenaHost.keyboard.up("ArrowLeft");
+  await arenaHost.keyboard.down("ArrowUp");
+  await wait(2400);
+  await arenaHost.keyboard.up("ArrowUp");
+  await shoot(arenaHost, "27-territory-captured");
+  await arenaGuests[0].getByRole("button", { name: "Quit match" }).click();
+  await wait(300);
+  await shoot(arenaGuests[0], "28-territory-quit-popup");
+  await arenaGuests[0].getByRole("button", { name: "QUIT", exact: true }).click();
+  await wait(500);
+  await shoot(arenaGuests[0], "29-territory-out");
+  await wait(4500);
+  await shoot(arenaGuests[0], "30-territory-watching");
+  await arenaGuests[1].getByRole("button", { name: "Quit match" }).click();
+  await arenaGuests[1].getByRole("button", { name: "QUIT", exact: true }).click();
+  await wait(1000);
+  await shoot(arenaHost, "31-territory-ended");
+  await wait(4000);
+  await shoot(arenaHost, "32-territory-results-host");
+  await shoot(arenaGuests[0], "33-territory-results-guest");
 } finally {
   await browser.close();
   await vite.close();

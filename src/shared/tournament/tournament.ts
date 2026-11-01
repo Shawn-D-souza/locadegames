@@ -1,4 +1,4 @@
-import { getGame, type GameId } from "../games/catalog";
+import { getTournamentGame, type TournamentGameId } from "../games/catalog";
 import { MATCH_GAMES } from "../games/registry";
 import type { MoveError, Seat } from "../games/types";
 import type { PlayerId } from "../rooms/types";
@@ -23,7 +23,7 @@ export function isLive(match: Match): boolean {
 }
 
 export function turnDeadline(t: Tournament, match: Match): number {
-  return match.turnStartedAt + getGame(t.gameId).turnTimeMs;
+  return match.turnStartedAt + getTournamentGame(t.gameId).turnTimeMs;
 }
 
 /** Enough rounds for a clear leader: 2 players → 1, 3–4 → 2, 5–8 → 3. */
@@ -118,7 +118,7 @@ function addRound(t: Tournament, startAt: number): Tournament {
   return next;
 }
 
-export function startTournament(gameId: GameId, players: Seed[], now: number): Tournament {
+export function startTournament(gameId: TournamentGameId, players: Seed[], now: number): Tournament {
   const seeds = [...players].sort((a, b) => b.trophies - a.trophies || a.joinOrder - b.joinOrder);
   const t: Tournament = {
     gameId,

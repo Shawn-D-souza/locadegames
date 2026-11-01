@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { GAMES, type GameId } from "../../shared/games/catalog";
 import type { ClientMessage, RoomView } from "../../shared/protocol/messages";
 import type { PlayerId } from "../../shared/rooms/types";
@@ -8,6 +9,7 @@ import { RoomCodePanel } from "../components/RoomCodePanel";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { SectionCard } from "../components/SectionCard";
 import { GAME_LOOKS } from "../games/gameLooks";
+import { loadTerritory } from "../games/territory/loadTerritory";
 
 interface LobbyScreenProps {
   room: RoomView;
@@ -21,6 +23,10 @@ export function LobbyScreen({ room, myId, send, onLeave }: LobbyScreenProps) {
   const isHost = room.hostId === myId;
   const me = room.players.find((p) => p.id === myId);
   const online = room.players.filter((p) => p.connected).length;
+  // Fetch the real-time game's code while friends gather, so it starts without a wait.
+  useEffect(() => {
+    void loadTerritory();
+  }, []);
 
   const pick = (gameId: GameId) => {
     if (isHost) send({ type: "start", gameId });

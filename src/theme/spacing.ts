@@ -48,4 +48,10 @@ export const layout = {
   avatarSmall: 28,
   /** Game tiles reflow: two columns on phones, more on wider screens. */
   gameTile: 140,
+  /** Real-time game overlay: the land table in the top corner, the countdown disc, the knockout notices (under the clock; fits beside the land table on a 320px phone). */
+  hudPanel: 168,
+  countdown: 128,
+  hudFeed: 112,
+  /** How high above the bottom the arena game's result tag sits (its center). */
+  endTag: 120,
 } as const;
