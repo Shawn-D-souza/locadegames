@@ -16,7 +16,7 @@ interface ScreenLayoutProps {
 export function ScreenLayout({ header, footer, centered, wash, onTap, children }: ScreenLayoutProps) {
   return (
     <div
-      className={clsx("flex min-h-dvh flex-col", wash && "bg-player-wash transition-colors duration-slow ease-out")}
+      className={clsx("flex min-h-dvh flex-col overflow-clip", wash && "bg-player-wash transition-colors duration-slow ease-out")}
       style={wash}
       onClick={onTap}
     >

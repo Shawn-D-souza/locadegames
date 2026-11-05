@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { playSound } from "../services/soundPlayer";
 import { Icon, type IconName } from "./Icon";
 
 interface IconButtonProps {
@@ -21,7 +22,10 @@ export function IconButton({ icon, label, onClick, wide }: IconButtonProps) {
       )}
       aria-label={label}
       title={label}
-      onClick={onClick}
+      onClick={() => {
+        playSound(icon === "back" ? "backButtonPress" : "iconButtonPress");
+        onClick();
+      }}
     >
       <Icon name={icon} className="size-icon" />
     </button>

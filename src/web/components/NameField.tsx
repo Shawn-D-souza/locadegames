@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import { useState, type FormEvent } from "react";
+import { playSound } from "../services/soundPlayer";
 import { Icon } from "./Icon";
 
 interface NameFieldProps {
@@ -43,7 +44,10 @@ export function NameField({ value, fallback, maxLength, onChange }: NameFieldPro
   }
 
   return (
-    <button type="button" className={clsx(FIELD_CLASSES, "cursor-pointer")} onClick={() => setEditing(true)} aria-label={`Your name: ${shown}. Edit`}>
+    <button type="button" className={clsx(FIELD_CLASSES, "cursor-pointer")} onClick={() => {
+      playSound("fieldTap");
+      setEditing(true);
+    }} aria-label={`Your name: ${shown}. Edit`}>
       <span className="min-w-0 truncate">{shown}</span>
       <span className="shrink-0 text-caption font-medium text-subtle">(YOU)</span>
       <Icon name="edit" className="ml-auto size-icon shrink-0 text-subtle" />

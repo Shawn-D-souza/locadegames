@@ -16,6 +16,7 @@ import { SunRays } from "../components/SunRays";
 import { WinParticles } from "../components/WinParticles";
 import { CLIENT_CONFIG } from "../config";
 import { useAutoContinue } from "../hooks/useAutoContinue";
+import { useMatchSounds } from "../hooks/useMatchSounds";
 import { useNow } from "../hooks/useNow";
 import { CELEBRATION_TIMING } from "../utils/celebrationTiming";
 import { playerStyle } from "../utils/playerStyle";
@@ -79,6 +80,7 @@ export function MatchScreen({ room, tournament, match, myId, clockOffsetMs, send
   };
   // The result stays a moment, then the room moves on; a tap anywhere skips the wait.
   useAutoContinue(!live, CLIENT_CONFIG.resultShowMs, onContinue);
+  useMatchSounds({ matchKey: `${tournament.startedAt}:${match.id}`, game: match.game, ending, leaver, yourTurn: live && turnId === myId, watching, countdown: live && turnId === myId ? countdown : null });
 
   // The pieces on the cards react on your phone: your X or O jumps for joy or droops; a draw makes both shrug.
   const pieceMotion = (id: PlayerId) =>

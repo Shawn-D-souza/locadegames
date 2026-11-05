@@ -8,6 +8,7 @@ import { Header } from "../components/Header";
 import { PillButton } from "../components/PillButton";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { SectionCard } from "../components/SectionCard";
+import { useChampionSounds } from "../hooks/useChampionSounds";
 import { arenaName } from "../utils/arenaText";
 
 interface ArenaResultsScreenProps {
@@ -23,6 +24,7 @@ interface ArenaResultsScreenProps {
 export function ArenaResultsScreen({ room, arena, myId, send, onBack }: ArenaResultsScreenProps) {
   const isHost = room.hostId === myId;
   const backToRoom = () => send({ type: "backToRoom" });
+  useChampionSounds(arena.championIds, myId);
 
   const footer = isHost ? (
     <div className="flex w-full flex-col gap-4">

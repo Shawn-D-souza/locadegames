@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { FORMATTED_CODE_LENGTH, formatRoomCode, isValidRoomCode, normalizeRoomCode } from "../../shared/rooms/roomCode";
 import { sanitizePlayerName } from "../../shared/rooms/playerName";
 import { ROOM_CONFIG } from "../../shared/rooms/config";
@@ -8,6 +8,7 @@ import { PillButton } from "../components/PillButton";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { TextField } from "../components/TextField";
 import { usePlayerName } from "../hooks/usePlayerName";
+import { playSound } from "../services/soundPlayer";
 
 interface HomeScreenProps {
   initialCode: string;
@@ -23,6 +24,13 @@ export function HomeScreen({ initialCode, busy, onCreate, onJoin }: HomeScreenPr
   // An empty field plays as the first-visit random name.
   const playName = sanitizePlayerName(name) ?? defaultName;
   const cleanCode = normalizeRoomCode(code);
+  // The last digit going in: JOIN ROOM wakes up.
+  const codeComplete = isValidRoomCode(cleanCode);
+  const wasComplete = useRef(codeComplete);
+  useEffect(() => {
+    if (codeComplete && !wasComplete.current) playSound("roomCodeComplete");
+    wasComplete.current = codeComplete;
+  }, [codeComplete]);
 
   const join = (event: FormEvent) => {
     event.preventDefault();

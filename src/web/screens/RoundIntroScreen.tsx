@@ -9,6 +9,7 @@ import { SeatCard } from "../components/SeatCard";
 import { SectionCard } from "../components/SectionCard";
 import { StandingsTable } from "../components/StandingsTable";
 import { CLIENT_CONFIG } from "../config";
+import { useCountdownSounds } from "../hooks/useCountdownSounds";
 import { useNow } from "../hooks/useNow";
 import { entrantName, roundLabel } from "../utils/tournamentText";
 
@@ -24,6 +25,7 @@ interface RoundIntroScreenProps {
 export function RoundIntroScreen({ room, tournament, myId, startsAt }: RoundIntroScreenProps) {
   const now = useNow(CLIENT_CONFIG.timerTickMs);
   const seconds = Math.max(1, Math.ceil((startsAt - now) / 1000));
+  useCountdownSounds(seconds);
   const round = currentRound(tournament);
   const mine = round.matches.find((m) => m.players.includes(myId));
 

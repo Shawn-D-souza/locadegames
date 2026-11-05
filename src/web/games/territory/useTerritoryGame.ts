@@ -8,6 +8,7 @@ import type { HudView } from "./engine/frame";
 import { TerritoryClient } from "./engine/territoryClient";
 import { SteeringInput } from "./input/steeringInput";
 import { TerritoryRenderer } from "./render/territoryRenderer";
+import { TerritoryAudio } from "./territoryAudio";
 
 interface TerritoryGameOptions {
   arena: Arena;
@@ -53,6 +54,7 @@ export function useTerritoryGame(canvasRef: RefObject<HTMLCanvasElement | null>,
     const renderer = new TerritoryRenderer(canvas);
     const steering = playing ? new SteeringInput(canvas, (angle) => client.steer(angle)) : null;
     const names = new Map(arena.entrants.map((e) => [e.id, e.name]));
+    const audio = new TerritoryAudio({ myId, playing, radius: arena.radius });
     const unsubscribe = subscribeBinary((data) => client.receive(data));
     client.start();
     clientRef.current = client;
@@ -73,7 +75,10 @@ export function useTerritoryGame(canvasRef: RefObject<HTMLCanvasElement | null>,
     let hudVersion = client.hudVersion;
     const loop = (now: number) => {
       const frame = client.frame(now);
-      if (frame) renderer.draw(frame, now, names);
+      if (frame) {
+        renderer.draw(frame, now, names);
+        audio.update(frame, client.takeMoments(), now);
+      }
       if (now - hudAt >= TERRITORY_CLIENT_CONFIG.hud.refreshMs || client.hudVersion !== hudVersion) {
         hudAt = now;
         hudVersion = client.hudVersion;
@@ -96,6 +101,7 @@ export function useTerritoryGame(canvasRef: RefObject<HTMLCanvasElement | null>,
       unsubscribe();
       steering?.dispose();
       client.stop();
+      audio.stop();
       clientRef.current = null;
     };
   }, [canvasRef, matchKey, myId]);

@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import { isLive } from "../../shared/tournament/tournament";
 import type { Match, Tournament } from "../../shared/tournament/types";
+import { playSound } from "../services/soundPlayer";
 import { entrantName } from "../utils/tournamentText";
 import { Avatar } from "./Avatar";
 import { Badge } from "./Badge";
@@ -53,7 +54,10 @@ export function MatchCard({ tournament, match, myId, onWatch }: MatchCardProps) 
         "cursor-pointer shadow-lip-small transition-[translate,box-shadow] duration-fast ease-spring active:translate-y-lip-small active:shadow-pressed",
       )}
       aria-label={`Watch ${match.players.map((id) => entrantName(tournament, id)).join(" against ")}`}
-      onClick={onWatch}
+      onClick={() => {
+        playSound("cardPress");
+        onWatch();
+      }}
     >
       {body}
     </button>

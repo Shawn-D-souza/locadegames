@@ -76,6 +76,18 @@ Full screen, drawn on a canvas (Canvas 2D), every color from the theme. No heade
 - **Results:** the arena results screen (see DESIGN.md, Scoreboard & results): land share for players still in, time survived for the rest.
 - **Tile art:** a small arena with two raised lands and a trail on its way home.
 
+## Sound
+
+Your head is a felt marker on paper, your land is notes: the platform's kit (see DESIGN.md, Sound) with its own character. `sounds.ts` says what each one is for; `territoryCues.ts` picks them; numbers in `sound` of the client config.
+
+- **Trail:** leaving your land is the pen touching down, then one quiet marker loop: one smooth, unbroken sound, because the head moves in one smooth, unbroken motion, so never a beat, ticks or strokes. A little faster and higher the longer you're out; darker, slower and heavier on someone's land (`trailShape`); it stops the moment you're home.
+- **Captures:** three sizes by area (small, medium, large): a quick run of rising notes that goes further the bigger the land, then the land settling. Only your own captures sound; what others do to land, yours included, is seen, not heard.
+- **Knockouts:** one sound however it happened (cut or land taken), since the screen says which. You knock someone out: a fat pop as the tag lands. You're out: a low blow, then a soft fall. Someone else goes out: a small scatter of pieces, full volume about as far as the screen shows, fading to silent off screen; watchers hear it at one lower volume.
+- **Bumps:** rubbery blocks when your head meets another (heads are solid), a dull knock at the wall, once per touch.
+- **Ending:** a thump and a long breath of air as the camera pulls out, air whistling down as the winner's head drops, then the platform's result sounds as the tag stamps on. The last seconds of the clock use the platform's timer.
+
+Everything is read from the game loop by `TerritoryAudio`, on what the client knows: own moments when predicted, so they land with what's drawn. Simulation, netcode and drawing know nothing of sound.
+
 ---
 
 ## Files
@@ -96,7 +108,11 @@ Full screen, drawn on a canvas (Canvas 2D), every color from the theme. No heade
 | `src/web/games/territory/useTerritoryGame.ts` | Wires client, renderer and controls to one animation-frame loop; wake on visibility; dev-only `window.territory` |
 | `src/web/games/territory/loadTerritory.ts` | Lazy chunk loader (the room hub preloads it) |
 | `src/web/games/territory/TerritoryArt.tsx` | Tile art |
-| `src/web/games/territory/config.ts` | Client numbers: netcode, camera, look, controls, HUD |
+| `src/web/games/territory/config.ts` | Client numbers: netcode, camera, look, controls, HUD, sound |
+| `src/web/games/territory/sounds.ts` | Its sounds (`territoryCaptureLarge`, `territoryYouAreOut`, …) |
+| `src/web/games/territory/territoryCues.ts` | Pure: which sound for a capture or someone going out, how loud at a distance, the ending's sequence |
+| `src/web/games/territory/territoryAudio.ts` | `TerritoryAudio`: plays them from the game loop (moments from the netcode, trail loop, bumps) |
+| `src/web/games/territory/useMatchClockSounds.ts` | GO when the countdown ends, ticks for the clock's last seconds |
 | `src/web/games/territory/engine/` | Netcode, no drawing: `serverClock.ts`, `replica.ts` (server state rebuilt from snapshots + history for drawing in the past), `prediction.ts` (`OwnPredictor`: own head, trail and capture ahead of the server), `territoryClient.ts` (receive, steer, resync, interpolation delay and lead, corrections, effects, frame + HUD view), `frame.ts` (view types) |
 | `src/web/games/territory/render/` | Canvas 2D: `territoryRenderer.ts` (one frame; scratch layer for trenches), `drawWorld.ts` (floor, land lips and tops, trenches, trails, vanishing land, heads, effects, wall), `drawEnding.ts` (thump, shake, rays, wash, winners' crowned heads), `drawOverlay.ts` (names, minimap map + per-frame heads), `camera.ts` (follow / overview), `paths.ts` (cached `Path2D`), `palette.ts` (theme colors per player) |
 | `src/web/games/territory/input/steeringInput.ts` | Invisible floating joystick + arrows / WASD |
@@ -109,4 +125,4 @@ Full screen, drawn on a canvas (Canvas 2D), every color from the theme. No heade
 
 ## Ideas for later
 
-- Sound and vibration, a short glow on capture. The owner may send more Paper.io screenshots for visual tuning.
+- Vibration, a short glow on capture. The owner may send more Paper.io screenshots for visual tuning.

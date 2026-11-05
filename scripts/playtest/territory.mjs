@@ -1,6 +1,6 @@
 // Territory: three players. One captures land, one cuts another, the last quits, the winner's ending plays,
 // then the results. Players are steered through the dev-only `window.territory` (the netcode client).
-import { sees, wait } from "./session.mjs";
+import { heard, sees, wait } from "./session.mjs";
 
 /** The player's id and everyone's start positions, from the netcode client. */
 const read = (page) =>
@@ -48,7 +48,11 @@ export default async function territory(session) {
     const views = await Promise.all([host, cutter, builder].map(read));
     ids = { host: views[0].me, cutter: views[1].me, builder: views[2].me };
     spawns = views[0].spawns;
+    // Heads never stop: without this, these two wander off while the builder plays, and their trails can cross before the cut.
+    await Promise.all([steer(host, [spawns[ids.host]]), steer(cutter, [spawns[ids.cutter]])]);
     await until(() => host.evaluate(() => window.territory.hud(performance.now()).countdownMs <= 0), "the countdown to end", 6_000);
+    await wait(400);
+    await heard(host, "gameStarting", "countdownTick", "countdownGo");
   });
   await session.step("a loop out and home becomes land", async () => {
     const s = spawns[ids.builder];
@@ -59,25 +63,34 @@ export default async function territory(session) {
     const before = await share(builder);
     await steer(builder, [at(5000, 0), at(5000, 5000), at(0, 5000), at(-1000, 0)]);
     await until(async () => (await share(builder)) > before * 1.5, "the builder's land to grow");
+    await heard(builder, "territoryLeftLand", "territoryTrailLoop", "territoryCaptureSmall");
   });
   await session.step("a cut: the cutter's stamp and notice, the host's out card", async () => {
     // The host heads for the middle and on past it; the cutter crosses the host's trail on the way.
     const h = spawns[ids.host];
     const mid = { x: h.x * 0.5, y: h.y * 0.5 };
     await steer(host, [{ x: 0, y: 0 }, { x: -h.x * 0.6, y: -h.y * 0.6 }]);
-    await steer(cutter, [mid, { x: mid.x * 0.2, y: mid.y * 0.2 }]);
+    // Straight through the point and out the far side, so it really crosses the host's trail.
+    const c = spawns[ids.cutter];
+    await steer(cutter, [mid, { x: mid.x + (mid.x - c.x) * 0.4, y: mid.y + (mid.y - c.y) * 0.4 }]);
     await until(async () => !(await alive(host, ids.host)), "the host to be cut");
     await sees(cutter, /cut .+!/i);
     await sees(cutter, /you cut/i);
     await sees(host, /you're out/i);
+    await heard(cutter, "territoryYouKnockedSomeoneOut");
+    await heard(host, "territoryYouAreOut");
   });
   await session.step("the builder quits: the cutter wins and sees the ending", async () => {
     await builder.getByRole("button", { name: "Quit match" }).click();
     await builder.getByRole("button", { name: "QUIT", exact: true }).click();
     await sees(cutter, /you win!/i);
     await sees(builder, /you lost/i);
+    await heard(cutter, "territoryMatchOver", "territoryWinnerHeadDrop", "matchWinFanfare");
+    await heard(builder, "warningPopupOpen", "territoryMatchOver", "matchLossSting");
   });
   await session.step("the results come by themselves: the cutter is champion", async () => {
     for (const page of [host, cutter, builder]) await sees(page, /champion!/i, 15_000);
+    await heard(cutter, "championFanfare");
+    await heard(host, "championAnnounced");
   });
 }

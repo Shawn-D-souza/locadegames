@@ -1,6 +1,7 @@
-/** Browser storage for the player's name and per-room reconnect tokens. */
+/** Browser storage for the player's name, settings and per-room reconnect tokens. */
 const NAME_KEY = "locade:name";
 const DEFAULT_NAME_KEY = "locade:defaultName";
+const SOUND_KEY = "locade:sound";
 const tokenKey = (code: string) => `locade:token:${code}`;
 
 function safely<T>(action: () => T, fallback: T): T {
@@ -18,6 +19,10 @@ export const savePlayerName = (name: string) => safely(() => localStorage.setIte
 /** The random name given on the first visit; kept forever so it never changes. */
 export const loadDefaultName = () => safely(() => localStorage.getItem(DEFAULT_NAME_KEY), null);
 export const saveDefaultName = (name: string) => safely(() => localStorage.setItem(DEFAULT_NAME_KEY, name), undefined);
+
+/** Sound effects are on unless turned off. */
+export const loadSoundOn = () => safely(() => localStorage.getItem(SOUND_KEY) !== "off", true);
+export const saveSoundOn = (on: boolean) => safely(() => localStorage.setItem(SOUND_KEY, on ? "on" : "off"), undefined);
 
 export const loadRoomToken = (code: string) => safely(() => sessionStorage.getItem(tokenKey(code)), null);
 export const saveRoomToken = (code: string, token: string) =>

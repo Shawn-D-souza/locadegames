@@ -10,6 +10,7 @@ import { ScreenLayout } from "../components/ScreenLayout";
 import { SectionCard } from "../components/SectionCard";
 import { GAME_LOOKS } from "../games/gameLooks";
 import { loadTerritory } from "../games/territory/loadTerritory";
+import { playSound } from "../services/soundPlayer";
 
 interface LobbyScreenProps {
   room: RoomView;
@@ -29,8 +30,14 @@ export function LobbyScreen({ room, myId, send, onLeave }: LobbyScreenProps) {
   }, []);
 
   const pick = (gameId: GameId) => {
-    if (isHost) send({ type: "start", gameId });
-    else send({ type: "suggest", gameId: me?.suggestion === gameId ? null : gameId });
+    if (isHost) {
+      playSound("cardPress");
+      send({ type: "start", gameId });
+      return;
+    }
+    const withdrawn = me?.suggestion === gameId;
+    playSound(withdrawn ? "gameUnsuggested" : "gameSuggested");
+    send({ type: "suggest", gameId: withdrawn ? null : gameId });
   };
 
   const hint =

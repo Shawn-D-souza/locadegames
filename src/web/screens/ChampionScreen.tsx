@@ -9,6 +9,7 @@ import { PillButton } from "../components/PillButton";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { SectionCard } from "../components/SectionCard";
 import { StandingsTable } from "../components/StandingsTable";
+import { useChampionSounds } from "../hooks/useChampionSounds";
 import { entrantName } from "../utils/tournamentText";
 
 interface ChampionScreenProps {
@@ -24,6 +25,7 @@ interface ChampionScreenProps {
 export function ChampionScreen({ room, tournament, myId, send, onBack }: ChampionScreenProps) {
   const isHost = room.hostId === myId;
   const backToRoom = () => send({ type: "backToRoom" });
+  useChampionSounds(tournament.championIds, myId);
 
   const footer = isHost ? (
     <div className="flex w-full flex-col gap-4">

@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { TicTacToeState } from "../../shared/games/tictactoe/types";
 import { playerColors } from "../../theme";
 import { Board, type BoardEnding } from "../components/Board";
@@ -6,6 +6,9 @@ import { ScreenLayout } from "../components/ScreenLayout";
 import { SeatCard } from "../components/SeatCard";
 import { SunRays } from "../components/SunRays";
 import { WinParticles } from "../components/WinParticles";
+import { lastMarkSound } from "../games/tictactoe/sounds";
+import { playSoundSequence } from "../services/soundPlayer";
+import { matchEndingSteps } from "../sound/cues/endingCues";
 import { CELEBRATION_TIMING } from "../utils/celebrationTiming";
 import { playerStyle } from "../utils/playerStyle";
 import type { CelebrationStyle } from "./celebrationStyles";
@@ -40,6 +43,12 @@ export function CelebrationStage({ look, outcome, colorId, controls }: Celebrati
   const seats = [colorId, opponentId] as const;
   const game = BOARDS[outcome];
   const winnerId = game.winner === null ? null : seats[game.winner];
+
+  // The real ending's sounds, in time with what's on screen.
+  useEffect(() => {
+    const handle = playSoundSequence(matchEndingSteps(outcome, { lastMove: lastMarkSound(BOARDS[outcome]), line: BOARDS[outcome].winningLine !== null }));
+    return () => handle.stop();
+  }, [outcome]);
 
   const pieceMotion = (id: number) => {
     if (!look.pieceMotion) return null;

@@ -18,6 +18,13 @@ Format: **tournament** (Swiss-style, 1v1 matches; see the tournament rules in [`
 - **Seat cards** show the player's piece (X or O); the match screen and the "All in" endings (win line, board in the winner's color, marks jumping) are described in DESIGN.md, Match screen.
 - **Tile art:** a small copy of the real board.
 
+## Sound
+
+`src/web/games/tictactoe/sounds.ts`:
+
+- **X and O** are one round pop each; O is a little lower and longer, so you can tell who moved without looking. Both climb a little as the board fills (the take is the move number) and stay low: the board is the instrument, not a melody. The sound comes when the server has accepted the move.
+- **Endings** are the platform's (the last mark, the board's thump, the win line, then each phone's result), started from `useMatchSounds`.
+
 ---
 
 ## Files
@@ -30,5 +37,6 @@ Format: **tournament** (Swiss-style, 1v1 matches; see the tournament rules in [`
 | `src/shared/games/tictactoe/game.ts` | `MatchGame` adapter + auto move |
 | `src/web/games/tictactoe/TicTacToeArt.tsx` | Tile art |
 | `src/web/components/Board.tsx`, `BoardCell.tsx`, `WinLine.tsx`, `Mark.tsx` | The board, its cells, the win line, the X / O glyphs (used by the match screen and the celebration preview) |
+| `src/web/games/tictactoe/sounds.ts` | Its sounds: `ticTacToeMarkX`, `ticTacToeMarkO`; `lastMarkSound` (which mark the last move made) |
 | `tests/tictactoe.test.ts` | Rules: moves, wins, draws, errors |
-| `scripts/playtest/tictactoe.mjs` | Playtest: 2 players; start, a match to a win, each phone's result, the results, back to the room |
+| `scripts/playtest/tictactoe.mjs` | Playtest: 2 players; start, a match to a win, each phone's result and sounds, the results, back to the room |

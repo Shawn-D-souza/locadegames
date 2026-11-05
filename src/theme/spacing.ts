@@ -48,6 +48,11 @@ export const layout = {
   avatarSmall: 28,
   /** Game tiles reflow: two columns on phones, more on wider screens. */
   gameTile: 140,
+  /** Settings switch: the pill track, its knob, and how far the knob slides. */
+  toggle: 32,
+  toggleTrack: 56,
+  toggleKnob: 20,
+  toggleTravel: 24,
   /** Real-time game overlay: the land table in the top corner, the countdown disc, the knockout notices (under the clock; fits beside the land table on a 320px phone). */
   hudPanel: 168,
   countdown: 128,

@@ -28,10 +28,15 @@ What a match costs (CPU, requests, bandwidth), measured.
 
 The game's own visuals (built from the shared design language): board or arena, pieces, HUD, endings, tile art.
 
+## Sound
+
+The game's own sounds (built from the shared kit, room, scale and levels; see DESIGN.md, Sound): their character, and any choice worth recording.
+
 ## Files
 
 | Path | Purpose |
 |---|---|
+| `src/web/games/<game>/sounds.ts` | Its sounds, named for what they're for (add them to `GAME_SOUNDS` and `SOUNDS` in `src/web/sound/soundBook.ts`) |
 | `scripts/playtest/<game>.mjs` | Playtest: its big moments end to end (add it to `GAMES` in `scripts/playtest.mjs`) |
 
 ## Ideas for later

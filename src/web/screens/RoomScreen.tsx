@@ -10,6 +10,7 @@ import { CLIENT_CONFIG } from "../config";
 import { useRoomConnection } from "../hooks/useRoomConnection";
 import { useBackButtonGuard } from "../hooks/useBackButtonGuard";
 import { useBefore } from "../hooks/useBefore";
+import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { closeMessage, roomErrorMessage } from "../utils/messages";
@@ -93,6 +94,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const roundKey = running && running.rounds.length > 1 ? `${running.startedAt}:${running.rounds.length}` : null;
   const roundStart = running ? currentRound(running).startsAt - clockOffsetMs : 0;
   const beforeRoundStart = useBefore(roundKey, roundStart);
+  useRoomSounds(room, playerId, status, lastError?.id ?? null, beforeRoundStart);
   // Your own live match is on screen (not a result still showing first).
   const playingNow =
     !!running && !!liveMine && isLive(liveMine) && !resultPending && !beforeRoundStart && !refersTo(dismissed, running, liveMine);
@@ -226,13 +228,14 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
       {lastError && status !== "reconnecting" && <Toast key={lastError.id} message={roomErrorMessage(lastError.error)} />}
       {quitAsked && running && (
         <Modal
+          serious
           title="Quit this game?"
           actions={
             <div className="flex w-full flex-col gap-4">
               <PillButton fullWidth variant="deep" onClick={quitNow}>
                 QUIT
               </PillButton>
-              <PillButton fullWidth onClick={() => setConfirmQuit(null)}>
+              <PillButton fullWidth sound="popupClose" onClick={() => setConfirmQuit(null)}>
                 KEEP PLAYING
               </PillButton>
             </div>
@@ -243,13 +246,14 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
       )}
       {arenaQuitAsked && (
         <Modal
+          serious
           title="Quit this game?"
           actions={
             <div className="flex w-full flex-col gap-4">
               <PillButton fullWidth variant="deep" onClick={quitArenaNow}>
                 QUIT
               </PillButton>
-              <PillButton fullWidth onClick={() => setConfirmArenaQuit(null)}>
+              <PillButton fullWidth sound="popupClose" onClick={() => setConfirmArenaQuit(null)}>
                 KEEP PLAYING
               </PillButton>
             </div>
@@ -260,13 +264,14 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
       )}
       {confirmLeave && (running || inLiveArena) && (
         <Modal
+          serious
           title="Leave the room?"
           actions={
             <div className="flex w-full flex-col gap-4">
               <PillButton fullWidth variant="deep" onClick={leaveNow}>
                 LEAVE
               </PillButton>
-              <PillButton fullWidth onClick={() => setConfirmLeave(false)}>
+              <PillButton fullWidth sound="popupClose" onClick={() => setConfirmLeave(false)}>
                 STAY
               </PillButton>
             </div>
@@ -277,6 +282,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
       )}
       {status === "lost" && (
         <Modal
+          serious
           title="Connection lost"
           actions={
             <div className="flex w-full flex-col gap-4">

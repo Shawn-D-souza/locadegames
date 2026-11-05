@@ -6,6 +6,7 @@ import { KillPop } from "../../games/territory/hud/KillPop";
 import { KnockoutFeed } from "../../games/territory/hud/KnockoutFeed";
 import { TerritoryEnding } from "../../games/territory/hud/TerritoryEnding";
 import { TerritoryRenderer } from "../../games/territory/render/territoryRenderer";
+import { playSound, prepareGameSounds } from "../../services/soundPlayer";
 import { arenaName } from "../../utils/arenaText";
 import { buildScene, sceneArena, sceneFrame, sceneKnockout, VICTIM_ID } from "./territoryScene";
 
@@ -26,6 +27,8 @@ export function TerritoryStage({ moment }: { moment: TerritoryMoment }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewer = VIEWER[moment];
 
+  useEffect(() => prepareGameSounds("territory"), []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -38,6 +41,7 @@ export function TerritoryStage({ moment }: { moment: TerritoryMoment }) {
     const observer = new ResizeObserver(fit);
     observer.observe(canvas);
 
+    if (moment === "kill") playSound("territoryYouKnockedSomeoneOut");
     const startedAt = performance.now();
     const victim = scene.players.find((p) => p.id === VICTIM_ID)!;
     const kill = moment === "kill";

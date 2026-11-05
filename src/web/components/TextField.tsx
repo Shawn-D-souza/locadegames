@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import type { InputHTMLAttributes } from "react";
+import { playSound } from "../services/soundPlayer";
 
 interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
   label: string;
@@ -22,6 +23,7 @@ export function TextField({ label, onChange, variant = "text", hideLabel, classN
           className,
         )}
         onChange={(event) => onChange(event.target.value)}
+        onFocus={() => playSound("fieldTap")}
         {...rest}
       />
     </label>

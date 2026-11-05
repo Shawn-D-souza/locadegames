@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { PlayerId } from "../../shared/rooms/types";
 import { currentRound, isLive, standings } from "../../shared/tournament/tournament";
 import type { Tournament } from "../../shared/tournament/types";
@@ -7,6 +8,7 @@ import { MatchCard } from "../components/MatchCard";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { SectionCard } from "../components/SectionCard";
 import { StandingsTable } from "../components/StandingsTable";
+import { playSound } from "../services/soundPlayer";
 import { entrantName, roundLabel } from "../utils/tournamentText";
 
 interface StandingsScreenProps {
@@ -28,6 +30,14 @@ function hint(t: Tournament, myId: PlayerId, anyLive: boolean): string {
 export function StandingsScreen({ tournament, myId, onWatch, onLeave }: StandingsScreenProps) {
   const round = currentRound(tournament);
   const anyLive = round.matches.some(isLive);
+  // Another match of the round finishing here gets its tick.
+  const finishedCount = round.matches.filter((match) => !isLive(match)).length;
+  const lastFinished = useRef({ round: tournament.rounds.length, count: finishedCount });
+  useEffect(() => {
+    const seen = lastFinished.current;
+    if (seen.round === tournament.rounds.length && finishedCount > seen.count) playSound("otherMatchEnded");
+    lastFinished.current = { round: tournament.rounds.length, count: finishedCount };
+  }, [tournament.rounds.length, finishedCount]);
   return (
     <ScreenLayout header={<Header title={roundLabel(tournament)} onBack={onLeave} backLabel="Leave room" />}>
       <SectionCard label="Points">

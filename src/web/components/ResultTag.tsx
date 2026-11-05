@@ -1,6 +1,9 @@
 import { clsx } from "clsx";
+import { useEffect } from "react";
 import { durations } from "../../theme";
 import { useCountUp } from "../hooks/useCountUp";
+import { playSound } from "../services/soundPlayer";
+import { POINTS_WAIT_MS, pointsTickTake } from "../sound/cues/endingCues";
 import { Icon } from "./Icon";
 
 /** win: your win (stamps in, tilted, trophy) · lose: quiet · draw / watch: neutral. */
@@ -13,7 +16,7 @@ interface ResultTagProps {
   points: number | null;
   /** Why it ended, when unusual ("Ana quit"). */
   detail: string | null;
-  /** Points tick up from 0 after the tag lands (`landsAtMs` from when the match ended), each tick popping. */
+  /** Points tick up from 0 once the tag has landed and its sound has played (`landsAtMs` from when the match ended), each tick popping. */
   countUp?: boolean;
   landsAtMs?: number;
   /** How the number reads (tournament points: `+2`; a land share: `34%`). */
@@ -35,7 +38,11 @@ const TONE_CLASSES: Record<ResultTone, string> = {
 
 /** How a match ended, on a pill that sits on the board's bottom edge, so nothing on the screen moves. */
 export function ResultTag({ tone, label, points, detail, countUp = false, landsAtMs = 0, format = asPoints }: ResultTagProps) {
-  const shown = useCountUp(points ?? 0, landsAtMs + durations.celebrate, durations.countUp, countUp && points !== null);
+  const shown = useCountUp(points ?? 0, landsAtMs + POINTS_WAIT_MS[tone], durations.countUp, countUp && points !== null);
+  // Each tick climbs the scale; a fast count (a land share) just rolls, the sound's cooldown thins it out.
+  useEffect(() => {
+    if (countUp && points !== null && shown > 0) playSound("pointsTick", { variant: pointsTickTake(shown, points) });
+  }, [shown, points, countUp]);
   return (
     // Straddles the board's bottom edge like the section labels sit on their cards.
     <div

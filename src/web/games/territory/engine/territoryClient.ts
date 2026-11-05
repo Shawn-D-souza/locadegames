@@ -11,7 +11,7 @@ import { decodeServerMessage, encodeClientMessage, type TerritoryClientMessage }
 import type { Bytes } from "../../../../shared/protocol/bytes";
 import type { PlayerId } from "../../../../shared/rooms/types";
 import { TERRITORY_CLIENT_CONFIG } from "../config";
-import type { EffectView, EndingView, FrameView, HeadView, HudView, KnockoutView, PlayerFrame } from "./frame";
+import type { EffectView, EndingView, FrameView, HeadView, HudView, KnockoutView, MomentView, PlayerFrame } from "./frame";
 import { OwnPredictor, type Prediction } from "./prediction";
 import { landAt, latestLand, Replica, type ReplicaPlayer } from "./replica";
 import { ServerClock } from "./serverClock";
@@ -87,6 +87,7 @@ export class TerritoryClient {
   readonly stats = { corrections: 0, largestCorrection: 0, resyncs: 0, interpMs: 0, leadMs: 0 };
 
   private effects: EffectView[] = [];
+  private moments: MomentView[] = [];
   private shownEvents = new Set<string>();
   private areaCache = new WeakMap<Land, number>();
   private lastDrawnHeads = new Map<PlayerId, HeadView>();
@@ -225,6 +226,13 @@ export class TerritoryClient {
     return { radius: r.radius, players, effects: this.effects, focus: this.ending ? null : focus, ending: this.ending };
   }
 
+  /** What just happened, since the last time this was asked. */
+  takeMoments(): MomentView[] {
+    const taken = this.moments;
+    this.moments = [];
+    return taken;
+  }
+
   hud(now: number): HudView {
     const r = this.replica;
     const serverNow = this.clock.serverNow(now);
@@ -318,7 +326,9 @@ export class TerritoryClient {
       home = this.predictedCapture.land;
       if (this.flashedCaptureKey !== key) {
         this.flashedCaptureKey = key;
-        this.flash(difference(home, latest, FillRule.NonZero), now);
+        const gained = difference(home, latest, FillRule.NonZero);
+        this.flash(gained, now);
+        this.noteCapture(gained, now);
       }
     } else {
       this.predictedCapture = null;
@@ -384,6 +394,7 @@ export class TerritoryClient {
     if (type === "out") {
       const at = this.lastDrawnHeads.get(id);
       if (at) this.effects.push({ kind: "burst", id, x: at.x, y: at.y, startedAt: now });
+      this.moments.push({ kind: "out", id, by: p.cutBy, reason: p.outReason, x: at?.x ?? 0, y: at?.y ?? 0, at: now });
       if (p.outReason) {
         this.knockouts.push({ id, by: p.cutBy, reason: p.outReason, at: now });
         this.hudVersion += 1;
@@ -401,7 +412,14 @@ export class TerritoryClient {
     // Your own capture already flashed when your head got home (predicted).
     if (id === this.options.myId && this.flashedCaptureKey !== null) return;
     const after = p.lands.find((v) => v.tick === tick);
-    if (after) this.flash(difference(after.land, landAt(p, tick - 1).land, FillRule.NonZero), now);
+    if (!after) return;
+    const gained = difference(after.land, landAt(p, tick - 1).land, FillRule.NonZero);
+    this.flash(gained, now);
+    if (id === this.options.myId) this.noteCapture(gained, now);
+  }
+
+  private noteCapture(gained: Land, now: number) {
+    if (gained.length) this.moments.push({ kind: "capture", area: landArea(gained), at: now });
   }
 
   /**

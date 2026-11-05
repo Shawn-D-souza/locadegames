@@ -103,6 +103,32 @@ export const TERRITORY_CLIENT_CONFIG = {
     /** The (invisible) joystick's reach; dragging past it pulls its center along. */
     stickRadiusPx: 56,
   },
+  sound: {
+    /** Your capture's size (area in world units): from these on it's a medium and a large one. */
+    captureMediumArea: (11 * TERRITORY_CONFIG.trailWidth) ** 2,
+    captureLargeArea: (24 * TERRITORY_CONFIG.trailWidth) ** 2,
+    /** Others' knockouts: full volume this near you (about what's on screen), silent from here on (world units). */
+    hearFullAt: 12 * TERRITORY_CONFIG.trailWidth,
+    hearNoneAt: 36 * TERRITORY_CONFIG.trailWidth,
+    /** Watching the whole arena: everything is heard at this volume. */
+    watchingVolume: 0.7,
+    /** Your head counts as touching a head at this share of their gap, and free again past the second. */
+    bumpShare: 1.03,
+    bumpFreeShare: 1.25,
+    /** Touching the wall this close to its limit, free again this far (world units). */
+    wallTouch: 0.06 * TERRITORY_CONFIG.trailWidth,
+    wallFree: 0.7 * TERRITORY_CONFIG.trailWidth,
+    /** The trail's marker: at start, and after this long out; a longer trail is more to lose. */
+    trailVolume: { from: 0.65, to: 1 },
+    trailRate: { from: 1, to: 1.22 },
+    trailBuildMs: 14_000,
+    /** How often your head's checked for being on someone else's land, and how the same trail sound changes there: darker, slower, heavier. */
+    rivalLandCheckMs: 120,
+    trailOnRivalLand: { cutoffHz: 900, rate: 0.85, volume: 1.5 },
+    trailOpenCutoffHz: 16_000,
+    /** A moment older than this (the tab was hidden) isn't played. */
+    momentMaxAgeMs: 400,
+  },
   hud: {
     /** How often the timer and land shares redraw. */
     refreshMs: 250,
@@ -115,6 +141,8 @@ export const TERRITORY_CLIENT_CONFIG = {
     minimapHeadPx: { me: 9, other: 7, lip: 1.5, outline: 1.25, cornerShare: 0.3 },
     /** Rows on the land table (you always show, even below these). */
     leaderboardRows: 5,
+    /** The clock's last seconds tick, turning coral with the clock. */
+    clockTicksFromS: 10,
     /** The ending plays this long (taps do nothing), then the results. */
     endShowMs: 6_000,
     /** When the result tag stamps on (ms from the end), with the winner's confetti. */

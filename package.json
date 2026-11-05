@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "screenshots": "node scripts/screenshots.mjs",
     "playtest": "node scripts/playtest.mjs",
+    "sounds": "node scripts/sounds.mjs",
     "deploy:server": "wrangler deploy",
     "icons": "node scripts/icons.mjs"
   },

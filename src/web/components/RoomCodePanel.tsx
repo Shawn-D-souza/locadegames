@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { formatRoomCode } from "../../shared/rooms/roomCode";
 import { CLIENT_CONFIG } from "../config";
+import { playSound } from "../services/soundPlayer";
 import { buildShareLink } from "../utils/roomUrl";
 import { IconButton } from "./IconButton";
 import { Modal } from "./Modal";
@@ -24,6 +25,7 @@ export function RoomCodePanel({ code }: { code: string }) {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      playSound("copied");
     } catch {
       // Clipboard blocked; the code is still on screen.
     }
@@ -54,7 +56,7 @@ export function RoomCodePanel({ code }: { code: string }) {
           title="Scan to join"
           onDismiss={() => setQrOpen(false)}
           actions={
-            <PillButton variant="deep" fullWidth onClick={() => setQrOpen(false)}>
+            <PillButton variant="deep" fullWidth sound="popupClose" onClick={() => setQrOpen(false)}>
               CLOSE
             </PillButton>
           }

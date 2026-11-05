@@ -33,6 +33,13 @@ export type EffectView =
   /** The view shaking: hard when you go out, a little when you knock someone out. */
   | { kind: "shake"; strength: "hard" | "light"; startedAt: number };
 
+/** Something happened in the match: collected by the client for whoever reacts to it (the sound), taken once. */
+export type MomentView =
+  /** Your new land; `area` in world units. */
+  | { kind: "capture"; area: number; at: number }
+  /** Someone is out. */
+  | { kind: "out"; id: PlayerId; by: PlayerId | null; reason: OutReason | null; x: number; y: number; at: number };
+
 /** The match is over: who won, and when the ending started (performance.now). */
 export interface EndingView {
   winners: PlayerId[];

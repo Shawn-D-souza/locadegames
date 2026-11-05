@@ -1,5 +1,5 @@
 // Tic-tac-toe: two players, one match (the whole tournament), the result on both phones, the results, back to the room.
-import { sees } from "./session.mjs";
+import { heard, sees } from "./session.mjs";
 
 const board = (page) => page.getByRole("group", { name: "Board" });
 
@@ -25,11 +25,15 @@ export default async function tictactoe(session) {
   await session.step("the host starts tic-tac-toe; both see the board", async () => {
     await players[0].getByRole("button", { name: /tic/i }).click();
     for (const page of players) await board(page).waitFor();
+    await heard(players[0], "roomEntered", "playerJoined", "cardPress", "gameStarting");
   });
   await session.step("a match to a win; the winner and the loser each see theirs", async () => {
     await playToWin(players);
     const winner = await Promise.any(players.map(async (page) => (await sees(page, /you win!/i), page)));
-    await sees(players.find((page) => page !== winner), /you lost/i);
+    const loser = players.find((page) => page !== winner);
+    await sees(loser, /you lost/i);
+    await heard(winner, "ticTacToeMarkX", "ticTacToeMarkO", "ticTacToeMarkX", "boardThump", "winLineDrawnWithSparks", "matchWinFanfare");
+    await heard(loser, "ticTacToeMarkO", "boardThump", "winLineDrawn", "matchLossSting");
   });
   await session.step("the results come by themselves: a champion", async () => {
     for (const page of players) await sees(page, /champion!/i, 15_000);

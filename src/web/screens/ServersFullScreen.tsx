@@ -1,12 +1,17 @@
+import { useEffect } from "react";
 import { Header } from "../components/Header";
 import { PillButton } from "../components/PillButton";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { TabCard } from "../components/TabCard";
+import { playSound } from "../services/soundPlayer";
 import { formatResetTime } from "../utils/formatResetTime";
 
 /** Shown instead of errors when the daily free-tier budget is nearly used up; the words sit in a card, over the dots. */
 export function ServersFullScreen({ resetAt, onBack }: { resetAt: Date; onBack(): void }) {
   const time = formatResetTime(resetAt);
+  useEffect(() => {
+    playSound("serversFullScreen");
+  }, []);
   return (
     <ScreenLayout
       header={<Header title="Locade Games" onBack={onBack} backLabel="Back home" />}

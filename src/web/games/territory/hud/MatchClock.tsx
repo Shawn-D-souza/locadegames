@@ -1,9 +1,10 @@
 import { clsx } from "clsx";
 import { formatClock } from "../../../utils/arenaText";
+import { TERRITORY_CLIENT_CONFIG } from "../config";
 
 /** Time left, in a white pill; turns coral for the last 10 seconds. */
 export function MatchClock({ msLeft }: { msLeft: number }) {
-  const ending = msLeft <= 10_000;
+  const ending = msLeft <= TERRITORY_CLIENT_CONFIG.hud.clockTicksFromS * 1000;
   return (
     <span
       className={clsx(

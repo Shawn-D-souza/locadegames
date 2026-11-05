@@ -6,6 +6,7 @@ import type { PlayerId } from "../../../shared/rooms/types";
 import { Badge } from "../../components/Badge";
 import { IconButton } from "../../components/IconButton";
 import { useAutoContinue } from "../../hooks/useAutoContinue";
+import { useCountdownSounds } from "../../hooks/useCountdownSounds";
 import type { BinaryListener } from "../../hooks/useRoomConnection";
 import { arenaName } from "../../utils/arenaText";
 import { TERRITORY_CLIENT_CONFIG } from "./config";
@@ -16,6 +17,7 @@ import { KillPop } from "./hud/KillPop";
 import { KnockoutFeed } from "./hud/KnockoutFeed";
 import { StatusCard } from "./hud/StatusCard";
 import { TerritoryEnding } from "./hud/TerritoryEnding";
+import { useMatchClockSounds } from "./useMatchClockSounds";
 import { useTerritoryGame } from "./useTerritoryGame";
 
 interface TerritoryScreenProps {
@@ -66,6 +68,9 @@ export function TerritoryScreen({ arena, myId, clockOffsetMs, sendBinary, subscr
   }, [knockedOut]);
 
   const countingDown = !!hud && hud.countdownMs > 0 && !finished;
+  // Keyed to what the overlay shows, so each sound lands with its number.
+  useCountdownSounds(countingDown ? Math.ceil(hud.countdownMs / 1000) : 0);
+  useMatchClockSounds(countingDown, hud && !finished ? Math.ceil(hud.timeLeftMs / 1000) : null);
   // Your latest knockout, celebrated over your head.
   const myKill = playing && !finished ? hud?.knockouts.filter((k) => k.by === myId && k.id !== myId).at(-1) : undefined;
 
@@ -117,6 +122,7 @@ export function TerritoryScreen({ arena, myId, clockOffsetMs, sendBinary, subscr
           </StatusCard>
         </div>
       )}
+
 
       {/* The arena plays the ending; the tag stamps on, then the results come by themselves (no tap to skip: a stray tap would miss it). */}
       {finished && <TerritoryEnding arena={arena} myId={myId} playing={playing} />}

@@ -1,15 +1,17 @@
-import { useRef, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import type { Arena } from "../../../../shared/arena/types";
 import type { PlayerId } from "../../../../shared/rooms/types";
 import { colors, getPlayerColor } from "../../../../theme";
 import { Particles } from "../../../components/Particles";
 import { ResultTag, type ResultTone } from "../../../components/ResultTag";
 import { CLIENT_CONFIG } from "../../../config";
+import { playSoundSequence } from "../../../services/soundPlayer";
 import { arenaNames, formatShare, ordinal } from "../../../utils/arenaText";
 import { spawnConfetti, spawnStars } from "../../../utils/particles";
 import { playerStyle } from "../../../utils/playerStyle";
 import { seededRandom } from "../../../utils/seededRandom";
 import { TERRITORY_CLIENT_CONFIG } from "../config";
+import { territoryEndingSteps } from "../territoryCues";
 
 interface TerritoryEndingProps {
   arena: Arena;
@@ -51,6 +53,12 @@ export function TerritoryEnding({ arena, myId, playing }: TerritoryEndingProps) 
     label = `${arenaNames(arena, winners)} ${winners.length > 1 ? "win" : "wins"}!`;
     shareOf = winners.length === 1 ? (winners[0] ?? null) : null;
   }
+
+  // The arena's ending and its sounds start together. (The whole thing plays out: taps don't skip it.)
+  useEffect(() => {
+    const handle = playSoundSequence(territoryEndingSteps(tone));
+    return () => handle.stop();
+  }, [tone]);
 
   // The share counts up in whole percents and lands on the exact figure the results show ("0.85%").
   const exact = shareOf === null ? null : exactShare(shareOf);

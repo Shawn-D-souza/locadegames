@@ -16,6 +16,7 @@ export class Session {
     this.players = new Map();
     this.errors = [];
     this.failed = false;
+    /** Later steps still run after a failure: for flows whose steps don't depend on each other. */
   }
 
   /** A new phone-sized player. */
@@ -68,4 +69,15 @@ export class Session {
 /** Waits until `page` shows text matching `pattern` (case-insensitive: some labels are drawn in capitals). */
 export async function sees(page, pattern, timeout = STEP_TIMEOUT_MS) {
   await page.getByText(pattern).first().waitFor({ timeout });
+}
+
+/** Fails unless `page` has played these sounds, in this order (others may come between). The app logs them in development. */
+export async function heard(page, ...sounds) {
+  const log = await page.evaluate(() => window.soundLog ?? []);
+  let from = 0;
+  for (const sound of sounds) {
+    const at = log.indexOf(sound, from);
+    if (at === -1) throw new Error(`didn't hear ${sound}${from ? " in order" : ""}; heard: ${log.join(", ")}`);
+    from = at + 1;
+  }
 }

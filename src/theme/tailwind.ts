@@ -53,6 +53,6 @@ export default plugin(({ addBase }) => addBase({ ":root": buildCssVariables() })
     letterSpacing: Object.fromEntries(Object.entries(typeScale).map(([name, t]) => [name, t.tracking])),
     transitionDuration: named(durations, (ms) => `${ms}ms`),
     transitionTimingFunction: { ...easings, linear: "linear" },
-    zIndex: { behind: "-1", toast: "10", modal: "20" },
+    zIndex: { behind: "-1", toast: "10", modal: "20", devTool: "30" },
   },
 });

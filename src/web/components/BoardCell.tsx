@@ -58,7 +58,9 @@ export function BoardCell({ index, value, colorIndex, label, playable, winning, 
       style={{ ...(colorIndex !== null ? playerStyle(colorIndex) : {}), "--hop-order": hopOrder } as CSSProperties}
       disabled={!playable}
       aria-label={label}
-      onClick={() => onPlay(index)}
+      onClick={() => {
+        onPlay(index);
+      }}
     >
       {value !== null && <Mark seat={value} className={clsx("size-full", markAnimation({ winning, celebrate, fresh, motion }))} />}
     </button>
