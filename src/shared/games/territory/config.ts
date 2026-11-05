@@ -34,8 +34,8 @@ export const TERRITORY_CONFIG = {
   startLandRadius: 3_000,
   startLandVertices: 48,
 
-  /** A head cuts a trail when its center comes this close to the trail's center line (it is on the trail). */
-  cutReach: 500,
+  /** A head cuts a trail when its center comes this close to the trail's center line: the head's edge touching the trail's edge (head radius + half a trail width). */
+  cutReach: 1_100,
   /** The newest stretch of a trail, under its owner's own head, cannot be cut. */
   headGraceLength: 1_000,
   /** Trail points this close to the wall count as touching it, so captures there reach the arena's edge. */

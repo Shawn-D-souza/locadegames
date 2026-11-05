@@ -210,6 +210,22 @@ describe("territory match", () => {
     expect(s.ended).toBe(true);
   });
 
+  it("cuts as soon as a head visibly touches a trail, and not before", () => {
+    const { cutReach, headRadius, trailWidth } = TERRITORY_CONFIG;
+    expect(cutReach).toBe(headRadius + trailWidth / 2);
+    const skimAt = (gap: number) => {
+      const s = stateWith([
+        { x: 15_000, y: 0, heading: 0, target: 0, land: square(0, 0, 3_000) },
+        { x: 8_000, y: -gap, heading: 0, target: 0, land: square(8_000, -20_000, 3_000) },
+      ]);
+      s.players[0]!.trail = [{ x: 3_000, y: 0 }, { x: 15_000, y: 0 }];
+      stepTerritory(s, shape);
+      return s.players[0]!.alive;
+    };
+    expect(skimAt(cutReach + 1)).toBe(true);
+    expect(skimAt(cutReach)).toBe(false);
+  });
+
   it("keeps only the part of a sliced land the player is on; the rest vanishes", () => {
     const s = stateWith([
       { x: 0, y: 9_000, heading: 1_024, target: 1_024, land: square(0, 9_000, 3_000) },
@@ -242,12 +258,13 @@ describe("territory match", () => {
   });
 
   it("knocks out a player left with only a sliver too thin to stand on", () => {
-    // Player 1 is out on a trail; player 0's loop takes all of its land but a thin strip on the far side.
+    // Player 1 is out on a trail that left land it has since lost (so player 0 never touches the trail); player 0's
+    // loop takes all of its land but a thin strip on the far side.
     const s = stateWith([
       { x: 0, y: 0, heading: 1_024, target: 1_024, land: square(0, 0, 3_000) },
       { x: 9_000, y: -8_500, heading: 0, target: 0, land: rect(-2_000, -12_000, 2_000, -8_000) },
     ]);
-    s.players[1]!.trail = [{ x: 2_000, y: -8_500 }, { x: 9_000, y: -8_500 }];
+    s.players[1]!.trail = [{ x: 1_400 + TERRITORY_CONFIG.cutReach + 500, y: -8_500 }, { x: 9_000, y: -8_500 }];
     const events = driveWhileOrbiting(
       s,
       [{ x: -3_000, y: -5_000 }, { x: -3_000, y: -13_000 }, { x: 1_400, y: -13_000 }, { x: 1_400, y: -11_500 }, { x: 1_400, y: -5_000 }, { x: 0, y: 0 }],

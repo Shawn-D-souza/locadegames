@@ -29,7 +29,7 @@ An original territory-capture game in the style of Paper.io 2 (our own look and 
 
 Split detail (`keepConnected` in `capture.ts`): parts are matched to the piece they came from; "where you stand" is your head, or your trail's start while you're out; a point within `anchorSlack` of a piece counts as on it. A part is a sliver when shrinking it by half of `minLandThickness` leaves nothing; slivers are dropped first.
 
-Cut detail: you are cut when another head's center gets within half a trail width of your trail (`cutReach`), except your trail's last `headGraceLength` (right behind your own head). When several heads cross a trail in one step, the closest cuts it (then the lowest id). If the cutter is also out that step, the land goes to the first player still in along the chain of cutters.
+Cut detail: you are cut as soon as another head visibly touches your trail: its center within its radius plus half a trail width of the trail's center line (`cutReach`), except your trail's last `headGraceLength` (right behind your own head). When several heads cross a trail in one step, the closest cuts it (then the lowest id). If the cutter is also out that step, the land goes to the first player still in along the chain of cutters.
 
 ## Numbers (`src/shared/games/territory/config.ts`)
 
