@@ -5,7 +5,7 @@ import { playSound, startSoundLoop, type LoopHandle } from "../../services/sound
 import type { SoundName } from "../../sound/soundBook";
 import { TERRITORY_CLIENT_CONFIG } from "./config";
 import type { FrameView, MomentView, PlayerFrame } from "./engine/frame";
-import { captureSound, distanceVolume, onRivalLand, outSound, trailShape } from "./territoryCues";
+import { captureSound, distanceVolume, onRivalLand, outSound, trailCourse, trailShape } from "./territoryCues";
 
 const SOUND = TERRITORY_CLIENT_CONFIG.sound;
 const HEAD_GAP = TERRITORY_CONFIG.headRadius * 2;
@@ -25,6 +25,8 @@ export class TerritoryAudio {
   private onRival = false;
   private rivalCheckedAt = -Infinity;
   private trailStartedAt = 0;
+  /** Whether the trail's course was set for rival land (null: not set yet). */
+  private courseOnRival: boolean | null = null;
   private touchingHead = false;
   private touchingWall = false;
   private readonly wallLimit: number;
@@ -44,6 +46,7 @@ export class TerritoryAudio {
     this.trail?.stop();
     this.trail = null;
     this.onRival = false;
+    this.courseOnRival = null;
     this.rivalCheckedAt = -Infinity;
   }
 
@@ -79,10 +82,12 @@ export class TerritoryAudio {
       this.rivalCheckedAt = now;
       this.onRival = !!me?.head && onRivalLand(me.head, frame.players);
     }
-    const shape = trailShape(this.onRival, Math.min(1, (now - this.trailStartedAt) / SOUND.trailBuildMs));
-    this.trail?.setVolume(shape.volume);
-    this.trail?.setRate(shape.rate);
-    this.trail?.setTone(shape.cutoffHz);
+    // Only when it changes: the build-up over the whole time out is handed to the audio clock in one go.
+    if (this.courseOnRival !== this.onRival) {
+      this.courseOnRival = this.onRival;
+      this.trail?.glide(trailCourse(this.onRival, (now - this.trailStartedAt) / SOUND.trailBuildMs));
+      this.trail?.setTone(trailShape(this.onRival, 0).cutoffHz);
+    }
   }
 
   private updateTouches(me: PlayerFrame, frame: FrameView) {

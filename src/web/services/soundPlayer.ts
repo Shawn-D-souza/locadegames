@@ -1,7 +1,7 @@
 import { SOUND_FILES } from "virtual:sound-files";
 import type { GameId } from "../../shared/games/catalog";
 import { soundStartSeconds } from "../sound/files";
-import type { SoundName, SoundStep } from "../sound/soundBook";
+import type { LoopPoint, SoundName, SoundStep } from "../sound/soundBook";
 import { volumeGain } from "../sound/volume";
 import { feelSound, feelSoundSequence } from "./hapticPlayer";
 import { loadSoundOn, loadSoundVolume, saveSoundOn, saveSoundVolume } from "./sessionStore";
@@ -29,19 +29,20 @@ export interface SoundHandle {
 }
 
 export interface LoopHandle extends SoundHandle {
-  setVolume(volume: number): void;
-  /** 1 is as made; above is faster and higher. */
-  setRate(rate: number): void;
+  /**
+   * Sets the loop on its way, in straight lines from where it is now through these points: the audio clock runs it
+   * by itself, so nothing needs calling each frame. Replaces any course set before.
+   */
+  glide(points: readonly LoopPoint[]): void;
   /** Takes the top off above this frequency, so the same sound can go darker without a break. Eases over `TONE_RAMP_SECONDS`. */
   setTone(cutoffHz: number): void;
 }
 
-const NO_HANDLE: LoopHandle = { stop() {}, setVolume() {}, setRate() {}, setTone() {} };
+const NO_HANDLE: LoopHandle = { stop() {}, glide() {}, setTone() {} };
 /** The same sound again within this time would only smear into itself. */
 const DEFAULT_COOLDOWN_MS = 35;
 const MAX_VOICES = 24;
 const STOP_FADE_SECONDS = 0.1;
-const RAMP_SECONDS = 0.05;
 const TONE_RAMP_SECONDS = 0.12;
 /** Quick enough that a tick played right after a change is already at its new volume, slow enough not to click. */
 const VOLUME_RAMP_SECONDS = 0.01;
@@ -354,11 +355,16 @@ export function startSoundLoop(name: SoundName): LoopHandle {
       loops.delete(handle);
       stopVoice(voice);
     },
-    setVolume(volume) {
-      voice.gain.gain.setTargetAtTime(volume, context!.currentTime, RAMP_SECONDS);
-    },
-    setRate(rate) {
-      voice.source.playbackRate.setTargetAtTime(rate, context!.currentTime, RAMP_SECONDS);
+    glide(points) {
+      const now = context!.currentTime;
+      for (const [param, of] of [
+        [voice.gain.gain, (point: LoopPoint) => point.volume],
+        [voice.source.playbackRate, (point: LoopPoint) => point.rate],
+      ] as const) {
+        param.cancelScheduledValues(now);
+        param.setValueAtTime(param.value, now);
+        for (const point of points) param.linearRampToValueAtTime(of(point), now + point.inSeconds);
+      }
     },
     setTone(cutoffHz) {
       tone.frequency.setTargetAtTime(cutoffHz, context!.currentTime, TONE_RAMP_SECONDS);

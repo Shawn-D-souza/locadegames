@@ -19,15 +19,20 @@ export const TERRITORY_CLIENT_CONFIG = {
     lateWindow: 40,
     /** The gap shrinks at most this fast (ms per s) once the connection calms down. */
     interpShrinkPerS: 20,
+    /** It grows at most this share of real time (others move at least 70% speed meanwhile), so they never jump back. */
+    interpGrowRate: 0.3,
     /** Your own head runs this far ahead of the server, plus half the round trip and its jitter. */
     leadSafetyMs: 20,
+    /** A new lead is eased into at this share of real time (your head runs at most this much faster or slower meanwhile), unless it's off by more than `leadSnapMs`. */
+    leadSlewRate: 0.06,
+    leadSnapMs: 250,
     /** Each input that still reached the server late adds this much lead (up to the max), fading slowly. */
     lateBoostStepMs: 15,
     lateBoostMaxMs: 150,
     lateBoostDecayPerS: 5,
     /** Others keep moving this many steps past their last snapshot during a hiccup, then wait. */
     maxExtrapolateTicks: 3,
-    /** A correction to your own head blends out with this half-life, instead of a jump. */
+    /** A correction to a head (yours, or someone guessed through a hiccup) blends out with this half-life, instead of a jump. */
     correctionHalfLifeMs: 60,
     /** Corrections bigger than this snap (a resync, not a hiccup). */
     correctionSnapUnits: 4_000,
@@ -122,6 +127,8 @@ export const TERRITORY_CLIENT_CONFIG = {
     trailVolume: { from: 0.65, to: 1 },
     trailRate: { from: 1, to: 1.22 },
     trailBuildMs: 14_000,
+    /** Changing to or from rival land (or starting) moves the trail there over this long, so it never clicks. */
+    trailMoveMs: 150,
     /** How often your head's checked for being on someone else's land, and how the same trail sound changes there: darker, slower, heavier. */
     rivalLandCheckMs: 120,
     trailOnRivalLand: { cutoffHz: 900, rate: 0.85, volume: 1.5 },

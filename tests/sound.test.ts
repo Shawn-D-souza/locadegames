@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { TOURNAMENT_CONFIG } from "../src/shared/tournament/config";
 import { ROOM_CONFIG } from "../src/shared/rooms/config";
-import { captureSound, distanceVolume, onRivalLand, outSound, territoryEndingSteps, trailShape } from "../src/web/games/territory/territoryCues";
+import { captureSound, distanceVolume, onRivalLand, outSound, territoryEndingSteps, trailCourse, trailShape } from "../src/web/games/territory/territoryCues";
 import { lastMarkSound } from "../src/web/games/tictactoe/sounds";
 import type { RoomView, PlayerView } from "../src/shared/protocol/messages";
 import { renderSound, SOUND_LEVELS, SOUND_SAMPLE_RATE } from "../src/web/sound/definition";
@@ -269,6 +269,21 @@ describe("endings are timed to their animations", () => {
     const rival = trailShape(true, 0);
     expect(rival.volume).toBeGreaterThan(open.volume);
     expect(rival.cutoffHz).toBeLessThan(open.cutoffHz);
+  });
+
+  it("the trail's course: the same build-up the trail always had, handed over once", () => {
+    const { trailBuildMs, trailMoveMs } = TERRITORY_CLIENT_CONFIG.sound;
+    const fresh = trailCourse(false, 0);
+    const full = trailShape(false, 1);
+    expect(fresh.at(-1)).toMatchObject({ volume: full.volume, rate: full.rate });
+    expect(fresh.at(-1)!.inSeconds).toBeCloseTo((trailMoveMs + trailBuildMs) / 1000);
+    // Halfway out, onto rival land: there quickly, then on to the rival's fully built sound in the time left.
+    const halfway = trailCourse(true, 0.5);
+    const rivalNow = trailShape(true, 0.5 + trailMoveMs / trailBuildMs);
+    expect(halfway[0]).toMatchObject({ inSeconds: trailMoveMs / 1000, volume: rivalNow.volume, rate: rivalNow.rate });
+    expect(halfway.at(-1)!.inSeconds).toBeCloseTo((trailMoveMs + trailBuildMs / 2) / 1000);
+    // Long out, it only moves to the built sound.
+    expect(trailCourse(false, 3)).toHaveLength(1);
   });
 
   it("Territory's ending follows the arena's", () => {

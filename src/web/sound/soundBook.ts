@@ -41,6 +41,13 @@ export interface SoundStep {
   volume?: number;
 }
 
+/** Where a loop is heading: its volume and rate (1 is as made; above is faster and higher), reached in `inSeconds` from now. */
+export interface LoopPoint {
+  inSeconds: number;
+  volume: number;
+  rate: number;
+}
+
 export const soundDefinition = (name: SoundName): SoundDefinition => SOUNDS[name];
 export const SOUND_NAMES = Object.keys(SOUNDS) as SoundName[];
 export const PLATFORM_SOUND_NAMES = Object.keys(PLATFORM_SOUNDS) as SoundName[];

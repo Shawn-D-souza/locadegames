@@ -12,7 +12,7 @@ import type { Bytes } from "../../../../shared/protocol/bytes";
 import type { PlayerId } from "../../../../shared/rooms/types";
 import { TERRITORY_CLIENT_CONFIG } from "../config";
 import type { EffectView, EndingView, FrameView, HeadView, HudView, KnockoutView, MomentView, PlayerFrame } from "./frame";
-import { OwnPredictor, type Prediction } from "./prediction";
+import { OwnPredictor, type PredictedStep, type Prediction } from "./prediction";
 import { landAt, latestLand, Replica, type ReplicaPlayer } from "./replica";
 import { ServerClock } from "./serverClock";
 
@@ -67,6 +67,8 @@ export class TerritoryClient {
   private lateness: number[] = [];
   private interpMs: number = NET.minInterpMs;
   private lateBoostMs = 0;
+  /** The lead your own head is drawn at: eased toward the measured one, so a new ping never makes it jump. */
+  private shownLeadMs: number | null = null;
   private lastLate: number | null = null;
   private lastFrameAt: number | null = null;
 
@@ -77,7 +79,10 @@ export class TerritoryClient {
 
   // Own head smoothing and predicted capture.
   private correction = { x: 0, y: 0 };
-  private lastSteps = new Map<number, Point>();
+  /** Where your head was last drawn (before its correction) and at which fractional step. */
+  private lastShown: { tick: number; x: number; y: number } | null = null;
+  /** The same for everyone else: where each was last drawn (before its glide), and the glide still to go. */
+  private othersShown = new Map<PlayerId, { tick: number; x: number; y: number; offset: Point }>();
   private predictedCapture: { key: string; land: Land } | null = null;
   private flashedCaptureKey: string | null = null;
   /** The step others are drawn at (last frame). */
@@ -154,7 +159,8 @@ export class TerritoryClient {
       if (me?.head) this.predictor.adoptServerSeq(me.head.inputSeq);
       this.sentTarget = me?.head?.target ?? null;
       this.lastLate = me?.head?.late ?? null;
-      this.lastSteps.clear();
+      this.lastShown = null;
+      this.othersShown.clear();
       this.correction = { x: 0, y: 0 };
       // Effects already over on the server are not replayed.
       for (const p of this.replica.players.values()) if (!p.alive) this.shownEvents.add(`out:${p.id}`);
@@ -193,9 +199,21 @@ export class TerritoryClient {
     const serverNow = this.clock.serverNow(now);
     const serverTick = this.clock.tickAt(serverNow);
     const neededInterp = Math.max(NET.minInterpMs, Math.max(0, ...this.lateness) + tickMs);
-    this.interpMs = neededInterp > this.interpMs ? neededInterp : Math.max(neededInterp, this.interpMs - (NET.interpShrinkPerS * elapsed) / 1000);
-    const pastTick = Math.min(serverTick - this.interpMs / tickMs, r.tick + (this.finished ? 0 : NET.maxExtrapolateTicks));
-    const leadMs = this.clock.rttMs / 2 + 2 * this.clock.jitterMs + NET.leadSafetyMs + this.lateBoostMs;
+    // Others are drawn this far in the past. It grows gently (others slow down for a moment) and never at once,
+    // which would throw them back along their path; it shrinks slowly once the connection calms down.
+    this.interpMs =
+      neededInterp > this.interpMs
+        ? Math.min(neededInterp, this.interpMs + elapsed * NET.interpGrowRate)
+        : Math.max(neededInterp, this.interpMs - (NET.interpShrinkPerS * elapsed) / 1000);
+    let pastTick = serverTick - this.interpMs / tickMs;
+    const newest = r.tick + (this.finished ? 0 : NET.maxExtrapolateTicks);
+    if (pastTick > newest) {
+      // Waiting for a late snapshot: others hold, then carry on from right there (the wait becomes extra delay).
+      pastTick = newest;
+      this.interpMs = (serverTick - pastTick) * tickMs;
+    }
+    const neededLead = this.clock.rttMs / 2 + 2 * this.clock.jitterMs + NET.leadSafetyMs + this.lateBoostMs;
+    const leadMs = this.easeLead(neededLead, elapsed);
     const aheadTick = this.finished ? r.tick : Math.max(r.tick, serverTick + leadMs / tickMs);
 
     this.stats.interpMs = this.interpMs;
@@ -211,7 +229,7 @@ export class TerritoryClient {
     const players: PlayerFrame[] = [];
     for (const p of r.players.values()) {
       if (p.id === this.options.myId && prediction) continue;
-      players.push(this.othersFrame(p, pastTick));
+      players.push(this.othersFrame(p, pastTick, elapsed));
     }
     let focus: Point | null = null;
     if (me && prediction) {
@@ -224,6 +242,17 @@ export class TerritoryClient {
     this.knockouts = this.knockouts.filter((k) => now - k.at < TERRITORY_CLIENT_CONFIG.hud.knockoutShowMs);
     // The ending shows the whole arena.
     return { radius: r.radius, players, effects: this.effects, focus: this.ending ? null : focus, ending: this.ending };
+  }
+
+  /**
+   * Moving the lead at once moves your head along its path in one frame (10 ms is half a frame's travel), so it
+   * eases there instead: your head runs a few percent faster or slower for a moment. A big change (a stall) snaps.
+   */
+  private easeLead(needed: number, elapsed: number): number {
+    const diff = needed - (this.shownLeadMs ?? needed);
+    if (this.shownLeadMs === null || Math.abs(diff) > NET.leadSnapMs) this.shownLeadMs = needed;
+    else this.shownLeadMs += Math.max(-elapsed * NET.leadSlewRate, Math.min(elapsed * NET.leadSlewRate, diff));
+    return this.shownLeadMs;
   }
 
   /** What just happened, since the last time this was asked. */
@@ -275,13 +304,13 @@ export class TerritoryClient {
     const upTo = Math.floor(aheadTick) + 1;
     const prediction = this.predictor.predict(me, this.replica.tick, upTo, headLimit(this.replica.radius), [...this.replica.players.values()]);
     if (!prediction) return null;
-    // A changed answer for a step already shown becomes a short glide, not a jump.
-    const shownTick = Math.floor(aheadTick);
-    const before = this.lastSteps.get(shownTick);
-    const after = prediction.steps.find((s) => s.tick === shownTick);
-    if (before && after) {
-      const dx = before.x - after.x;
-      const dy = before.y - after.y;
+    // Any change to where your head was a moment ago (your own steering reaching the step it's heading for, a late
+    // input, the server's answer) becomes a short glide, not a jump: the head moves on from where it was drawn.
+    const last = this.lastShown;
+    const then = last ? positionAt(prediction.steps, last.tick) : null;
+    if (last && then) {
+      const dx = last.x - then.x;
+      const dy = last.y - then.y;
       const size = Math.hypot(dx, dy);
       if (size > 0) {
         this.stats.corrections += 1;
@@ -292,7 +321,6 @@ export class TerritoryClient {
     }
     const decay = Math.pow(0.5, elapsed / NET.correctionHalfLifeMs);
     this.correction = { x: this.correction.x * decay, y: this.correction.y * decay };
-    this.lastSteps = new Map(prediction.steps.map((s) => [s.tick, { x: s.x, y: s.y }]));
     return prediction;
   }
 
@@ -301,11 +329,10 @@ export class TerritoryClient {
     const a = steps.find((s) => s.tick === Math.floor(aheadTick)) ?? steps[steps.length - 1]!;
     const b = steps.find((s) => s.tick === a.tick + 1) ?? a;
     const f = aheadTick - Math.floor(aheadTick);
-    const head: HeadView = {
-      x: lerp(a.x, b.x, f) + this.correction.x,
-      y: lerp(a.y, b.y, f) + this.correction.y,
-      angle: angleToRadians(lerpAngle(a.heading, b.heading, f)),
-    };
+    const x = lerp(a.x, b.x, f);
+    const y = lerp(a.y, b.y, f);
+    this.lastShown = { tick: aheadTick, x, y };
+    const head: HeadView = { x: x + this.correction.x, y: y + this.correction.y, angle: angleToRadians(lerpAngle(a.heading, b.heading, f)) };
     keepClear(head, others);
     this.lastDrawnHeads.set(me.id, head);
 
@@ -339,6 +366,29 @@ export class TerritoryClient {
 
   // --- Everyone else, drawn a little in the past ---
 
+  /**
+   * After a hiccup, others are guessed onward in a straight line; when the real steps arrive (they were turning),
+   * the difference glides out like your own corrections instead of a snap.
+   */
+  private smoothOther(p: ReplicaPlayer, head: HeadView | null, tick: number, elapsed: number): HeadView | null {
+    const last = this.othersShown.get(p.id);
+    if (!head) {
+      this.othersShown.delete(p.id);
+      return null;
+    }
+    let offset = last?.offset ?? { x: 0, y: 0 };
+    const then = last ? this.headAt(p, last.tick) : null;
+    if (last && then) {
+      const dx = last.x - then.x;
+      const dy = last.y - then.y;
+      offset = Math.hypot(dx, dy) > NET.correctionSnapUnits ? { x: 0, y: 0 } : { x: offset.x + dx, y: offset.y + dy };
+    }
+    const decay = Math.pow(0.5, elapsed / NET.correctionHalfLifeMs);
+    offset = { x: offset.x * decay, y: offset.y * decay };
+    this.othersShown.set(p.id, { tick, x: head.x, y: head.y, offset });
+    return { ...head, x: head.x + offset.x, y: head.y + offset.y };
+  }
+
   private headAt(p: ReplicaPlayer, tick: number): HeadView | null {
     if (p.outTick !== null && p.outTick <= tick) return null;
     const a = Math.floor(tick);
@@ -362,8 +412,8 @@ export class TerritoryClient {
     return { x: h.x, y: h.y, angle: angleToRadians(h.heading) };
   }
 
-  private othersFrame(p: ReplicaPlayer, tick: number): PlayerFrame {
-    const head = this.headAt(p, tick);
+  private othersFrame(p: ReplicaPlayer, tick: number, elapsed: number): PlayerFrame {
+    const head = this.smoothOther(p, this.headAt(p, tick), tick, elapsed);
     if (head) this.lastDrawnHeads.set(p.id, head);
     let trail: Point[] | null = null;
     for (const record of p.trails) {
@@ -501,4 +551,14 @@ function keepClear(head: HeadView, others: readonly HeadView[]) {
     head.x = other.x + nx * minGap;
     head.y = other.y + ny * minGap;
   }
+}
+
+/** Where predicted steps put your head at a fractional step, or null if it's outside them. */
+function positionAt(steps: readonly PredictedStep[], tick: number): Point | null {
+  const a = steps.find((step) => step.tick === Math.floor(tick));
+  const b = steps.find((step) => step.tick === Math.floor(tick) + 1);
+  if (!a) return null;
+  if (!b) return { x: a.x, y: a.y };
+  const f = tick - Math.floor(tick);
+  return { x: lerp(a.x, b.x, f), y: lerp(a.y, b.y, f) };
 }

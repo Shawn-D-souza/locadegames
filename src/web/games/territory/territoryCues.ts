@@ -2,7 +2,7 @@ import { pointInLand } from "../../../shared/games/territory/geometry";
 import type { Point } from "../../../shared/games/territory/types";
 import type { PlayerId } from "../../../shared/rooms/types";
 import type { EndingTone } from "../../sound/cues/endingCues";
-import type { SoundName, SoundStep } from "../../sound/soundBook";
+import type { LoopPoint, SoundName, SoundStep } from "../../sound/soundBook";
 import { TERRITORY_CLIENT_CONFIG } from "./config";
 import type { MomentView, PlayerFrame } from "./engine/frame";
 
@@ -36,6 +36,22 @@ export function trailShape(onRival: boolean, built: number) {
   return onRival
     ? { volume: volume * rival.volume, rate: rate * rival.rate, cutoffHz: rival.cutoffHz }
     : { volume, rate, cutoffHz: trailOpenCutoffHz };
+}
+
+/**
+ * The trail's course from now (`built` so far, 0 → 1): a quick move to how it should sound now (a hard change would
+ * click), then on in a straight line to fully built. The audio clock runs it, so nothing is set each frame.
+ */
+export function trailCourse(onRival: boolean, built: number): LoopPoint[] {
+  const done = Math.min(1, Math.max(0, built));
+  const at = (b: number, inSeconds: number): LoopPoint => {
+    const { volume, rate } = trailShape(onRival, b);
+    return { inSeconds, volume, rate };
+  };
+  const moveSeconds = SOUND.trailMoveMs / 1000;
+  const course = [at(Math.min(1, done + SOUND.trailMoveMs / SOUND.trailBuildMs), moveSeconds)];
+  if (done < 1) course.push(at(1, moveSeconds + ((1 - done) * SOUND.trailBuildMs) / 1000));
+  return course;
 }
 
 /** Which sound someone going out makes, from your point of view (null: none). */
