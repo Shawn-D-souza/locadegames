@@ -35,6 +35,7 @@
     "web-haptics": "0.0.6"
   },
   "devDependencies": {
+    "@breezystack/lamejs": "1.2.7",
     "@cloudflare/workers-types": "5.20261028.1",
     "@eslint/js": "10.0.1",
     "@tailwindcss/vite": "4.3.3",

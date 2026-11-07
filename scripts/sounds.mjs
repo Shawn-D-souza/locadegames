@@ -1,4 +1,4 @@
-// Renders every sound the app can make to WAV files in dist/sounds/ (the same code the browser runs), and prints
+// Renders every sound the app can make to WAV files in dist/sounds/ (the same code the build turns into the MP3 files the app plays), and prints
 // each one's length, peak and loudness on a phone. To listen outside the app, or to put them on a phone.
 // Usage: npm run sounds
 import { mkdir, rm, writeFile } from "node:fs/promises";

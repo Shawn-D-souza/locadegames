@@ -1,15 +1,16 @@
+import { SOUND_FILES } from "virtual:sound-files";
 import type { GameId } from "../../shared/games/catalog";
-import { renderSound, SOUND_SAMPLE_RATE } from "../sound/definition";
-import { gameSoundNames, PLATFORM_SOUND_NAMES, soundDefinition, type SoundName, type SoundStep } from "../sound/soundBook";
-import type { RenderRequest, RenderResult } from "../sound/soundWorker";
+import { soundStartSeconds } from "../sound/files";
+import type { SoundName, SoundStep } from "../sound/soundBook";
 import { volumeGain } from "../sound/volume";
 import { feelSound, feelSoundSequence } from "./hapticPlayer";
 import { loadSoundOn, loadSoundVolume, saveSoundOn, saveSoundVolume } from "./sessionStore";
 
 /**
- * Plays the sounds, the app's one door to the speakers. Sounds are made ahead of time in a worker and kept as
- * ready buffers, so playing one costs almost nothing and starts at once: the platform's on the first touch, a
- * game's when that game starts. Works with what phones insist on:
+ * Plays the sounds, the app's one door to the speakers. Sounds are files made when the site is built (see
+ * `sound/files.ts`): the platform's are downloaded when the page opens, a game's when that game starts, and the
+ * browser decodes them off the game's thread and keeps them, so playing one costs almost nothing and starts at once.
+ * Nothing is ever made on the phone, so a sound can never cost the game a frame. Works with what phones insist on:
  * audio only starts from a finger on the screen, stops when the app is hidden, and doesn't interrupt your music.
  */
 
@@ -46,8 +47,10 @@ const TONE_RAMP_SECONDS = 0.12;
 const VOLUME_RAMP_SECONDS = 0.01;
 /** A loop's tone control starts fully open: above everything a sound made at 32 kHz holds. */
 const OPEN_TONE_HZ = 16_000;
-/** A sound asked for while audio is still waking up plays if it's ready within this time, or is dropped: late is worse than silent. */
+/** A sound asked for while audio is waking up, or before its file is in, plays if ready within this time, or is dropped: late is worse than silent. */
 const MAX_LATENESS_MS = 250;
+/** Files downloaded and decoded at once. */
+const MAX_LOADS = 4;
 const LIMITER_INPUT = 0.6;
 const LIMITER_POINTS = 2_049;
 
@@ -56,24 +59,34 @@ interface Voice {
   gain: GainNode;
 }
 
+/** A decoded file: the sound starts `start` seconds in (after the file's marker). */
+interface Ready {
+  buffer: AudioBuffer;
+  start: number;
+}
+
 let context: AudioContext | null = null;
 let master: GainNode | null = null;
-let worker: Worker | null = null;
 let soundOn = loadSoundOn();
 let soundVolume = loadSoundVolume();
 const listeners = new Set<() => void>();
-const buffers = new Map<string, AudioBuffer>();
+/** By file URL. */
+const downloads = new Map<string, Promise<ArrayBuffer | null>>();
+const ready = new Map<string, Ready>();
 const requested = new Set<string>();
-/** What the worker makes next, one at a time, so a game that just started can go ahead of the rest. */
-let queue: RenderRequest[] = [];
-let workerBusy = false;
+/** Files to decode next, a few at a time, so a game that just started can go ahead of the rest. */
+let queue: string[] = [];
+let loading = 0;
 const nextTake = new Map<SoundName, number>();
 const lastPlayedAt = new Map<SoundName, number>();
 const voices = new Set<Voice>();
 const loops = new Set<LoopHandle>();
-let waiting: { run: () => void; askedAt: number }[] = [];
+let waiting: { urls: string[]; run: () => void; askedAt: number }[] = [];
 
-const bufferKey = (name: SoundName, variant: number) => `${name}:${variant}`;
+const fileOf = (name: SoundName, take: number) => SOUND_FILES[name].urls[take]!;
+const takesOf = (name: SoundName) => SOUND_FILES[name].urls.length;
+const PLATFORM_FILES = Object.values(SOUND_FILES).flatMap((entry) => (entry.game ? [] : entry.urls));
+const gameFiles = (game: GameId) => Object.values(SOUND_FILES).flatMap((entry) => (entry.game === game ? entry.urls : []));
 
 /**
  * The way out to the speaker: quiet sounds pass untouched; when several overlap, the peaks get rounded off instead
@@ -97,70 +110,69 @@ function connectLimiter(ctx: AudioContext, input: AudioNode) {
   input.connect(headroom).connect(shaper).connect(makeUp).connect(ctx.destination);
 }
 
-function store(request: RenderRequest, left: Float32Array, right: Float32Array) {
-  if (!context) return;
-  const buffer = context.createBuffer(2, left.length, SOUND_SAMPLE_RATE);
-  buffer.copyToChannel(left as Float32Array<ArrayBuffer>, 0);
-  buffer.copyToChannel(right as Float32Array<ArrayBuffer>, 1);
-  buffers.set(bufferKey(request.name, request.variant), buffer);
-}
-
-/** Now, on this thread: only for a sound needed before the worker got to it, which is rare and at worst a small hitch. */
-function bufferNow(name: SoundName, variant: number): AudioBuffer {
-  const key = bufferKey(name, variant);
-  let buffer = buffers.get(key);
-  if (!buffer) {
-    const [left, right] = renderSound(name, soundDefinition(name), variant);
-    store({ name, variant }, left, right);
-    buffer = buffers.get(key)!;
+/** The file's bytes, fetched once (the browser keeps the file too: its name changes whenever the sound does). */
+function download(url: string): Promise<ArrayBuffer | null> {
+  let bytes = downloads.get(url);
+  if (!bytes) {
+    bytes = fetch(url)
+      .then((response) => (response.ok ? response.arrayBuffer() : null))
+      .catch(() => null);
+    downloads.set(url, bytes);
   }
-  return buffer;
+  return bytes;
 }
 
-function makeNext() {
-  if (!worker || workerBusy || !context) return;
-  let next = queue.shift();
-  while (next && buffers.has(bufferKey(next.name, next.variant))) next = queue.shift();
-  if (!next) return;
-  workerBusy = true;
-  worker.postMessage(next);
-}
-
-/** Puts every take of these sounds in line, ahead of what's waiting or behind it. */
-function enqueue(names: readonly SoundName[], ahead: boolean) {
-  const added: RenderRequest[] = [];
-  for (const name of names) {
-    const takes = soundDefinition(name).variants ?? 1;
-    for (let variant = 0; variant < takes; variant++) {
-      if (requested.has(bufferKey(name, variant))) continue;
-      requested.add(bufferKey(name, variant));
-      added.push({ name, variant });
-    }
+async function decode(url: string) {
+  const bytes = await download(url);
+  if (!bytes || !context) {
+    downloads.delete(url);
+    requested.delete(url);
+    return;
   }
-  queue = ahead ? [...added, ...queue] : [...queue, ...added];
-  makeNext();
-}
-
-function startWorker() {
-  if (typeof Worker === "undefined") return;
   try {
-    worker = new Worker(new URL("../sound/soundWorker.ts", import.meta.url), { type: "module" });
+    // A copy: decoding takes the bytes over, and they may be needed again if audio is ever started anew.
+    const buffer = await context.decodeAudioData(bytes.slice(0));
+    ready.set(url, { buffer, start: soundStartSeconds(buffer.getChannelData(0), buffer.sampleRate) });
   } catch {
-    return; // Sounds are then made when first played.
+    requested.delete(url);
   }
-  worker.onmessage = ({ data }: MessageEvent<RenderResult>) => {
-    if (!buffers.has(bufferKey(data.name, data.variant))) store(data, data.left, data.right);
-    workerBusy = false;
-    makeNext();
-  };
-  enqueue(PLATFORM_SOUND_NAMES, false);
 }
+
+function loadNext() {
+  if (!context) return;
+  while (loading < MAX_LOADS && queue.length) {
+    const url = queue.shift()!;
+    if (ready.has(url)) continue;
+    loading += 1;
+    void decode(url).finally(() => {
+      loading -= 1;
+      flushWaiting();
+      loadNext();
+    });
+  }
+}
+
+/** Puts these files in line, ahead of what's waiting or behind it. */
+function enqueue(urls: readonly string[], ahead: boolean) {
+  const added = urls.filter((url) => !requested.has(url));
+  for (const url of added) requested.add(url);
+  const moved = ahead ? urls.filter((url) => !ready.has(url)) : added;
+  if (ahead) queue = [...moved, ...queue.filter((url) => !moved.includes(url))];
+  else queue = [...queue, ...added];
+  loadNext();
+}
+
+const isReady = (urls: readonly string[]) => context?.state === "running" && urls.every((url) => ready.has(url));
 
 function flushWaiting() {
   const now = performance.now();
   const due = waiting;
   waiting = [];
-  for (const item of due) if (now - item.askedAt <= MAX_LATENESS_MS) item.run();
+  for (const item of due) {
+    if (now - item.askedAt > MAX_LATENESS_MS) continue;
+    if (isReady(item.urls)) item.run();
+    else waiting.push(item);
+  }
 }
 
 function wake() {
@@ -177,15 +189,20 @@ function wake() {
     context.addEventListener("statechange", () => {
       if (context?.state === "running") flushWaiting();
     });
-    startWorker();
+    enqueue(PLATFORM_FILES, false);
   }
   if (context.state !== "running" && document.visibilityState === "visible") void context.resume().catch(() => undefined);
 }
 
-/** Runs now if audio is awake, or as soon as it wakes (within reason). */
-function whenAwake(run: () => void) {
-  if (context?.state === "running") run();
-  else if (context) waiting.push({ run, askedAt: performance.now() });
+/** Runs now if audio is awake and these files are in, or as soon as they are (within reason). */
+function whenReady(urls: string[], run: () => void) {
+  if (!context) return;
+  if (isReady(urls)) {
+    run();
+    return;
+  }
+  waiting.push({ urls, run, askedAt: performance.now() });
+  enqueue(urls, true);
 }
 
 /**
@@ -196,6 +213,8 @@ export function installSound() {
   for (const type of ["pointerdown", "touchend", "keydown", "click"] as const) {
     window.addEventListener(type, wake, { capture: true, passive: true });
   }
+  // The platform's files start downloading once the page has settled, so they're in by the first tap.
+  window.addEventListener("load", () => setTimeout(() => PLATFORM_FILES.forEach((url) => void download(url))), { once: true });
   document.addEventListener("visibilitychange", () => {
     if (!context) return;
     if (document.visibilityState === "hidden") void context.suspend().catch(() => undefined);
@@ -205,18 +224,27 @@ export function installSound() {
 
 /** Gets a game's own sounds ready, ahead of anything else waiting. Call when the game starts; twice does nothing. */
 export function prepareGameSounds(game: GameId) {
-  enqueue(gameSoundNames(game), true);
+  const urls = gameFiles(game);
+  for (const url of urls) void download(url);
+  enqueue(urls, true);
 }
 
+/** Only once its file is ready (see `whenReady`). */
 function startVoice(name: SoundName, variant: number, volume: number, when: number, loop = false): Voice | null {
-  if (!context || !master) return null;
+  const file = ready.get(fileOf(name, variant));
+  if (!context || !master || !file) return null;
   if (voices.size >= MAX_VOICES) {
     const oldest = voices.values().next().value;
     if (oldest) stopVoice(oldest);
   }
   const source = context.createBufferSource();
-  source.buffer = bufferNow(name, variant);
-  source.loop = loop;
+  source.buffer = file.buffer;
+  const loopSeconds = SOUND_FILES[name].loopSeconds;
+  if (loop && loopSeconds !== undefined) {
+    source.loop = true;
+    source.loopStart = file.start;
+    source.loopEnd = file.start + loopSeconds;
+  }
   const gain = context.createGain();
   gain.gain.value = volume;
   source.connect(gain).connect(master);
@@ -226,7 +254,7 @@ function startVoice(name: SoundName, variant: number, volume: number, when: numb
     voices.delete(voice);
     gain.disconnect();
   };
-  source.start(when);
+  source.start(when, file.start);
   return voice;
 }
 
@@ -243,7 +271,7 @@ function stopVoice(voice: Voice) {
 }
 
 function pickTake(name: SoundName, variant: number | undefined): number {
-  const takes = soundDefinition(name).variants ?? 1;
+  const takes = takesOf(name);
   if (variant !== undefined) return Math.max(0, Math.min(takes - 1, Math.floor(variant)));
   const take = nextTake.get(name) ?? 0;
   nextTake.set(name, (take + 1) % takes);
@@ -258,7 +286,7 @@ function log(name: SoundName) {
 /** Plays a sound, and what it feels like (that part even with sound off). Safe to call any time: with sound off or audio asleep it just does nothing. */
 export function playSound(name: SoundName, { variant, volume = 1, delayMs = 0 }: PlayOptions = {}): SoundHandle {
   const now = performance.now();
-  const cooldown = soundDefinition(name).cooldownMs ?? DEFAULT_COOLDOWN_MS;
+  const cooldown = SOUND_FILES[name].cooldownMs ?? DEFAULT_COOLDOWN_MS;
   if (now - (lastPlayedAt.get(name) ?? -Infinity) < cooldown) return NO_HANDLE;
   lastPlayedAt.set(name, now);
   feelSound(name);
@@ -267,7 +295,7 @@ export function playSound(name: SoundName, { variant, volume = 1, delayMs = 0 }:
   const take = pickTake(name, variant);
   let voice: Voice | null = null;
   let stopped = false;
-  whenAwake(() => {
+  whenReady([fileOf(name, take)], () => {
     if (!stopped) voice = startVoice(name, take, volume, context!.currentTime + delayMs / 1000);
   });
   return {
@@ -285,14 +313,18 @@ export function playSoundSequence(steps: readonly SoundStep[]): SoundHandle {
   const playing: Voice[] = [];
   let stopped = false;
   for (const step of steps) log(step.sound);
-  whenAwake(() => {
-    if (stopped) return;
-    const start = context!.currentTime;
-    for (const step of steps) {
-      const voice = startVoice(step.sound, pickTake(step.sound, step.variant), step.volume ?? 1, start + step.at / 1000);
-      if (voice) playing.push(voice);
-    }
-  });
+  const takes = steps.map((step) => pickTake(step.sound, step.variant));
+  whenReady(
+    steps.map((step, i) => fileOf(step.sound, takes[i]!)),
+    () => {
+      if (stopped) return;
+      const start = context!.currentTime;
+      steps.forEach((step, i) => {
+        const voice = startVoice(step.sound, takes[i]!, step.volume ?? 1, start + step.at / 1000);
+        if (voice) playing.push(voice);
+      });
+    },
+  );
   return {
     stop() {
       stopped = true;
@@ -304,7 +336,11 @@ export function playSoundSequence(steps: readonly SoundStep[]): SoundHandle {
 
 /** Starts a looping sound that goes on until stopped. */
 export function startSoundLoop(name: SoundName): LoopHandle {
-  if (!soundOn || !context || context.state !== "running") return NO_HANDLE;
+  if (!soundOn || !context) return NO_HANDLE;
+  if (!isReady([fileOf(name, 0)])) {
+    enqueue([fileOf(name, 0)], true);
+    return NO_HANDLE;
+  }
   log(name);
   const voice = startVoice(name, 0, 0, context.currentTime, true);
   if (!voice) return NO_HANDLE;

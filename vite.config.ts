@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { soundFiles } from "./scripts/soundFilesPlugin.ts";
 
 const projectRoot = fileURLToPath(new URL(".", import.meta.url));
 
@@ -11,7 +12,7 @@ const DEV_SERVER = { target: "http://localhost:8787", origin: "http://localhost:
 export default defineConfig({
   root: "src/web",
   envDir: projectRoot,
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), soundFiles()],
   server: {
     // Same-origin `/api` in dev, so phones on the LAN (`--host`) reach the Worker too.
     proxy: {
