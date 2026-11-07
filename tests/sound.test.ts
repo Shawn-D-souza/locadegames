@@ -16,6 +16,7 @@ import { POINT_TICK_TAKES } from "../src/web/sound/library/endingSounds";
 import { COUNTDOWN_NOTES, TIMER_TAKES } from "../src/web/sound/library/playingSounds";
 import { hz, PLAYER_NOTES, scaleStep } from "../src/web/sound/pitch";
 import { SOUND_NAMES, soundDefinition, SOUNDS, type SoundName } from "../src/web/sound/soundBook";
+import { DEFAULT_VOLUME, parseVolume, VOLUME_STEP, volumeGain } from "../src/web/sound/volume";
 import { CELEBRATION_TIMING } from "../src/web/utils/celebrationTiming";
 import { TERRITORY_CLIENT_CONFIG } from "../src/web/games/territory/config";
 
@@ -311,5 +312,28 @@ describe("game sounds", () => {
     expect(outSound(out(1, 0, "land"), 0)).toBe("territoryYouKnockedSomeoneOut");
     expect(outSound(out(1, 2, "cut"), 0)).toBe("territoryPlayerBurst");
     expect(outSound(out(1, null, "quit"), 0)).toBe("territoryPlayerQuit");
+  });
+});
+
+describe("the volume", () => {
+  it("100 leaves every sound as made, 0 is silent, and each step is quieter", () => {
+    expect(volumeGain(100)).toBe(1);
+    expect(volumeGain(0)).toBe(0);
+    expect(volumeGain(50)).toBeCloseTo(0.25);
+    for (let volume = VOLUME_STEP; volume <= 100; volume += VOLUME_STEP) {
+      expect(volumeGain(volume)).toBeGreaterThan(volumeGain(volume - VOLUME_STEP));
+    }
+  });
+
+  it("starts at 100; what's saved is kept, in range; anything unreadable is the default", () => {
+    expect(DEFAULT_VOLUME).toBe(100);
+    expect(parseVolume(null)).toBe(100);
+    expect(parseVolume("")).toBe(100);
+    expect(parseVolume("loud")).toBe(100);
+    expect(parseVolume("Infinity")).toBe(100);
+    expect(parseVolume("0")).toBe(0);
+    expect(parseVolume("40")).toBe(40);
+    expect(parseVolume("140")).toBe(100);
+    expect(parseVolume("-5")).toBe(0);
   });
 });

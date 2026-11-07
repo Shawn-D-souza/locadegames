@@ -1,11 +1,12 @@
+import { clsx } from "clsx";
 import { useSyncExternalStore } from "react";
-import { isSoundOn, playSound, setSoundOn, subscribeSoundOn } from "../services/soundPlayer";
+import { hapticsAvailable, isHapticsOn, setHapticsOn, subscribeHapticsOn } from "../services/hapticPlayer";
+import { getSoundVolume, isSoundOn, playSound, setSoundOn, setSoundVolume, subscribeSoundOn, subscribeSoundVolume } from "../services/soundPlayer";
+import { VOLUME_STEP } from "../sound/volume";
 import { Modal } from "./Modal";
 import { PillButton } from "./PillButton";
+import { Slider } from "./Slider";
 import { Toggle } from "./Toggle";
-
-/** Settings we plan to offer; none work yet, so each row says so. */
-const PLANNED_SETTINGS = ["Music", "Haptics"] as const;
 
 const ROW_CLASSES = "flex min-h-tap items-center justify-between gap-4 border-dashed border-line text-left not-last:border-b-dash";
 
@@ -16,9 +17,24 @@ function setSoundEffects(on: boolean) {
   if (on) playSound("switchOn");
 }
 
-/** The settings menu: sound effects work; what's still to come says so. */
+function setHaptics(on: boolean) {
+  // The same for haptics: you feel it took.
+  if (!on) playSound("switchOff");
+  setHapticsOn(on);
+  if (on) playSound("switchOn");
+}
+
+function changeVolume(volume: number) {
+  // Every step ticks at its new volume, so you hear how loud it is as you drag: the setting goes first, the sound after.
+  setSoundVolume(volume);
+  playSound("volumeStep");
+}
+
+/** The settings menu: sound effects, their volume, and haptics (on phones that have them). */
 export function SettingsModal({ onClose }: { onClose(): void }) {
   const soundOn = useSyncExternalStore(subscribeSoundOn, isSoundOn);
+  const volume = useSyncExternalStore(subscribeSoundVolume, getSoundVolume);
+  const hapticsOn = useSyncExternalStore(subscribeHapticsOn, isHapticsOn);
   return (
     <Modal
       title="Settings"
@@ -34,12 +50,17 @@ export function SettingsModal({ onClose }: { onClose(): void }) {
           <span className="text-ink">Sound effects</span>
           <Toggle label="Sound effects" on={soundOn} onChange={setSoundEffects} />
         </li>
-        {PLANNED_SETTINGS.map((setting) => (
-          <li key={setting} className={`${ROW_CLASSES} text-ink-muted`}>
-            <span>{setting}</span>
-            <span className="text-caption tracking-caption text-subtle">COMING SOON</span>
+        <li className={clsx(ROW_CLASSES, soundOn ? "text-ink" : "text-ink-muted")}>
+          <span>Volume</span>
+          <Slider label="Volume" value={volume} step={VOLUME_STEP} disabled={!soundOn} onChange={changeVolume} />
+          <span className="w-slider-value flex-none text-right">{volume}</span>
+        </li>
+        {hapticsAvailable() && (
+          <li className={ROW_CLASSES}>
+            <span className="text-ink">Haptics</span>
+            <Toggle label="Haptics" on={hapticsOn} onChange={setHaptics} />
           </li>
-        ))}
+        )}
       </ul>
     </Modal>
   );

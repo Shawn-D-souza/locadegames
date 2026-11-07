@@ -81,3 +81,14 @@ export async function heard(page, ...sounds) {
     from = at + 1;
   }
 }
+
+/** Fails unless `page` has played these haptics, in this order (others may come between). The app logs them in development. */
+export async function felt(page, ...haptics) {
+  const log = await page.evaluate(() => window.hapticLog ?? []);
+  let from = 0;
+  for (const haptic of haptics) {
+    const at = log.indexOf(haptic, from);
+    if (at === -1) throw new Error(`didn't feel ${haptic}${from ? " in order" : ""}; felt: ${log.join(", ")}`);
+    from = at + 1;
+  }
+}

@@ -88,6 +88,16 @@ Your head is a felt marker on paper, your land is notes: the platform's kit (see
 
 Everything is read from the game loop by `TerritoryAudio`, on what the client knows: own moments when predicted, so they land with what's drawn. Simulation, netcode and drawing know nothing of sound.
 
+## Haptics
+
+`haptics.ts`, on the platform's levels (see DESIGN.md, Haptics); they follow the sounds, so they land with what's drawn. **Android only while playing:** steering is a drag, and iPhones only tick on a tap, so on an iPhone only the HUD's buttons and the screens around the match are felt.
+
+- **Trail:** a `selection` tick as you leave your land, then nothing while you draw, so your hand stays quiet for the moments that matter (no buzz under your thumb).
+- **Captures:** three sizes by area, one to three pulses climbing from `light` to `heavy`. Only your own.
+- **Knockouts:** you knock someone out: a `heavy` hit and a `medium` echo, with the stamp. You're out: two `heavy` hits, then it falls away through `medium` and `light`, with the hard shake; the hardest thing in a match. Others going out aren't felt, nor are others' captures, your land included.
+- **Bumps:** `medium` when your head meets another, `light` at the wall, once per touch.
+- **Ending:** a `thump` as the camera pulls out, `medium` as the winner's head drops, then the platform's result as the tag stamps on. The clock's last seconds use the platform's `selection` tick.
+
 ---
 
 ## Files
@@ -110,6 +120,7 @@ Everything is read from the game loop by `TerritoryAudio`, on what the client kn
 | `src/web/games/territory/TerritoryArt.tsx` | Tile art |
 | `src/web/games/territory/config.ts` | Client numbers: netcode, camera, look, controls, HUD, sound |
 | `src/web/games/territory/sounds.ts` | Its sounds (`territoryCaptureLarge`, `territoryYouAreOut`, …) |
+| `src/web/games/territory/haptics.ts` | Its feels (`territoryCaptureLarge`, `territoryYouAreOut`, …) |
 | `src/web/games/territory/territoryCues.ts` | Pure: which sound for a capture or someone going out, how loud at a distance, the ending's sequence |
 | `src/web/games/territory/territoryAudio.ts` | `TerritoryAudio`: plays them from the game loop (moments from the netcode, trail loop, bumps) |
 | `src/web/games/territory/useMatchClockSounds.ts` | GO when the countdown ends, ticks for the clock's last seconds |
@@ -125,4 +136,4 @@ Everything is read from the game loop by `TerritoryAudio`, on what the client kn
 
 ## Ideas for later
 
-- Vibration, a short glow on capture. The owner may send more Paper.io screenshots for visual tuning.
+- A short glow on capture. The owner may send more Paper.io screenshots for visual tuning.

@@ -53,6 +53,10 @@ export const layout = {
   toggleTrack: 56,
   toggleKnob: 20,
   toggleTravel: 24,
+  /** Settings slider: its track's height, its thumb, and the number beside it (wide enough for "100", so the slider never shifts). */
+  sliderTrack: 12,
+  sliderThumb: 32,
+  sliderValue: 40,
   /** Real-time game overlay: the land table in the top corner, the countdown disc, the knockout notices (under the clock; fits beside the land table on a 320px phone). */
   hudPanel: 168,
   countdown: 128,

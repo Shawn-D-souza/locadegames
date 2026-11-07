@@ -25,6 +25,14 @@ Format: **tournament** (Swiss-style, 1v1 matches; see the tournament rules in [`
 - **X and O** are one round pop each; O is a little lower and longer, so you can tell who moved without looking. Both climb a little as the board fills (the take is the move number) and stay low: the board is the instrument, not a melody. The sound comes when the server has accepted the move.
 - **Endings** are the platform's (the last mark, the board's thump, the win line, then each phone's result), started from `useMatchSounds`.
 
+## Haptics
+
+`src/web/games/tictactoe/haptics.ts`, on the platform's levels (see DESIGN.md, Haptics):
+
+- **Your mark:** `medium`, the moment your finger lands (`BoardCell`), not when the server accepts it, because a press should answer at once. iPhones get their tap tick here too, so tic-tac-toe is felt on every phone.
+- **The other player's mark:** `light`: it's your turn, even if you've looked away (Android; `useMatchSounds`). Watchers feel no marks.
+- **Endings** are the platform's, on the sounds' own times: the board's `thump`, then the win line and the result on the winner's phone, or the result on the loser's.
+
 ---
 
 ## Files
@@ -38,5 +46,6 @@ Format: **tournament** (Swiss-style, 1v1 matches; see the tournament rules in [`
 | `src/web/games/tictactoe/TicTacToeArt.tsx` | Tile art |
 | `src/web/components/Board.tsx`, `BoardCell.tsx`, `WinLine.tsx`, `Mark.tsx` | The board, its cells, the win line, the X / O glyphs (used by the match screen and the celebration preview) |
 | `src/web/games/tictactoe/sounds.ts` | Its sounds: `ticTacToeMarkX`, `ticTacToeMarkO`; `lastMarkSound` (which mark the last move made) |
+| `src/web/games/tictactoe/haptics.ts` | Its feels: `ticTacToeMarkPlaced`, `ticTacToeOpponentMoved` |
 | `tests/tictactoe.test.ts` | Rules: moves, wins, draws, errors |
-| `scripts/playtest/tictactoe.mjs` | Playtest: 2 players; start, a match to a win, each phone's result and sounds, the results, back to the room |
+| `scripts/playtest/tictactoe.mjs` | Playtest: 2 players; start, a match to a win, each phone's result, sounds and haptics, the results, back to the room |

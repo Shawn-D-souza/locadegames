@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import type { CSSProperties } from "react";
 import type { Cell } from "../../shared/games/tictactoe/types";
+import { hapticTarget, playHaptic } from "../services/hapticPlayer";
 import { playerStyle } from "../utils/playerStyle";
 import { Mark } from "./Mark";
 
@@ -44,6 +45,7 @@ function markAnimation({ winning, celebrate, fresh, motion }: Pick<BoardCellProp
 export function BoardCell({ index, value, colorIndex, label, playable, winning, fresh, celebrate, faded, motion = "glow", hopOrder = 0, onPlay }: BoardCellProps) {
   return (
     <button
+      ref={hapticTarget}
       type="button"
       className={clsx(
         "flex aspect-square items-center justify-center rounded-tile border-thin border-ink p-2",
@@ -59,6 +61,8 @@ export function BoardCell({ index, value, colorIndex, label, playable, winning, 
       disabled={!playable}
       aria-label={label}
       onClick={() => {
+        // Felt the moment the finger lands; its sound waits until the server has accepted the move.
+        playHaptic("ticTacToeMarkPlaced");
         onPlay(index);
       }}
     >

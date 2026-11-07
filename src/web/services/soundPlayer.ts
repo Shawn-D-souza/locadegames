@@ -2,7 +2,9 @@ import type { GameId } from "../../shared/games/catalog";
 import { renderSound, SOUND_SAMPLE_RATE } from "../sound/definition";
 import { gameSoundNames, PLATFORM_SOUND_NAMES, soundDefinition, type SoundName, type SoundStep } from "../sound/soundBook";
 import type { RenderRequest, RenderResult } from "../sound/soundWorker";
-import { loadSoundOn, saveSoundOn } from "./sessionStore";
+import { volumeGain } from "../sound/volume";
+import { feelSound, feelSoundSequence } from "./hapticPlayer";
+import { loadSoundOn, loadSoundVolume, saveSoundOn, saveSoundVolume } from "./sessionStore";
 
 /**
  * Plays the sounds, the app's one door to the speakers. Sounds are made ahead of time in a worker and kept as
@@ -40,6 +42,8 @@ const MAX_VOICES = 24;
 const STOP_FADE_SECONDS = 0.1;
 const RAMP_SECONDS = 0.05;
 const TONE_RAMP_SECONDS = 0.12;
+/** Quick enough that a tick played right after a change is already at its new volume, slow enough not to click. */
+const VOLUME_RAMP_SECONDS = 0.01;
 /** A loop's tone control starts fully open: above everything a sound made at 32 kHz holds. */
 const OPEN_TONE_HZ = 16_000;
 /** A sound asked for while audio is still waking up plays if it's ready within this time, or is dropped: late is worse than silent. */
@@ -56,6 +60,7 @@ let context: AudioContext | null = null;
 let master: GainNode | null = null;
 let worker: Worker | null = null;
 let soundOn = loadSoundOn();
+let soundVolume = loadSoundVolume();
 const listeners = new Set<() => void>();
 const buffers = new Map<string, AudioBuffer>();
 const requested = new Set<string>();
@@ -167,6 +172,7 @@ function wake() {
     if (session) session.type = "ambient";
     context = new Context({ latencyHint: "interactive" });
     master = context.createGain();
+    master.gain.value = volumeGain(soundVolume);
     connectLimiter(context, master);
     context.addEventListener("statechange", () => {
       if (context?.state === "running") flushWaiting();
@@ -249,13 +255,14 @@ function log(name: SoundName) {
   if (import.meta.env.DEV) ((window as unknown as { soundLog?: string[] }).soundLog ??= []).push(name);
 }
 
-/** Plays a sound. Safe to call any time: with sound off or audio asleep it just does nothing. */
+/** Plays a sound, and what it feels like (that part even with sound off). Safe to call any time: with sound off or audio asleep it just does nothing. */
 export function playSound(name: SoundName, { variant, volume = 1, delayMs = 0 }: PlayOptions = {}): SoundHandle {
-  if (!soundOn) return NO_HANDLE;
   const now = performance.now();
   const cooldown = soundDefinition(name).cooldownMs ?? DEFAULT_COOLDOWN_MS;
   if (now - (lastPlayedAt.get(name) ?? -Infinity) < cooldown) return NO_HANDLE;
   lastPlayedAt.set(name, now);
+  feelSound(name);
+  if (!soundOn) return NO_HANDLE;
   log(name);
   const take = pickTake(name, variant);
   let voice: Voice | null = null;
@@ -271,9 +278,10 @@ export function playSound(name: SoundName, { variant, volume = 1, delayMs = 0 }:
   };
 }
 
-/** Plays sounds at exact times: a whole moment (an ending) timed to its animation. Stopping it stops the lot, played or not. */
+/** Plays sounds at exact times, and what they feel like: a whole moment (an ending) timed to its animation. Stopping it stops the lot, played or not. */
 export function playSoundSequence(steps: readonly SoundStep[]): SoundHandle {
-  if (!soundOn) return NO_HANDLE;
+  const feel = feelSoundSequence(steps);
+  if (!soundOn) return feel;
   const playing: Voice[] = [];
   let stopped = false;
   for (const step of steps) log(step.sound);
@@ -288,6 +296,7 @@ export function playSoundSequence(steps: readonly SoundStep[]): SoundHandle {
   return {
     stop() {
       stopped = true;
+      feel.stop();
       for (const voice of playing) stopVoice(voice);
     },
   };
@@ -338,3 +347,15 @@ export function subscribeSoundOn(listener: () => void) {
     listeners.delete(listener);
   };
 }
+
+export const getSoundVolume = () => soundVolume;
+
+/** 0 … 100, for everything that plays. Eases there, so moving the slider while something plays doesn't click. */
+export function setSoundVolume(volume: number) {
+  soundVolume = volume;
+  saveSoundVolume(volume);
+  if (context && master) master.gain.setTargetAtTime(volumeGain(volume), context.currentTime, VOLUME_RAMP_SECONDS);
+  for (const listener of listeners) listener();
+}
+
+export const subscribeSoundVolume = subscribeSoundOn;

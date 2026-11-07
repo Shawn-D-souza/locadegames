@@ -19,6 +19,12 @@
     --celebrate-at: calc(var(--duration-slow) + var(--duration-freeze) + var(--duration-line-draw));
   }
 
+  /* The iPhone's tap tick (`hapticTarget`) sits on top of a button: not on a disabled one, nor with haptics off. */
+  button:disabled > [data-haptic-trigger],
+  :root[data-haptics="off"] [data-haptic-trigger] {
+    display: none;
+  }
+
   body {
     /* Dot grid in ink on the pale background (DESIGN.md §2 backgrounds). */
     background-color: var(--color-background);

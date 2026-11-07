@@ -1,6 +1,6 @@
 // Territory: three players. One captures land, one cuts another, the last quits, the winner's ending plays,
 // then the results. Players are steered through the dev-only `window.territory` (the netcode client).
-import { heard, sees, wait } from "./session.mjs";
+import { felt, heard, sees, wait } from "./session.mjs";
 
 /** The player's id and everyone's start positions, from the netcode client. */
 const read = (page) =>
@@ -53,6 +53,7 @@ export default async function territory(session) {
     await until(() => host.evaluate(() => window.territory.hud(performance.now()).countdownMs <= 0), "the countdown to end", 6_000);
     await wait(400);
     await heard(host, "gameStarting", "countdownTick", "countdownGo");
+    await felt(host, "gameStarting", "countdownTick", "go");
   });
   await session.step("a loop out and home becomes land", async () => {
     const s = spawns[ids.builder];
@@ -64,6 +65,7 @@ export default async function territory(session) {
     await steer(builder, [at(5000, 0), at(5000, 5000), at(0, 5000), at(-1000, 0)]);
     await until(async () => (await share(builder)) > before * 1.5, "the builder's land to grow");
     await heard(builder, "territoryLeftLand", "territoryTrailLoop", "territoryCaptureSmall");
+    await felt(builder, "territoryLeftLand", "territoryCaptureSmall");
   });
   await session.step("a cut: the cutter's stamp and notice, the host's out card", async () => {
     // The host heads for the middle and on past it; the cutter crosses the host's trail on the way.
@@ -79,6 +81,8 @@ export default async function territory(session) {
     await sees(host, /you're out/i);
     await heard(cutter, "territoryYouKnockedSomeoneOut");
     await heard(host, "territoryYouAreOut");
+    await felt(cutter, "territoryKnockedSomeoneOut");
+    await felt(host, "territoryYouAreOut");
   });
   await session.step("the builder quits: the cutter wins and sees the ending", async () => {
     await builder.getByRole("button", { name: "Quit match" }).click();
@@ -87,10 +91,13 @@ export default async function territory(session) {
     await sees(builder, /you lost/i);
     await heard(cutter, "territoryMatchOver", "territoryWinnerHeadDrop", "matchWinFanfare");
     await heard(builder, "warningPopupOpen", "territoryMatchOver", "matchLossSting");
+    await felt(cutter, "thump", "territoryWinnerHeadDrop", "matchWon");
+    await felt(builder, "warning", "thump", "matchLost");
   });
   await session.step("the results come by themselves: the cutter is champion", async () => {
     for (const page of [host, cutter, builder]) await sees(page, /champion!/i, 15_000);
     await heard(cutter, "championFanfare");
     await heard(host, "championAnnounced");
+    await felt(cutter, "champion");
   });
 }

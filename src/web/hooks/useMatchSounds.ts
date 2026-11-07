@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { TicTacToeState } from "../../shared/games/tictactoe/types";
 import type { PlayerId } from "../../shared/rooms/types";
 import { lastMarkSound } from "../games/tictactoe/sounds";
+import { playHaptic } from "../services/hapticPlayer";
 import { playSound, playSoundSequence } from "../services/soundPlayer";
 import { matchEndingSteps, type EndingTone } from "../sound/cues/endingCues";
 import { timerTake, timerVolume } from "../sound/cues/clockCues";
@@ -22,7 +23,7 @@ interface MatchSoundOptions {
   countdown: number | null;
 }
 
-/** A turn-based match's sounds: each mark landing (the opponent's is your cue to move, so your turn has no sound of its own), your last seconds, and the ending in time with its animation. */
+/** A turn-based match's sounds and what they feel like: each mark landing (the opponent's is your cue to move, so your turn has no sound of its own; you feel it too), your last seconds, and the ending in time with its animation. */
 export function useMatchSounds({ matchKey, game, ending, leaver, yourTurn, watching, countdown }: MatchSoundOptions) {
   const movesPlayed = game.board.filter((cell) => cell !== null).length;
   const lastSeen = useRef({ matchKey, moves: movesPlayed, yourTurn });
@@ -34,6 +35,8 @@ export function useMatchSounds({ matchKey, game, ending, leaver, yourTurn, watch
       const mark = moved ? lastMarkSound(game) : null;
       const mine = seen.yourTurn;
       if (mark) playSound(mark.sound, { variant: mark.variant, volume: watching ? WATCHING_VOLUME : mine ? 1 : OPPONENT_VOLUME });
+      // Your own mark was felt when you tapped; watchers feel none of them.
+      if (mark && !mine && !watching) playHaptic("ticTacToeOpponentMoved");
     }
     lastSeen.current = { matchKey, moves: movesPlayed, yourTurn };
     // The board's latest state is read when the move count or match changes.

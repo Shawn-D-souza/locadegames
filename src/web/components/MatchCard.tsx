@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import { isLive } from "../../shared/tournament/tournament";
 import type { Match, Tournament } from "../../shared/tournament/types";
+import { hapticTarget } from "../services/hapticPlayer";
 import { playSound } from "../services/soundPlayer";
 import { entrantName } from "../utils/tournamentText";
 import { Avatar } from "./Avatar";
@@ -48,6 +49,7 @@ export function MatchCard({ tournament, match, myId, onWatch }: MatchCardProps) 
   );
   return live && onWatch ? (
     <button
+      ref={hapticTarget}
       type="button"
       className={clsx(
         CARD_CLASSES,

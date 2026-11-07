@@ -32,11 +32,16 @@ The game's own visuals (built from the shared design language): board or arena, 
 
 The game's own sounds (built from the shared kit, room, scale and levels; see DESIGN.md, Sound): their character, and any choice worth recording.
 
+## Haptics
+
+What you feel and when (on the shared levels; see DESIGN.md, Haptics), and what an iPhone feels, since it only ticks on a tap.
+
 ## Files
 
 | Path | Purpose |
 |---|---|
 | `src/web/games/<game>/sounds.ts` | Its sounds, named for what they're for (add them to `GAME_SOUNDS` and `SOUNDS` in `src/web/sound/soundBook.ts`) |
+| `src/web/games/<game>/haptics.ts` | Its feels, named for what they're for (add them to `HAPTICS` in `src/web/haptics/hapticBook.ts`, and a row in `soundHaptics.ts` per sound that's felt) |
 | `scripts/playtest/<game>.mjs` | Playtest: its big moments end to end (add it to `GAMES` in `scripts/playtest.mjs`) |
 
 ## Ideas for later

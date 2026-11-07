@@ -11,6 +11,52 @@
   text-shadow: 0 var(--lip-large) 0 var(--color-ink);
 }
 
+/*
+ * The settings slider (Slider). Browsers only let a range input be styled through their own pseudo-elements, one set
+ * each. Ink up to --slider-fill, gray after it; the thumb's width hides where the two meet. The track's outline is a
+ * shadow, not a border: a border would keep the thumb inside it, short of the ends, with the track showing past it.
+ */
+@utility slider {
+  appearance: none;
+  height: var(--layout-slider-thumb);
+  background: transparent;
+
+  &::-webkit-slider-runnable-track {
+    height: var(--layout-slider-track);
+    border-radius: var(--radius-pill);
+    background: linear-gradient(to right, var(--color-ink) var(--slider-fill), var(--color-off-gray-track) var(--slider-fill));
+    box-shadow: inset 0 0 0 var(--stroke-thin) var(--color-ink);
+  }
+
+  &::-moz-range-track {
+    height: var(--layout-slider-track);
+    border-radius: var(--radius-pill);
+    background: linear-gradient(to right, var(--color-ink) var(--slider-fill), var(--color-off-gray-track) var(--slider-fill));
+    box-shadow: inset 0 0 0 var(--stroke-thin) var(--color-ink);
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    box-sizing: border-box;
+    width: var(--layout-slider-thumb);
+    height: var(--layout-slider-thumb);
+    /* The thumb starts at the top of the track: this centers it on the track. */
+    margin-top: calc((var(--layout-slider-track) - var(--layout-slider-thumb)) / 2);
+    border: var(--stroke-thin) solid var(--color-ink);
+    border-radius: var(--radius-pill);
+    background: var(--color-white);
+  }
+
+  &::-moz-range-thumb {
+    box-sizing: border-box;
+    width: var(--layout-slider-thumb);
+    height: var(--layout-slider-thumb);
+    border: var(--stroke-thin) solid var(--color-ink);
+    border-radius: var(--radius-pill);
+    background: var(--color-white);
+  }
+}
+
 /* Screen titles: the title size, shrinking with the screen on very narrow phones so they never get cut off. */
 @utility text-title-fit {
   font-size: min(var(--type-title-size), var(--fluid-title-fit));

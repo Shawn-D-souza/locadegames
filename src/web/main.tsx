@@ -4,10 +4,11 @@ import "@fontsource/roboto-condensed/800.css";
 import "@fontsource/roboto-mono/500.css";
 import "@fontsource/roboto-mono/700.css";
 import { App } from "./App";
+import { installHaptics } from "./services/hapticPlayer";
 import { installSound } from "./services/soundPlayer";
 import "./styles/global.css";
 
-/** Dev-only tool pages (`?preview=celebrations`, `?preview=territory`); the production build drops this branch and its code entirely. */
+/** Dev-only tool pages (`?preview=celebrations`, `?preview=territory`, `?preview=haptics`); the production build drops this branch and its code entirely. */
 function devPreview(): ReactNode | null {
   if (!import.meta.env.DEV) return null;
   const page = new URLSearchParams(window.location.search).get("preview");
@@ -16,7 +17,9 @@ function devPreview(): ReactNode | null {
       ? lazy(() => import("./preview/CelebrationPreview").then((m) => ({ default: m.CelebrationPreview })))
       : page === "territory"
         ? lazy(() => import("./preview/territory/TerritoryPreview").then((m) => ({ default: m.TerritoryPreview })))
-        : null;
+        : page === "haptics"
+          ? lazy(() => import("./preview/HapticsPreview").then((m) => ({ default: m.HapticsPreview })))
+          : null;
   return Preview ? (
     <Suspense>
       <Preview />
@@ -25,5 +28,6 @@ function devPreview(): ReactNode | null {
 }
 
 installSound();
+installHaptics();
 // Tool pages skip StrictMode: its double effects would double every sound, and they're there to judge those.
 createRoot(document.getElementById("root")!).render(devPreview() ?? (<StrictMode><App /></StrictMode>));

@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import type { ButtonHTMLAttributes } from "react";
+import { hapticTarget } from "../services/hapticPlayer";
 import { playSound } from "../services/soundPlayer";
 import type { SoundName } from "../sound/soundBook";
 import { Icon, type IconName } from "./Icon";
@@ -19,6 +20,7 @@ const VARIANT_SOUNDS = { primary: "mainButtonPress", deep: "secondButtonPress", 
 export function PillButton({ variant = "primary", icon, fullWidth, sound, className, children, onClick, ...rest }: PillButtonProps) {
   return (
     <button
+      ref={hapticTarget}
       type="button"
       className={clsx(
         "inline-flex min-h-tap items-center justify-center gap-3 rounded-control border-thin border-ink px-6 text-button tracking-button text-white uppercase",

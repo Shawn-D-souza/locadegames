@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { hapticTarget } from "../services/hapticPlayer";
 import { playSound } from "../services/soundPlayer";
 import { Icon, type IconName } from "./Icon";
 
@@ -14,6 +15,7 @@ interface IconButtonProps {
 export function IconButton({ icon, label, onClick, wide }: IconButtonProps) {
   return (
     <button
+      ref={hapticTarget}
       type="button"
       className={clsx(
         "inline-flex h-icon-button shrink-0 cursor-pointer items-center justify-center rounded-control border-thin border-ink text-ink",

@@ -105,6 +105,16 @@ export const INTERFACE_SOUNDS = defineSounds({
       mix.add(pop(mix, { note: "F#4", from: 0.85, glide: 0.006, decay: 0.02 }), { at: 0.022 });
     },
   },
+  volumeStep: {
+    about: "The volume slider moving a step: one tiny pop, always the same note, so all that changes as you drag is how loud it is.",
+    level: "tap",
+    room: 0.03,
+    // A fast drag passes many steps: ticks, not a buzz.
+    cooldownMs: 55,
+    render(mix) {
+      mix.add(pop(mix, { note: "D5", from: 0.85, glide: 0.006, decay: 0.014 }));
+    },
+  },
   copied: {
     about: "The room code or link copied (the icon turns into a tick): a pop with a soft note.",
     level: "tap",

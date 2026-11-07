@@ -2,6 +2,7 @@ import { clsx } from "clsx";
 import type { GameInfo } from "../../shared/games/catalog";
 import { CLIENT_CONFIG } from "../config";
 import type { GameLook } from "../games/gameLooks";
+import { hapticTarget } from "../services/hapticPlayer";
 import { Avatar } from "./Avatar";
 import { Badge } from "./Badge";
 
@@ -27,6 +28,7 @@ export function GameTile({ game, look, disabled, needs, suggesters = [], selecte
   const more = suggesters.length - shown.length;
   return (
     <button
+      ref={hapticTarget}
       type="button"
       className={clsx(
         "relative flex aspect-square w-full cursor-pointer flex-col items-center gap-1 rounded-card border-outline bg-white p-2 disabled:cursor-not-allowed disabled:opacity-disabled",

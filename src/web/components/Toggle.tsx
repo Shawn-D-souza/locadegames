@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { hapticTarget } from "../services/hapticPlayer";
 
 interface ToggleProps {
   label: string;
@@ -10,6 +11,7 @@ interface ToggleProps {
 export function Toggle({ label, on, onChange }: ToggleProps) {
   return (
     <button
+      ref={hapticTarget}
       type="button"
       role="switch"
       aria-checked={on}
