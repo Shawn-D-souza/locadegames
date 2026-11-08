@@ -31,6 +31,12 @@ describe("RoomService", () => {
   const send = (conn: FakeConnection, msg: object) => service.receive(CODE, conn.playerId!, JSON.stringify(msg));
   const tournament = () => store.get(CODE)!.tournament!;
 
+  /** The two players of the first match, the one who starts (X, picked by the coin) first. */
+  const seated = (...conns: FakeConnection[]): [FakeConnection, FakeConnection] => {
+    const [x, o] = currentRound(tournament()).matches[0]!.players;
+    return [conns.find((c) => c.playerId === x)!, conns.find((c) => c.playerId === o)!];
+  };
+
   /** Plays X_WINS in the match `first` is in; `first` must be seat 0 (X). */
   const winMatch = (first: FakeConnection, second: FakeConnection) => {
     X_WINS.forEach((cell, i) => send(i % 2 === 0 ? first : second, { type: "move", move: cell }));
@@ -96,13 +102,14 @@ describe("RoomService", () => {
     const host = join("Host");
     const guest = join("Guest");
     send(host, { type: "start", gameId: GAME });
-    send(guest, { type: "move", move: 0 });
-    expect(guest.received.at(-1)).toEqual({ type: "error", error: "NOT_YOUR_TURN" });
-    winMatch(host, guest);
+    const [x, o] = seated(host, guest);
+    send(o, { type: "move", move: 0 });
+    expect(o.received.at(-1)).toEqual({ type: "error", error: "NOT_YOUR_TURN" });
+    winMatch(x, o);
     const room = lastRoom(guest)!;
     expect(room.phase).toBe("finished");
-    expect(room.tournament!.championIds).toEqual([0]);
-    expect(room.players[0]!.trophies).toBe(1);
+    expect(room.tournament!.championIds).toEqual([x.playerId]);
+    expect(room.players[x.playerId!]!.trophies).toBe(1);
 
     send(guest, { type: "backToRoom" });
     expect(guest.received.at(-1)).toEqual({ type: "error", error: "NOT_HOST" });
@@ -114,8 +121,9 @@ describe("RoomService", () => {
     const host = join("Host");
     const guest = join("Guest");
     send(host, { type: "start", gameId: GAME });
+    const [x, o] = seated(host, guest);
     // X O X / X O O / O X X
-    [0, 1, 2, 4, 3, 5, 7, 6, 8].forEach((cell, i) => send(i % 2 === 0 ? host : guest, { type: "move", move: cell }));
+    [0, 1, 2, 4, 3, 5, 7, 6, 8].forEach((cell, i) => send(i % 2 === 0 ? x : o, { type: "move", move: cell }));
     const room = lastRoom(host)!;
     expect(room.phase).toBe("finished");
     expect(room.tournament!.championIds).toEqual([0, 1]);
@@ -126,13 +134,14 @@ describe("RoomService", () => {
     const host = join("Host");
     const guest = join("Guest");
     send(host, { type: "start", gameId: GAME });
-    // Guest (O) wins the middle row while X scatters.
-    for (const [conn, cell] of [[host, 0], [guest, 3], [host, 1], [guest, 4], [host, 8], [guest, 5]] as const) {
+    // Guest wins.
+    if (seated(host, guest)[0] === guest) winMatch(guest, host);
+    else for (const [conn, cell] of [[host, 0], [guest, 3], [host, 1], [guest, 4], [host, 8], [guest, 5]] as const) {
       send(conn, { type: "move", move: cell });
     }
     expect(lastRoom(host)!.players[1]!.trophies).toBe(1);
     send(host, { type: "start", gameId: GAME });
-    expect(currentRound(tournament()).matches[0]!.players).toEqual([1, 0]);
+    expect(tournament().entrants.map((e) => e.id)).toEqual([1, 0]);
   });
 
   it("plays the auto move when a turn timer runs out, and not before", () => {
@@ -146,7 +155,7 @@ describe("RoomService", () => {
     now += 1;
     send(guest, { type: "timeout", matchId });
     const match = findActiveMatch(tournament(), 0)!;
-    expect(match.game.board[0]).toBe(0);
+    expect(match.game.board[0]).toBe(0); // the starter's (seat 0) auto move
   });
 
   it("lets a disconnected player reclaim their slot with the token", () => {

@@ -29,6 +29,8 @@ try {
 
 const vite = await createServer({ server: { port: PORT, strictPort: true }, logLevel: "silent" });
 await vite.listen();
+// Make the sounds before the first page asks for them (they take longer than a page load may wait).
+await vite.transformRequest("virtual:sound-files");
 const browser = await chromium.launch();
 let failed = false;
 try {

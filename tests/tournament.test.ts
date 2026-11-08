@@ -3,6 +3,7 @@ import { TICTACTOE_CONFIG } from "../src/shared/games/tictactoe/config";
 import type { PlayerId } from "../src/shared/rooms/types";
 import {
   claimTimeout,
+  coinFlip,
   currentRound,
   findActiveMatch,
   playMove,
@@ -16,10 +17,16 @@ import { TOURNAMENT_CONFIG } from "../src/shared/tournament/config";
 import type { Seed, Tournament } from "../src/shared/tournament/types";
 
 const GAME = "tictactoe";
+const SEED = 12345;
 /** Seat 0 (X) wins on the top row. */
 const X_WINS = [0, 3, 1, 4, 2];
+/** Seat 1 (O) wins on the top row. */
+const O_WINS = [3, 0, 4, 1, 8, 2];
 /** Fills the board with no line: X O X / X O O / O X X. */
 const DRAW = [0, 1, 2, 4, 3, 5, 7, 6, 8];
+
+const pairsOf = (t: Tournament) => currentRound(t).matches.map((m) => [...m.players].sort());
+const starters = (t: Tournament) => t.rounds.flatMap((r) => r.matches.map((m) => m.players[0]));
 
 const seeds = (count: number, trophies: number[] = []): Seed[] =>
   Array.from({ length: count }, (_, i) => ({ id: i, name: `P${i}`, trophies: trophies[i] ?? 0, joinOrder: i }));
@@ -41,22 +48,30 @@ function playRound(t: Tournament, cells: number[]): Tournament {
   return t;
 }
 
+/** Plays every live match this round: the better seed (lower id here) wins, whoever starts. */
+function seedsWinRound(t: Tournament): Tournament {
+  for (const match of currentRound(t).matches) {
+    t = playCells(t, match.players[0], match.players[0] < match.players[1] ? X_WINS : O_WINS);
+  }
+  return t;
+}
+
 describe("tournament", () => {
   it("plays enough rounds for a clear leader", () => {
     expect([2, 3, 4, 5, 8].map(roundsFor)).toEqual([1, 2, 2, 3, 3]);
   });
 
   it("pairs best seed against worst in round 1, and the bye goes to the lowest seed", () => {
-    const even = startTournament(GAME, seeds(4), 0);
-    expect(currentRound(even).matches.map((m) => m.players)).toEqual([[0, 3], [1, 2]]);
+    const even = startTournament(GAME, seeds(4), 0, SEED);
+    expect(pairsOf(even)).toEqual([[0, 3], [1, 2]]);
     expect(currentRound(even).bye).toBeNull();
-    const odd = startTournament(GAME, seeds(5, [0, 0, 0, 0, 3]), 0);
+    const odd = startTournament(GAME, seeds(5, [0, 0, 0, 0, 3]), 0, SEED);
     expect(odd.entrants[0]!.id).toBe(4);
     expect(currentRound(odd).bye).toBe(3);
   });
 
   it("ends a 2-player draw with both sharing the title", () => {
-    const t = playCells(startTournament(GAME, seeds(2), 0), 0, DRAW);
+    const t = playCells(startTournament(GAME, seeds(2), 0, SEED), 0, DRAW);
     expect(currentRound(t).matches[0]).toMatchObject({ result: "draw", winner: null });
     expect(t.finished).toBe(true);
     expect(t.championIds).toEqual([0, 1]);
@@ -64,10 +79,10 @@ describe("tournament", () => {
   });
 
   it("pairs leaders with leaders, avoids rematches and crowns the top points", () => {
-    let t = startTournament(GAME, seeds(4), 0);
-    t = playRound(t, X_WINS); // 0 beats 3, 1 beats 2
+    let t = startTournament(GAME, seeds(4), 0, SEED);
+    t = seedsWinRound(t); // 0 beats 3, 1 beats 2
     expect(t.rounds).toHaveLength(2);
-    expect(currentRound(t).matches.map((m) => [...m.players].sort())).toEqual([[0, 1], [2, 3]]);
+    expect(pairsOf(t)).toEqual([[0, 1], [2, 3]]);
     t = playRound(t, X_WINS);
     expect(t.finished).toBe(true);
     const winner = currentRound(t).matches[0]!.winner!;
@@ -76,7 +91,7 @@ describe("tournament", () => {
   });
 
   it("starts later rounds together after a break, refusing moves until then", () => {
-    let t = startTournament(GAME, seeds(4), 0);
+    let t = startTournament(GAME, seeds(4), 0, SEED);
     expect(currentRound(t).matches.every((m) => m.turnStartedAt === 0)).toBe(true);
     t = playRound(t, X_WINS);
     const [first, second] = currentRound(t).matches;
@@ -88,23 +103,40 @@ describe("tournament", () => {
   });
 
   it("lets whoever started fewer games start the next one", () => {
-    let t = startTournament(GAME, seeds(4), 0);
+    let t = startTournament(GAME, seeds(4), 0, SEED);
     t = playRound(t, X_WINS);
-    // 0 and 1 both started in round 1; 0 is ranked higher, so 0 starts again. 2 started fewer than 3.
-    expect(currentRound(t).matches.map((m) => m.players)).toEqual([[0, 1], [2, 3]]);
+    for (const match of currentRound(t).matches) {
+      const startedBefore = (id: PlayerId) => t.rounds[0]!.matches.some((m) => m.players[0] === id);
+      const [first, second] = match.players;
+      expect(startedBefore(first) && !startedBefore(second)).toBe(false);
+    }
+  });
+
+  it("flips a coin for who starts when both have started as many games, never favouring the host", () => {
+    // Player 0 is the best seed (the host when nobody has trophies). Over many tournaments, they start about half the time.
+    const runs = 400;
+    const hostStarts = Array.from({ length: runs }, (_, seed) => startTournament(GAME, seeds(2), 0, seed)).filter(
+      (t) => starters(t)[0] === 0,
+    ).length;
+    expect(hostStarts).toBeGreaterThan(runs * 0.4);
+    expect(hostStarts).toBeLessThan(runs * 0.6);
+    // The same seed always gives the same seats (pure, so the server and tests agree).
+    expect(starters(startTournament(GAME, seeds(4), 0, 7))).toEqual(starters(startTournament(GAME, seeds(4), 0, 7)));
+    expect(new Set(Array.from({ length: 64 }, (_, i) => coinFlip(SEED, i))).size).toBe(2);
   });
 
   it("counts the bye as a win and never gives anyone two", () => {
-    let t = startTournament(GAME, seeds(3), 0);
+    let t = startTournament(GAME, seeds(3), 0, SEED);
     expect(currentRound(t).bye).toBe(2);
     expect(pointsOf(t, 2)).toBe(2);
-    t = playRound(t, X_WINS); // 0 beats 1
-    expect(currentRound(t).bye).toBe(1);
-    expect(currentRound(t).matches[0]!.players).toEqual([2, 0]);
+    t = playRound(t, X_WINS); // 0 v 1, the starter wins
+    const loser = currentRound(t).bye;
+    expect(loser).not.toBe(2);
+    expect([...currentRound(t).matches[0]!.players].sort()).toEqual([0, 1].filter((id) => id !== loser).concat(2).sort());
   });
 
   it("forfeits a leaver's match, stops pairing them and keeps them out of the title", () => {
-    let t = startTournament(GAME, seeds(4), 0);
+    let t = startTournament(GAME, seeds(4), 0, SEED);
     t = removePlayer(t, 3, 0);
     expect(currentRound(t).matches[0]).toMatchObject({ result: "forfeit", winner: 0 });
     t = playCells(t, 1, X_WINS);
@@ -115,7 +147,7 @@ describe("tournament", () => {
   });
 
   it("plays the auto move only once the turn timer has run out", () => {
-    let t = startTournament(GAME, seeds(2), 0);
+    let t = startTournament(GAME, seeds(2), 0, SEED);
     const matchId = currentRound(t).matches[0]!.id;
     expect(claimTimeout(t, matchId, TICTACTOE_CONFIG.turnTimeMs - 1)).toEqual({ ok: false, error: "TOO_EARLY" });
     const update = claimTimeout(t, matchId, TICTACTOE_CONFIG.turnTimeMs);
@@ -125,7 +157,7 @@ describe("tournament", () => {
   });
 
   it("rejects moves from players not in a live match", () => {
-    const t = startTournament(GAME, seeds(3), 0);
+    const t = startTournament(GAME, seeds(3), 0, SEED);
     expect(playMove(t, 2, 4, 0)).toEqual({ ok: false, error: "NOT_IN_MATCH" });
   });
 });

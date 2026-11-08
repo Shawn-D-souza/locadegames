@@ -6,9 +6,11 @@ import { TOURNAMENT_CONFIG } from "./config";
 import type { Match, Round, Seed, Standing, Tournament } from "./types";
 
 /**
- * Swiss-style tournament, pure and deterministic: pairing, byes and seats follow
- * fixed rules (points, trophies, join order), never chance. Draws are a normal result.
- * A room with exactly two players plays one match.
+ * Swiss-style tournament, pure and deterministic: pairing and byes follow fixed rules
+ * (points, trophies, join order), never chance. The one coin flip is who starts a match
+ * when both players have started as many games: it comes from `coinSeed`, a random
+ * number the server picks once per tournament, so the logic stays pure and testable.
+ * Draws are a normal result. A room with exactly two players plays one match.
  */
 
 export type TournamentError = MoveError | "NOT_IN_MATCH" | "TOO_EARLY";
@@ -78,16 +80,26 @@ function pairWithoutRematch(t: Tournament, ids: PlayerId[]): [PlayerId, PlayerId
   return null;
 }
 
-/** Seat 0 starts: whoever has started fewer games, else the better ranked. */
-function seatPair(t: Tournament, [a, b]: [PlayerId, PlayerId]): [PlayerId, PlayerId] {
-  const starts = (id: PlayerId) => allMatches(t).filter((m) => m.players[0] === id).length;
-  return starts(b) < starts(a) ? [b, a] : [a, b];
+/** Heads or tails for match `matchId`, the same every time for the same seed (a 32-bit integer mix). */
+export function coinFlip(coinSeed: number, matchId: number): boolean {
+  let x = (coinSeed ^ Math.imul(matchId, 0x9e3779b9)) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x85ebca6b);
+  x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35);
+  return ((x ^ (x >>> 16)) & 1) === 1;
 }
 
-function newMatch(t: Tournament, players: [PlayerId, PlayerId], now: number): Match {
+/** Seat 0 starts: whoever has started fewer games in this tournament, else a coin flip (never the host or the better ranked by default). */
+function seatPair(t: Tournament, [a, b]: [PlayerId, PlayerId], matchId: number): [PlayerId, PlayerId] {
+  const starts = (id: PlayerId) => allMatches(t).filter((m) => m.players[0] === id).length;
+  if (starts(a) !== starts(b)) return starts(b) < starts(a) ? [b, a] : [a, b];
+  return coinFlip(t.coinSeed, matchId) ? [b, a] : [a, b];
+}
+
+function newMatch(t: Tournament, pair: [PlayerId, PlayerId], now: number): Match {
+  const id = t.nextMatchId++;
   return {
-    id: t.nextMatchId++,
-    players,
+    id,
+    players: seatPair(t, pair, id),
     game: MATCH_GAMES[t.gameId].create(0),
     turnStartedAt: now,
     result: null,
@@ -114,15 +126,17 @@ function addRound(t: Tournament, startAt: number): Tournament {
     pairs =
       pairWithoutRematch(t, order) ?? Array.from({ length: order.length / 2 }, (_, i) => [order[2 * i]!, order[2 * i + 1]!]);
   }
-  next.rounds.push({ startsAt: startAt, matches: pairs.map((pair) => newMatch(next, seatPair(t, pair), startAt)), bye });
+  next.rounds.push({ startsAt: startAt, matches: pairs.map((pair) => newMatch(next, pair, startAt)), bye });
   return next;
 }
 
-export function startTournament(gameId: TournamentGameId, players: Seed[], now: number): Tournament {
+/** `coinSeed`: any random 32-bit integer from the server; it decides who starts when both have started as many games. */
+export function startTournament(gameId: TournamentGameId, players: Seed[], now: number, coinSeed: number): Tournament {
   const seeds = [...players].sort((a, b) => b.trophies - a.trophies || a.joinOrder - b.joinOrder);
   const t: Tournament = {
     gameId,
     startedAt: now,
+    coinSeed: coinSeed >>> 0,
     entrants: seeds.map(({ id, name }) => ({ id, name })),
     left: [],
     rounds: [],

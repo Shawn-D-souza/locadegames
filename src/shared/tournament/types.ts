@@ -40,6 +40,8 @@ export interface Tournament {
   gameId: TournamentGameId;
   /** Server time it started; also tells one tournament from the next. */
   startedAt: number;
+  /** Random number picked by the server at the start; flips the coin for who starts a match (see `seatPair`). */
+  coinSeed: number;
   /** In seed order: most trophies, then earliest joiner. */
   entrants: Entrant[];
   /** Entrants who quit or left the room; they keep their points but are no longer paired or crowned. */

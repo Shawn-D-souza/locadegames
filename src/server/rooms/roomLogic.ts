@@ -146,7 +146,7 @@ function leaveRoom(record: RoomRecord, id: PlayerId, now: number): RoomRecord {
   return next;
 }
 
-function startGame(record: RoomRecord, gameId: GameId, now: number): RoomUpdate {
+function startGame(record: RoomRecord, gameId: GameId, now: number, coinSeed: number): RoomUpdate {
   // Only connected players enter; anyone away joins the next one.
   const entrants = record.players.filter((p) => p.connected);
   if (entrants.length < getGame(gameId).minPlayers) return { ok: false, error: "NOT_ENOUGH_PLAYERS" };
@@ -154,7 +154,7 @@ function startGame(record: RoomRecord, gameId: GameId, now: number): RoomUpdate 
   if (!isTournamentGame(gameId)) {
     return { ok: true, record: { ...record, players, phase: "playing", tournament: null, arena: newArena(gameId, entrants, now) } };
   }
-  const tournament = startTournament(gameId, entrants, now);
+  const tournament = startTournament(gameId, entrants, now, coinSeed);
   return { ok: true, record: { ...record, players, phase: "playing", tournament, arena: null } };
 }
 
@@ -174,7 +174,14 @@ function newArena(gameId: ArenaGameId, entrants: PlayerRecord[], now: number): A
   };
 }
 
-export function applyClientMessage(record: RoomRecord, id: PlayerId, msg: ClientMessage, now: number): RoomUpdate {
+/** `coinSeed`: a fresh random 32-bit integer; only used when a tournament starts (who starts each match). */
+export function applyClientMessage(
+  record: RoomRecord,
+  id: PlayerId,
+  msg: ClientMessage,
+  now: number,
+  coinSeed: number,
+): RoomUpdate {
   const isHost = record.hostId === id;
   const picking = record.phase === "lobby" || record.phase === "finished";
   let next: RoomRecord;
@@ -187,7 +194,7 @@ export function applyClientMessage(record: RoomRecord, id: PlayerId, msg: Client
     case "start": {
       if (!isHost) return { ok: false, error: "NOT_HOST" };
       if (!picking) return { ok: false, error: "WRONG_PHASE" };
-      const started = startGame(record, msg.gameId, now);
+      const started = startGame(record, msg.gameId, now, coinSeed);
       if (!started.ok) return started;
       next = started.record;
       break;

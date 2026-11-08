@@ -18,6 +18,11 @@ import {
 } from "./roomLogic";
 import type { RoomRecord } from "./roomRecord";
 
+/** A random 32-bit integer (Web Crypto: in Workers and Node.js alike). */
+function randomSeed(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0]!;
+}
+
 /** Coordinates store + transport around the pure room reducers, and the live real-time matches. Host-agnostic. */
 export class RoomService {
   private lastSweepAt = 0;
@@ -76,7 +81,7 @@ export class RoomService {
       this.transport.sendTo(code, playerId, { type: "error", error: "BAD_MESSAGE" });
       return;
     }
-    const update = applyClientMessage(record, playerId, msg, this.now());
+    const update = applyClientMessage(record, playerId, msg, this.now(), randomSeed());
     if (!update.ok) {
       // Timeout claims race with moves and fast clocks; the client retries, so stay quiet.
       if (msg.type !== "timeout") this.transport.sendTo(code, playerId, { type: "error", error: update.error });

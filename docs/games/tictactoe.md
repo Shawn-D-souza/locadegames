@@ -8,8 +8,8 @@ Format: **tournament** (Swiss-style, 1v1 matches; see the tournament rules in [`
 
 ## Rules
 
-- Classic 3×3: seat 0 plays X and moves first, seat 1 plays O. Three in a row (row, column or diagonal) wins; a full board with no line is a draw (draws are a normal tournament result).
-- **Turn timer: 30 s per move** (owner decision); the countdown shows only in the last 5 s. When it runs out, the auto move is played: the first empty cell (deterministic, so the tournament never decides anything by chance).
+- Classic 3×3: seat 0 plays X and moves first, seat 1 plays O. **Who gets X is fair, never always the host** (owner decision): whoever has started fewer games in this tournament, else picked at random (the platform's rule, CLAUDE.md, Fair starts). Three in a row (row, column or diagonal) wins; a full board with no line is a draw (draws are a normal tournament result).
+- **Turn timer: 30 s per move** (owner decision); the countdown shows only in the last 5 s. When it runs out, the auto move is played: the first empty cell (deterministic, so a timeout never depends on chance).
 - Rules are pure (`createGame` / `applyMove`); the server validates every move, turn and seat.
 
 ## Look
