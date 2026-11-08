@@ -3,6 +3,7 @@ import type { Point } from "../../../shared/games/territory/types";
 import type { PlayerId } from "../../../shared/rooms/types";
 import type { EndingTone } from "../../sound/cues/endingCues";
 import type { LoopPoint, SoundName, SoundStep } from "../../sound/soundBook";
+import { captureSize } from "./captureSize";
 import { TERRITORY_CLIENT_CONFIG } from "./config";
 import type { MomentView, PlayerFrame } from "./engine/frame";
 
@@ -13,9 +14,8 @@ const { hud: HUD, look: LOOK } = TERRITORY_CLIENT_CONFIG;
 
 /** Which of the three capture sounds a piece of new land gets. */
 export function captureSound(area: number): SoundName {
-  if (area >= SOUND.captureLargeArea) return "territoryCaptureLarge";
-  if (area >= SOUND.captureMediumArea) return "territoryCaptureMedium";
-  return "territoryCaptureSmall";
+  const size = captureSize(area);
+  return size === "large" ? "territoryCaptureLarge" : size === "medium" ? "territoryCaptureMedium" : "territoryCaptureSmall";
 }
 
 /** How loud something this far from you is: full on screen, fading out, and silent well off screen. */

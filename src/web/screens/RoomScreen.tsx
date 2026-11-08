@@ -1,10 +1,12 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { CLOSE_CODES } from "../../shared/protocol/errors";
 import type { PlayerId } from "../../shared/rooms/types";
-import { currentRound, isLive } from "../../shared/tournament/tournament";
+import { currentRound, isLive, standings } from "../../shared/tournament/tournament";
 import type { Match, Tournament } from "../../shared/tournament/types";
+import { ArenaRankingTable } from "../components/ArenaRankingTable";
 import { Modal } from "../components/Modal";
 import { PillButton } from "../components/PillButton";
+import { StandingsTable } from "../components/StandingsTable";
 import { Toast } from "../components/Toast";
 import { CLIENT_CONFIG } from "../config";
 import { useRoomConnection } from "../hooks/useRoomConnection";
@@ -13,12 +15,13 @@ import { useBefore } from "../hooks/useBefore";
 import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
 import { loadTerritory } from "../games/territory/loadTerritory";
+import { arenaName } from "../utils/arenaText";
 import { closeMessage, roomErrorMessage } from "../utils/messages";
-import { ArenaResultsScreen } from "./ArenaResultsScreen";
-import { ChampionScreen } from "./ChampionScreen";
+import { entrantName } from "../utils/tournamentText";
 import { JoiningScreen } from "./JoiningScreen";
 import { LobbyScreen } from "./LobbyScreen";
 import { MatchScreen } from "./MatchScreen";
+import { ResultsScreen } from "./ResultsScreen";
 import { RoundIntroScreen } from "./RoundIntroScreen";
 import { StandingsScreen } from "./StandingsScreen";
 
@@ -163,7 +166,21 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
         </Suspense>
       );
     } else if (leftResults !== a.startedAt) {
-      content = <ArenaResultsScreen room={room} arena={a} myId={playerId} send={send} onBack={() => setLeftResults(a.startedAt)} />;
+      content = (
+        <ResultsScreen
+          room={room}
+          myId={playerId}
+          send={send}
+          onBack={() => setLeftResults(a.startedAt)}
+          gameId={a.gameId}
+          championIds={a.championIds}
+          playerCount={a.entrants.length}
+          nameOf={(id) => arenaName(a, id)}
+          tableLabel="Ranking"
+        >
+          <ArenaRankingTable arena={a} myId={playerId} />
+        </ResultsScreen>
+      );
     } else {
       content = <LobbyScreen room={room} myId={playerId} send={send} onLeave={requestLeave} />;
     }
@@ -205,7 +222,21 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
       // BACK TO SCORES while it's live; once it ends it moves on by itself like your own match.
       content = <MatchScreen {...matchProps} match={watched} onBack={close} onContinue={close} />;
     } else if (finished && leftResults !== t.startedAt) {
-      content = <ChampionScreen room={room} tournament={t} myId={playerId} send={send} onBack={() => setLeftResults(t.startedAt)} />;
+      content = (
+        <ResultsScreen
+          room={room}
+          myId={playerId}
+          send={send}
+          onBack={() => setLeftResults(t.startedAt)}
+          gameId={t.gameId}
+          championIds={t.championIds}
+          playerCount={t.entrants.length}
+          nameOf={(id) => entrantName(t, id)}
+          tableLabel="Points"
+        >
+          <StandingsTable standings={standings(t)} myId={playerId} />
+        </ResultsScreen>
+      );
     } else if (finished) {
       // Back in the room while the room still holds the results; the host can start the next game from here.
       content = <LobbyScreen room={room} myId={playerId} send={send} onLeave={requestLeave} />;

@@ -55,5 +55,8 @@ export type TerritoryEvent =
   | { type: "trailStart"; id: PlayerId; point: Point }
   /** Came home at `point` (on the land's edge): the trail and what it enclosed became land. */
   | { type: "capture"; id: PlayerId; point: Point; lands: LandChange[] }
-  /** Went out: cut (land to the cutter), lost all land, or quit (land vanishes). */
+  /**
+   * Went out: cut (their land, their trail up to the cut and the cutter's own trail become the cutter's
+   * land, so it stays one piece), lost all land, or quit (land vanishes). `lands` has everyone's change.
+   */
   | { type: "out"; id: PlayerId; reason: OutReason; by: PlayerId | null; lands: LandChange[] };

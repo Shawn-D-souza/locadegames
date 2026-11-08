@@ -2,12 +2,16 @@ import { TERRITORY_CONFIG } from "../../../../shared/games/territory/config";
 import type { Land } from "../../../../shared/games/territory/types";
 import { TERRITORY_CLIENT_CONFIG } from "../config";
 import type { EffectView, PlayerFrame } from "../engine/frame";
+import { drawHeadAt } from "./drawHeads";
+import { RESTING } from "./headMotion";
+import type { HeadWake } from "./headWake";
 import { ARENA_PAINT, playerPaint } from "./palette";
+import { landPattern } from "./landPatterns";
 import { landPath, outsidePath, polylinePath } from "./paths";
 
 /**
- * Drawing in world units (the camera transform is already set). Order: floor, land, trails, heads,
- * effects, wall. Where a trail crosses someone's raised land it runs at floor level in a trench: the
+ * Drawing in world units (the camera transform is already set). Order: floor, land, trails, heads
+ * (`drawHeads.ts`), effects, wall. Where a trail crosses someone's raised land it runs at floor level in a trench: the
  * renderer then draws trails first and the land over them with the trails cut out (`cutTrenches`).
  */
 
@@ -36,14 +40,9 @@ function floorPattern(ctx: CanvasRenderingContext2D): CanvasPattern | null {
   return pattern;
 }
 
-/** The arena: a white raised plate with an ink lip and the dot grid. */
+/** The arena: a pale floor with the dot grid (its wall, the same thin line all around, is drawn last). */
 export function drawFloor(ctx: CanvasRenderingContext2D, arena: Land) {
   const path = landPath(arena);
-  ctx.save();
-  ctx.translate(0, LOOK.wallLip * W);
-  ctx.fillStyle = ARENA_PAINT.wall;
-  ctx.fill(path);
-  ctx.restore();
   ctx.fillStyle = ARENA_PAINT.floor;
   ctx.fill(path);
   const pattern = floorPattern(ctx);
@@ -55,7 +54,7 @@ export function drawFloor(ctx: CanvasRenderingContext2D, arena: Land) {
 
 /** The wall's ink outline, drawn last so land meets it cleanly. */
 export function drawWall(ctx: CanvasRenderingContext2D, arena: Land, pxPerUnit: number) {
-  ctx.lineWidth = Math.max(LOOK.wallWidth * W * 0.25, 3 / pxPerUnit);
+  ctx.lineWidth = Math.max(LOOK.wallLine * W, 3 / pxPerUnit);
   ctx.strokeStyle = ARENA_PAINT.wall;
   ctx.lineJoin = "round";
   ctx.stroke(landPath(arena));
@@ -72,6 +71,8 @@ export function drawLands(ctx: CanvasRenderingContext2D, players: readonly Playe
 
 /** How far a land's solid side shows below its top. */
 export const LAND_LIP = LOOK.landLip * W;
+/** How thick the light band along a land's top edges is. */
+const LAND_EDGE = LOOK.landEdge * W;
 
 /** The solid sides of every land (the land shifted down by the lip). */
 export function drawLandLips(ctx: CanvasRenderingContext2D, players: readonly PlayerFrame[], arena: Land) {
@@ -85,7 +86,7 @@ export function drawLandLips(ctx: CanvasRenderingContext2D, players: readonly Pl
   ctx.restore();
 }
 
-/** The tops of every land. */
+/** The tops of every land: their color, a light band along the top edges and the pattern. */
 export function drawLandTops(ctx: CanvasRenderingContext2D, players: readonly PlayerFrame[], arena: Land, pxPerUnit: number) {
   ctx.save();
   ctx.clip(landPath(arena));
@@ -93,13 +94,26 @@ export function drawLandTops(ctx: CanvasRenderingContext2D, players: readonly Pl
   ctx.lineJoin = "round";
   for (const p of players) {
     const paint = playerPaint(p.id);
-    ctx.fillStyle = paint.land;
-    ctx.strokeStyle = paint.land;
+    const pattern = landPattern(ctx, p.id);
     for (const land of p.land) {
       if (!land.length) continue;
       const path = landPath(land);
+      // The light edge everywhere, then the land shifted down over it: the band stays only along top edges.
+      ctx.fillStyle = paint.landEdge;
       ctx.fill(path);
+      ctx.strokeStyle = paint.land;
       ctx.stroke(path);
+      ctx.save();
+      ctx.clip(path);
+      ctx.translate(0, LAND_EDGE);
+      ctx.fillStyle = paint.land;
+      ctx.fill(path);
+      if (pattern) {
+        ctx.translate(0, -LAND_EDGE);
+        ctx.fillStyle = pattern;
+        ctx.fill(path);
+      }
+      ctx.restore();
     }
   }
   ctx.restore();
@@ -128,66 +142,19 @@ export function drawTrails(ctx: CanvasRenderingContext2D, players: readonly Play
   }
 }
 
-function roundedSquare(ctx: CanvasRenderingContext2D, size: number, corner: number) {
-  const h = size / 2;
-  ctx.beginPath();
-  ctx.roundRect(-h, -h, size, size, corner);
-}
-
-/** Heads: a rounded block in the player's color with a solid lip, ink outline and eyes looking ahead. */
-export function drawHeads(ctx: CanvasRenderingContext2D, players: readonly PlayerFrame[]) {
-  const size = LOOK.headSize * W;
-  const corner = LOOK.headCorner * W;
-  for (const p of players) {
-    if (!p.head) continue;
-    const paint = playerPaint(p.id);
-    const { x, y, angle } = p.head;
-    ctx.save();
-    ctx.translate(x, y + LOOK.headLip * W);
-    ctx.rotate(angle);
-    roundedSquare(ctx, size, corner);
-    ctx.fillStyle = ARENA_PAINT.ink;
-    ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
-    roundedSquare(ctx, size, corner);
-    ctx.fillStyle = paint.head;
-    ctx.fill();
-    ctx.lineWidth = LOOK.outline * W;
-    ctx.strokeStyle = ARENA_PAINT.ink;
-    ctx.stroke();
-    // Eyes on the front half, pupils looking forward.
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.arc(size * 0.16, side * size * 0.2, size * 0.14, 0, Math.PI * 2);
-      ctx.fillStyle = ARENA_PAINT.white;
-      ctx.fill();
-      ctx.lineWidth = LOOK.outline * W * 0.6;
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(size * 0.22, side * size * 0.2, size * 0.065, 0, Math.PI * 2);
-      ctx.fillStyle = ARENA_PAINT.ink;
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-}
-
 const easeOut = (t: number) => 1 - (1 - t) * (1 - t);
 
 /** How far (device px) the land overlaps a trench's trail on each side, so their soft edges never let the floor show between them. */
 const TRENCH_OVERLAP_PX = 1.5;
 
 /**
- * Cuts every trail out of a land layer (shifted down by `offsetY` for the lips), each clipped like the
- * drawn trail: a trail never cuts its owner's land. Through the cut, the trail shows at floor level.
+ * Cuts every trail out of a land layer, once at each of `offsetsY`, each clipped like the drawn trail: a
+ * trail never cuts its owner's land. Through the cut, the trail shows at floor level. The tops are also
+ * cut one lip higher, so the trench's far wall (the lips) shows beyond the trail, never over it: the trail
+ * keeps its full width whichever way it runs.
  */
-export function cutTrenches(ctx: CanvasRenderingContext2D, players: readonly PlayerFrame[], radius: number, offsetY: number, pxPerUnit: number) {
+export function cutTrenches(ctx: CanvasRenderingContext2D, players: readonly PlayerFrame[], radius: number, offsetsY: readonly number[], pxPerUnit: number) {
   ctx.save();
-  ctx.translate(0, offsetY);
   ctx.globalCompositeOperation = "destination-out";
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -197,7 +164,13 @@ export function cutTrenches(ctx: CanvasRenderingContext2D, players: readonly Pla
     if (!p.trail || p.trail.length === 0) continue;
     ctx.save();
     if (p.home.length) ctx.clip(outsidePath(p.home, radius * 2), "evenodd");
-    ctx.stroke(polylinePath(p.trail));
+    const path = polylinePath(p.trail);
+    for (const offsetY of offsetsY) {
+      ctx.save();
+      ctx.translate(0, offsetY);
+      ctx.stroke(path);
+      ctx.restore();
+    }
     ctx.restore();
   }
   ctx.restore();
@@ -223,12 +196,90 @@ export function drawVanishing(ctx: CanvasRenderingContext2D, effects: readonly E
   }
 }
 
+const FILL = LOOK.captureFill;
+/** How far the color's front has spread (share of the way) at share `t` of the sweep: fast, then slowing. */
+const sweepAt = (t: number) => 1 - (1 - t) * (1 - t);
 
-/** New land flashes white; a head that goes out bursts into pieces of its color. */
+/**
+ * Your new land filling in: pale until your color, spreading from where your head got home, reaches it;
+ * a light shine just behind the front. Drawn with the land, under trails and heads.
+ */
+export function drawFills(ctx: CanvasRenderingContext2D, effects: readonly EffectView[], now: number) {
+  for (const e of effects) {
+    if (e.kind !== "fill") continue;
+    const since = now - e.startedAt;
+    if (since < 0) continue;
+    const t = Math.min(1, Math.max(0, (since - FILL.holdMs) / FILL.sweepMs));
+    const front = e.reach * sweepAt(t);
+    const afterSweep = (since - FILL.holdMs - FILL.sweepMs) / FILL.fadeMs;
+    if (afterSweep >= 1) continue;
+    const paint = playerPaint(e.id);
+    ctx.save();
+    ctx.clip(landPath(e.land));
+    if (t < 1) {
+      // Pale everywhere the color hasn't reached: the land's box with the color's circle cut out.
+      ctx.beginPath();
+      ctx.rect(e.x - e.reach, e.y - e.reach, 2 * e.reach, 2 * e.reach);
+      if (front > 0) ctx.arc(e.x, e.y, front, 0, Math.PI * 2);
+      ctx.fillStyle = paint.landPale;
+      ctx.fill("evenodd");
+    }
+    if (front > 0) {
+      // The shine: clear inside, brightest at the front; it fades once the color has spread everywhere.
+      const shine = ctx.createRadialGradient(e.x, e.y, Math.max(0, front - FILL.shineBand * W), e.x, e.y, front);
+      shine.addColorStop(0, paint.landShineClear);
+      shine.addColorStop(1, paint.landShine);
+      ctx.globalAlpha = afterSweep > 0 ? 1 - afterSweep : 1;
+      ctx.fillStyle = shine;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, front, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+}
+
+/** The sand heads kick up behind them in their own land: faint puffs and small grains in lighter and darker shades of the land. */
+export function drawWake(ctx: CanvasRenderingContext2D, wake: HeadWake, now: number) {
+  wake.forEachPuff(now, (id, shade, x, y, size, alpha) => {
+    const paint = playerPaint(id);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = shade === "dark" ? paint.wakeGrain : paint.wake;
+    ctx.beginPath();
+    ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+const SPIN = LOOK.outSpin;
+/** Reused for the spinning head (no garbage per frame). */
+const spinning = { ...RESTING };
+
+/**
+ * Others' new land flashes white; a head that goes out bursts into pieces of its color. Knocked out, it first spins
+ * (faster and faster), pops up and shrinks, then bursts up there.
+ */
 export function drawEffects(ctx: CanvasRenderingContext2D, effects: readonly EffectView[], now: number) {
   for (const e of effects) {
-    if (e.kind === "vanish" || e.kind === "shake") continue;
-    const t = (now - e.startedAt) / (e.kind === "flash" ? LOOK.captureFlashMs : LOOK.burstMs);
+    if (e.kind === "vanish" || e.kind === "shake" || e.kind === "cheer" || e.kind === "fill") continue;
+    let startedAt = e.startedAt;
+    let y = e.kind === "burst" ? e.y : 0;
+    if (e.kind === "burst" && e.spin) {
+      const s = (now - startedAt) / SPIN.ms;
+      if (s < 0) continue;
+      if (s < 1) {
+        const scale = 1 - SPIN.shrink * s;
+        // Lifted in the shrunken head's own units, so it rises the full height on screen.
+        spinning.lift = (SPIN.lift * W * easeOut(s)) / scale;
+        drawHeadAt(ctx, e.id, e.x, e.y, e.angle + SPIN.turns * 2 * Math.PI * s * s, spinning, scale);
+        continue;
+      }
+      startedAt += SPIN.ms;
+      y -= SPIN.lift * W;
+    }
+    const t = (now - startedAt) / (e.kind === "flash" ? LOOK.captureFlashMs : LOOK.burstMs);
     if (t < 0 || t >= 1) continue;
     if (e.kind === "flash") {
       ctx.globalAlpha = LOOK.captureFlashAlpha * (1 - t);
@@ -245,7 +296,7 @@ export function drawEffects(ctx: CanvasRenderingContext2D, effects: readonly Eff
       const reach = LOOK.burstSpread * W * easeOut(t) * (0.6 + (i % 4) * 0.15);
       ctx.save();
       ctx.globalAlpha = 1 - t;
-      ctx.translate(e.x + Math.cos(angle) * reach, e.y + Math.sin(angle) * reach + t * t * W * 1.5);
+      ctx.translate(e.x + Math.cos(angle) * reach, y + Math.sin(angle) * reach + t * t * W * 1.5);
       ctx.rotate(angle + t * 6);
       ctx.fillStyle = i % 2 ? paint.head : paint.lip;
       ctx.fillRect(-piece / 2, -piece / 2, piece, piece);

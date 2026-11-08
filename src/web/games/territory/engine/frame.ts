@@ -26,12 +26,19 @@ export interface PlayerFrame {
 export type EffectView =
   /** New land flashing white. */
   | { kind: "flash"; land: Land; startedAt: number }
-  /** A head bursting when its player goes out. */
-  | { kind: "burst"; id: PlayerId; x: number; y: number; startedAt: number }
+  /** A head bursting when its player goes out; knocked out (`spin`), it first spins, pops up and shrinks, facing `angle`. */
+  | { kind: "burst"; id: PlayerId; x: number; y: number; angle: number; spin: boolean; startedAt: number }
   /** Land cut off from its owner fading away (drawn with the land, under trails and heads). */
   | { kind: "vanish"; id: PlayerId; land: Land; startedAt: number }
   /** The view shaking: hard when you go out, a little when you knock someone out. */
-  | { kind: "shake"; strength: "hard" | "light"; startedAt: number };
+  | { kind: "shake"; strength: "hard" | "light"; startedAt: number }
+  /**
+   * Your new land filling in: pale at first, then your color spreading from (x, y), where your head got home;
+   * `reach`: from there to its farthest corner.
+   */
+  | { kind: "fill"; id: PlayerId; land: Land; x: number; y: number; reach: number; startedAt: number }
+  /** A head hopping for joy (a capture; a knockout adds a spin): its height (world units), length and turns. */
+  | { kind: "cheer"; id: PlayerId; height: number; ms: number; spins: number; startedAt: number };
 
 /** Something happened in the match: collected by the client for whoever reacts to it (the sound), taken once. */
 export type MomentView =
@@ -65,6 +72,8 @@ export interface FrameView {
   focus: Point | null;
   /** The match is over: the ending plays on the arena (and the minimap goes). */
   ending: EndingView | null;
+  /** Who leads in land during the match and wears the crown (none on a tie or once it's over). */
+  leader?: PlayerId | null;
 }
 
 /** What the screen's overlay shows; refreshed a few times a second. */

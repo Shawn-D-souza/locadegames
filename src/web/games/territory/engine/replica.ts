@@ -106,6 +106,9 @@ export class Replica {
       if (head.outside && trail) {
         const last = trail.points[trail.points.length - 1]!;
         if (last.x !== head.x || last.y !== head.y) trail.points.push({ x: head.x, y: head.y, tick: s.tick });
+      } else if (trail) {
+        // Home without a capture of their own: their trail became land when they cut someone.
+        trail.endTick = s.tick;
       }
     }
     return true;

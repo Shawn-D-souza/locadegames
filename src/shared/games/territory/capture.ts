@@ -87,36 +87,26 @@ function isSliver(piece: Land): boolean {
 }
 
 /**
- * What is left of your land after someone else's capture took part of it. Slivers too thin to stand on
- * vanish (so taking all the land you can see always knocks you out). When a piece is cut in two (or more),
- * you keep one part and the rest vanishes: the part at `anchor` (where you stand, or where your trail left
- * home), else the part nearest to it; a piece you are not on keeps its biggest part. Pieces that were
- * already separate (land won by cutting someone) stay separate.
+ * What is left of your land after someone else took part of it. Slivers too thin to stand on vanish (so
+ * taking all the land you can see always knocks you out). When it is cut in two (or more), you keep one
+ * part and the rest vanishes: the part at `anchor` (where you stand, or where your trail left home), else
+ * the part nearest to it. No exceptions: land is always one piece (land won by a cut is joined to yours).
  */
-export function keepConnected(before: Land, after: Land, anchor: Point): Land {
+export function keepConnected(after: Land, anchor: Point): Land {
   const all = landPieces(after);
   const parts = all.filter((part) => !isSliver(part));
   if (parts.length === 0) return [];
   if (parts.length === 1 && all.length === 1) return after;
-  const olds = landPieces(before);
-  const groups = new Map<number, Land[]>();
-  parts.forEach((part, index) => {
-    // A part lies inside exactly one old piece; unmatched (never expected) parts stand alone.
-    const old = olds.findIndex((o) => intersect(part, o, FillRule.NonZero).length > 0);
-    const key = old >= 0 ? old : olds.length + index;
-    groups.set(key, [...(groups.get(key) ?? []), part]);
-  });
-  const slackSq = TERRITORY_CONFIG.anchorSlack ** 2;
-  const kept: Land = [];
-  for (const [key, group] of groups) {
-    const old = olds[key];
-    const anchored = !!old && distanceToLandSq(old, anchor) <= slackSq;
-    const score = (part: Land) => (anchored ? distanceToLandSq(part, anchor) : -landArea(part));
-    let best = group[0]!;
-    for (const part of group) if (score(part) < score(best)) best = part;
-    kept.push(...best);
+  let best = parts[0]!;
+  let bestSq = distanceToLandSq(best, anchor);
+  for (const part of parts) {
+    const distSq = distanceToLandSq(part, anchor);
+    if (distSq < bestSq) {
+      best = part;
+      bestSq = distSq;
+    }
   }
-  return kept;
+  return best;
 }
 
 /** One open area: its outline and the islands inside it. */
@@ -169,8 +159,28 @@ function sameArea(a: OpenArea, b: OpenArea): boolean {
  * the biggest one: that is the rest of the arena.
  */
 export function captureLand(land: Land, trail: readonly Point[], shape: ArenaShape): Land {
-  const before = openAreas(land, shape);
   const grown = intersect(union(land, trailArea(trail, shape.headLimit), FillRule.NonZero), shape.arena, FillRule.NonZero);
+  return fillClosedOff(land, grown, shape);
+}
+
+/**
+ * The cutter's land after a cut: their own, the land they won, and the trails that join the two (each
+ * stroked to its full width, like a capture's trail), inside the arena, with every open area those trails
+ * newly closed off filled in, like a capture (owner decision, 2026-11-08).
+ */
+export function joinLand(land: Land, won: Land, trails: readonly (readonly Point[])[], shape: ArenaShape): Land {
+  const joined = union(land, won, FillRule.NonZero);
+  let grown = joined;
+  for (const trail of trails) if (trail.length) grown = union(grown, trailArea(trail, shape.headLimit), FillRule.NonZero);
+  return fillClosedOff(joined, intersect(grown, shape.arena, FillRule.NonZero), shape);
+}
+
+/**
+ * `grown` (land that grew from `land`) with every open area it newly closed off filled in. Areas cut off
+ * against the wall count too, except the biggest one: that is the rest of the arena.
+ */
+function fillClosedOff(land: Land, grown: Land, shape: ArenaShape): Land {
+  const before = openAreas(land, shape);
   const after = openAreas(grown, shape).filter((open) => !before.some((old) => sameArea(old, open)));
   const atWall = after.filter((open) => open.touchesWall);
   const rest = atWall.reduce<OpenArea | null>((big, open) => (!big || open.area > big.area ? open : big), null);
@@ -181,8 +191,4 @@ export function captureLand(land: Land, trail: readonly Point[], shape: ArenaSha
 /** `land` without whatever `taken` covers. */
 export function subtractLand(land: Land, taken: Land): Land {
   return plain(difference(land, taken, FillRule.NonZero));
-}
-
-export function mergeLand(a: Land, b: Land): Land {
-  return plain(union(a, b, FillRule.NonZero));
 }

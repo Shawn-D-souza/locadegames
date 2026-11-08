@@ -1,5 +1,5 @@
 export { colors, type ColorToken } from "./colors";
-export { contrastRatio, darken, lighten, readableText, withAlpha } from "./colorUtils";
+export { contrastRatio, darken, lighten, mix, readableText, withAlpha } from "./colorUtils";
 export { buildCssVariables } from "./cssVariables";
 export { durations, easings, transforms } from "./motion";
 export { getPlayerColor, playerColors, type PlayerColor, type PlayerPattern } from "./players";

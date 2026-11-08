@@ -25,6 +25,14 @@ export function lighten(hex: string, amount: number): string {
   return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`.toUpperCase();
 }
 
+/** Mixes `a` toward `b` by `amount` (0 is `a`, 1 is `b`). */
+export function mix(a: string, b: string, amount: number): string {
+  const ca = parseHex(a);
+  const cb = parseHex(b);
+  const channel = (i: number) => toHex(ca[i]! + (cb[i]! - ca[i]!) * amount);
+  return `#${channel(0)}${channel(1)}${channel(2)}`.toUpperCase();
+}
+
 export function withAlpha(hex: string, alpha: number): string {
   const [r, g, b] = parseHex(hex);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;

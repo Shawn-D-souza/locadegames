@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { TERRITORY_CONFIG } from "../../../shared/games/territory/config";
+import { angleToRadians } from "../../../shared/games/territory/movement";
 import type { PlayerId } from "../../../shared/rooms/types";
 import type { EffectView, EndingView } from "../../games/territory/engine/frame";
 import { KillPop } from "../../games/territory/hud/KillPop";
@@ -47,7 +48,7 @@ export function TerritoryStage({ moment }: { moment: TerritoryMoment }) {
     const kill = moment === "kill";
     const effects: EffectView[] = kill
       ? [
-          { kind: "burst", id: VICTIM_ID, x: victim.x, y: victim.y, startedAt },
+          { kind: "burst", id: VICTIM_ID, x: victim.x, y: victim.y, angle: angleToRadians(victim.heading), spin: true, startedAt },
           { kind: "shake", strength: "light", startedAt },
         ]
       : [];

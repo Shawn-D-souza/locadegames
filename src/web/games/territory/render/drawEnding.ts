@@ -1,23 +1,23 @@
 import { TERRITORY_CONFIG } from "../../../../shared/games/territory/config";
 import type { Land, Point } from "../../../../shared/games/territory/types";
-import { colors, lighten } from "../../../../theme";
+import { lighten } from "../../../../theme";
 import { TERRITORY_CLIENT_CONFIG } from "../config";
 import type { EffectView, EndingView, PlayerFrame } from "../engine/frame";
-import { drawHeads } from "./drawWorld";
+import { drawHeads } from "./drawHeads";
 import { ARENA_PAINT, playerPaint } from "./palette";
 import { landPath } from "./paths";
+import { winnerHeadAngle } from "./winnerHeadSpin";
 
 /**
  * The match's ending, drawn on the arena: a thump, everyone but the winners washing out, rays in the
  * winner's color turning around the arena, and a big copy of each winner's head dropping onto them with a
- * crown. All keyed to the ending's start, so it plays the same on every frame rate.
+ * crown, spinning round to face us. All keyed to the ending's start, so it plays the same on every frame rate.
  */
 
 const LOOK = TERRITORY_CLIENT_CONFIG.look;
 const W = TERRITORY_CONFIG.trailWidth;
 const RAYS_REACH = 3;
 const RAY_LIGHTEN = 0.55;
-const CROWN = { width: 0.9, height: 0.55, lift: 0.62, tilt: -0.22, outline: 2 } as const;
 
 /** 0 → 1 over `durationMs` after `atMs` (ms since the ending started). */
 function progress(sinceMs: number, atMs: number, durationMs: number): number {
@@ -92,32 +92,13 @@ export function winnersOnTop(ending: EndingView, now: number): boolean {
   return now - ending.startedAt >= LOOK.washAtMs;
 }
 
-function drawCrown(ctx: CanvasRenderingContext2D, size: number) {
-  const w = size * CROWN.width;
-  const h = size * CROWN.height;
-  ctx.beginPath();
-  ctx.moveTo(-w / 2, h / 2);
-  ctx.lineTo(-w / 2, -h / 2);
-  ctx.lineTo(-w / 4, 0);
-  ctx.lineTo(0, -h / 2);
-  ctx.lineTo(w / 4, 0);
-  ctx.lineTo(w / 2, -h / 2);
-  ctx.lineTo(w / 2, h / 2);
-  ctx.closePath();
-  ctx.fillStyle = colors.waiting;
-  ctx.fill();
-  ctx.lineWidth = CROWN.outline;
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = ARENA_PAINT.ink;
-  ctx.stroke();
-}
-
 /**
- * Each winner's head, big (screen px), dropping onto where they are with a bounce, a crown on top.
- * `toScreen` maps world to CSS px; the context is in CSS px.
+ * Each winner's head, big (screen px), dropping onto where they are with a bounce, wearing the crown,
+ * spinning round to face us (`winnerHeadAngle`). `toScreen` maps world to CSS px; the context is in CSS px.
  */
 export function drawWinnerHeads(ctx: CanvasRenderingContext2D, ending: EndingView, players: readonly PlayerFrame[], toScreen: (p: Point) => Point, now: number) {
-  const t = progress(now - ending.startedAt, LOOK.winnerHeadAtMs, LOOK.winnerHeadDropMs);
+  const since = now - ending.startedAt;
+  const t = progress(since, LOOK.winnerHeadAtMs, LOOK.winnerHeadDropMs);
   if (t === 0) return;
   const size = LOOK.winnerHeadPx;
   const grow = easeOutBack(t);
@@ -131,12 +112,8 @@ export function drawWinnerHeads(ctx: CanvasRenderingContext2D, ending: EndingVie
     ctx.translate(at.x, at.y - drop);
     ctx.scale(k, k);
     ctx.translate(-p.head.x, -p.head.y);
-    drawHeads(ctx, [p]);
-    ctx.restore();
-    ctx.save();
-    ctx.translate(at.x, at.y - drop - size * CROWN.lift * grow);
-    ctx.rotate(CROWN.tilt);
-    drawCrown(ctx, size * grow);
+    // Wearing the leader's crown, the same 3D one as in the match.
+    drawHeads(ctx, [{ ...p, head: { ...p.head, angle: winnerHeadAngle(p.head.angle, since) } }], undefined, undefined, p.id);
     ctx.restore();
   }
 }

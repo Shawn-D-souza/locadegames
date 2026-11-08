@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { difference, FillRule, union } from "clipper2-ts";
 import { arenaPolygon, headLimit } from "../src/shared/games/territory/arena";
-import { captureLand, keepConnected, landPieces, trailArea } from "../src/shared/games/territory/capture";
+import { captureLand, joinLand, keepConnected, landPieces, trailArea } from "../src/shared/games/territory/capture";
 import { TERRITORY_CONFIG, TERRITORY_TICKS } from "../src/shared/games/territory/config";
 import { landArea, pointInLand } from "../src/shared/games/territory/geometry";
 import { angleOf, moveHead, turnToward } from "../src/shared/games/territory/movement";
@@ -144,25 +144,31 @@ describe("territory capture", () => {
 });
 
 describe("territory land pieces", () => {
-  it("keeps the part at the anchor, the biggest part of other pieces, and separate pieces", () => {
+  it("keeps only the part at the anchor, even of land that was in separate pieces", () => {
     const home = square(0, 0, 5_000);
     const far = square(20_000, 0, 5_000);
     const before = [...home, ...far];
     // A slice through each piece, off-center in the far one.
     const after = difference(before, [...rect(-500, -6_000, 500, 6_000), ...rect(21_000, -6_000, 22_000, 6_000)], FillRule.NonZero);
     expect(landPieces(after)).toHaveLength(4);
-    const kept = keepConnected(before, after, { x: 3_000, y: 0 });
-    expect(landPieces(kept)).toHaveLength(2);
+    const kept = keepConnected(after, { x: 3_000, y: 0 });
+    expect(landPieces(kept)).toHaveLength(1);
     expect(pointInLand(kept, { x: 3_000, y: 0 })).toBe(true);
     expect(pointInLand(kept, { x: -3_000, y: 0 })).toBe(false);
-    expect(pointInLand(kept, { x: 17_000, y: 0 })).toBe(true);
-    expect(pointInLand(kept, { x: 24_000, y: 0 })).toBe(false);
+    expect(pointInLand(kept, { x: 17_000, y: 0 })).toBe(false);
+  });
+
+  it("keeps the part nearest the anchor when it isn't on any (its trail left land since taken)", () => {
+    const after = [...square(0, 0, 2_000), ...square(20_000, 0, 5_000)];
+    const kept = keepConnected(after, { x: 4_000, y: 0 });
+    expect(pointInLand(kept, { x: 0, y: 0 })).toBe(true);
+    expect(pointInLand(kept, { x: 20_000, y: 0 })).toBe(false);
   });
 
   it("leaves land alone when nothing was cut in two", () => {
     const before = square(0, 0, 5_000);
     const after = difference(before, rect(4_000, -6_000, 6_000, 6_000), FillRule.NonZero);
-    expect(keepConnected(before, after, { x: 0, y: 0 })).toBe(after);
+    expect(keepConnected(after, { x: 0, y: 0 })).toBe(after);
   });
 });
 
@@ -187,6 +193,39 @@ describe("territory match", () => {
     expect(pointInLand(me.land, { x: 5_000, y: 3_000 })).toBe(true);
   });
 
+  it("is home as the head touches its land: its center within homeReach, and not before", () => {
+    const { homeReach, speedPerStep } = TERRITORY_CONFIG;
+    expect(homeReach).toBeLessThan(W / 2); // the trail's stroke always reaches the land
+    const comeBackFrom = (gap: number) => {
+      const west = angleOf(-1, 0);
+      const s = stateWith([
+        { x: 3_000 + gap + speedPerStep, y: 0, heading: west, target: west, land: square(0, 0, 3_000) },
+        { x: -30_000, y: 0, land: square(-30_000, 0, 3_000) },
+      ]);
+      const p = s.players[0]!;
+      p.trail = [{ x: 3_000, y: 2_000 }, { x: 8_000, y: 2_000 }, { x: 8_000, y: 0 }, { x: p.x, y: 0 }];
+      const events = stepTerritory(s, shape);
+      expect(p.x).toBe(3_000 + gap);
+      return events.find((e) => e.type === "capture");
+    };
+    expect(comeBackFrom(homeReach + 1)).toBeUndefined();
+    const capture = comeBackFrom(homeReach);
+    // The trail still ends exactly on the land's edge.
+    expect(capture?.point).toEqual({ x: 3_000, y: 0 });
+  });
+
+  it("leaves home only beyond homeReach, with the trail starting on the land's edge", () => {
+    const s = stateWith([{ x: 2_900, y: 500, heading: 0, target: 0, land: square(0, 0, 3_000) }, { x: -30_000, y: 0, land: square(-30_000, 0, 3_000) }]);
+    const p = s.players[0]!;
+    let start = null;
+    while (!start) {
+      start = stepTerritory(s, shape).find((e) => e.type === "trailStart") ?? null;
+      if (!start) expect(p.x - 3_000).toBeLessThanOrEqual(TERRITORY_CONFIG.homeReach);
+    }
+    expect(p.x - 3_000).toBeGreaterThan(TERRITORY_CONFIG.homeReach);
+    expect(start.type === "trailStart" && start.point).toEqual({ x: 3_000, y: 500 });
+  });
+
   it("lets you cross your own trail", () => {
     const s = stateWith([{ x: 0, y: 0, heading: 0, target: 0, land: square(0, 0, 3_000) }, { x: -30_000, y: 0, land: square(-30_000, 0, 3_000) }]);
     driveTo(s, 0, { x: 10_000, y: 0 });
@@ -196,18 +235,71 @@ describe("territory match", () => {
     expect(s.players[0]!.alive).toBe(true);
   });
 
-  it("knocks out a cut player and gives their land to the cutter", () => {
+  it("knocks out a cut player and gives their land to the cutter, joined to theirs by both trails", () => {
     const s = stateWith([
       { x: 0, y: 0, heading: 0, target: 0, land: square(0, 0, 3_000) },
-      { x: 6_000, y: -8_000, heading: 1_024, target: 1_024, land: square(6_000, -12_000, 3_000) },
+      { x: 6_000, y: -9_500, heading: 1_024, target: 1_024, land: square(6_000, -12_000, 3_000) },
     ]);
-    // Both keep moving every step: 0 runs right, 1 runs down across 0's trail.
+    // Both keep moving every step: 0 runs right, 1 runs down out of its land and across 0's trail.
     const events = driveTo(s, 0, { x: 12_000, y: 0 });
     const out = events.find((e) => e.type === "out");
     expect(out).toMatchObject({ type: "out", id: 0, reason: "cut", by: 1 });
-    expect(s.players[0]!.alive).toBe(false);
-    expect(pointInLand(s.players[1]!.land, { x: 0, y: 0 })).toBe(true);
+    const [victim, cutter] = s.players as [TerritoryPlayer, TerritoryPlayer];
+    expect(victim.alive).toBe(false);
+    expect(victim.land).toEqual([]);
+    // The victim's land, its trail from home to the cut, the cutter's own trail and home: one piece.
+    expect(pointInLand(cutter.land, { x: 0, y: 0 })).toBe(true);
+    expect(pointInLand(cutter.land, { x: 4_500, y: 0 })).toBe(true);
+    expect(pointInLand(cutter.land, { x: 6_000, y: -5_000 })).toBe(true);
+    expect(landPieces(cutter.land)).toHaveLength(1);
+    expect(cutter.trail).toEqual([]);
+    // The victim's trail past the cut doesn't become land.
+    expect(pointInLand(cutter.land, { x: 8_500, y: 0 })).toBe(false);
+    // The event carries the cutter's whole new land.
+    expect(out?.type === "out" && out.lands.find((l) => l.id === 1)?.land).toEqual(cutter.land);
     expect(s.ended).toBe(true);
+  });
+
+  it("fills an open area the joining trails close off on a cut, like a capture", () => {
+    // The cutter's land on the left, the land won on the right; one trail joins them along the top, the other along the bottom.
+    const mine = square(-6_000, 0, 2_000);
+    const won = square(6_000, 0, 2_000);
+    const top = [
+      { x: -6_000, y: -1_500 },
+      { x: -6_000, y: -5_000 },
+      { x: 6_000, y: -5_000 },
+      { x: 6_000, y: -1_500 },
+    ];
+    const bottom = [
+      { x: 6_000, y: 1_500 },
+      { x: 6_000, y: 5_000 },
+      { x: -6_000, y: 5_000 },
+      { x: -6_000, y: 1_500 },
+    ];
+    const land = joinLand(mine, won, [top, bottom], shape);
+    expect(landPieces(land)).toHaveLength(1);
+    expect(pointInLand(land, { x: 0, y: 0 })).toBe(true);
+    // One trail alone closes nothing off: the space below it stays open.
+    const one = joinLand(mine, won, [top], shape);
+    expect(pointInLand(one, { x: 0, y: -5_000 })).toBe(true);
+    expect(pointInLand(one, { x: 0, y: 0 })).toBe(false);
+  });
+
+  it("takes the joining trails' land from anyone else under them", () => {
+    const s = stateWith([
+      { x: 0, y: 0, heading: 0, target: 0, land: square(0, 0, 3_000) },
+      { x: 6_000, y: -9_500, heading: 1_024, target: 1_024, land: square(6_000, -12_000, 3_000) },
+      // A long strip of land the cutter's trail runs across (sliced in two by it).
+      { x: -20_000, y: -5_000, heading: 2_048, target: 2_048, land: rect(-30_000, -5_500, 20_000, -4_500) },
+    ]);
+    driveTo(s, 0, { x: 12_000, y: 0 });
+    const [, cutter, other] = s.players as [TerritoryPlayer, TerritoryPlayer, TerritoryPlayer];
+    expect(pointInLand(cutter.land, { x: 6_000, y: -5_000 })).toBe(true);
+    expect(pointInLand(other.land, { x: 6_000, y: -5_000 })).toBe(false);
+    // The other player keeps the part they stand on; the far part vanishes.
+    expect(pointInLand(other.land, { x: -15_000, y: -5_000 })).toBe(true);
+    expect(pointInLand(other.land, { x: 15_000, y: -5_000 })).toBe(false);
+    expect(landPieces(cutter.land)).toHaveLength(1);
   });
 
   it("cuts as soon as a head visibly touches a trail, and not before", () => {

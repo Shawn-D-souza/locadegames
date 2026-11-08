@@ -1,10 +1,10 @@
-import { TERRITORY_CONFIG } from "../../../../shared/games/territory/config";
 import type { Land } from "../../../../shared/games/territory/types";
 import type { PlayerId } from "../../../../shared/rooms/types";
 import { fonts, fontWeights } from "../../../../theme";
 import { TERRITORY_CLIENT_CONFIG } from "../config";
 import type { FrameView } from "../engine/frame";
 import type { Camera } from "./camera";
+import { CROWN_REACH_UP, HEAD_REACH_UP } from "./drawHeads";
 import { ARENA_PAINT, playerPaint } from "./palette";
 import { landPath } from "./paths";
 
@@ -13,7 +13,6 @@ const { minimapMargin: MINIMAP_MARGIN, minimapFloorAlpha: MINIMAP_FLOOR_ALPHA, m
 /** Drawing in screen pixels (CSS px; the device pixel ratio is already applied): names, the minimap. */
 
 const LOOK = TERRITORY_CLIENT_CONFIG.look;
-const W = TERRITORY_CONFIG.trailWidth;
 
 /** Name tags over everyone else's head: a white pill with an ink outline. */
 export function drawNames(
@@ -32,7 +31,8 @@ export function drawNames(
     const name = names.get(p.id);
     if (!name) continue;
     const at = camera.toScreen(p.head, width, height);
-    const y = at.y - (LOOK.headSize * W * camera.scale) / 2 - LOOK.nameGapPx - LOOK.nameFontPx / 2;
+    const reach = p.id === frame.leader ? Math.max(HEAD_REACH_UP, CROWN_REACH_UP) : HEAD_REACH_UP;
+    const y = at.y - reach * camera.scale - LOOK.nameGapPx - LOOK.nameFontPx / 2;
     const textWidth = ctx.measureText(name).width;
     const padX = 6;
     const h = LOOK.nameFontPx + 8;
@@ -61,7 +61,7 @@ export function drawMinimap(ctx: CanvasRenderingContext2D, frame: FrameView, are
   ctx.scale(scale, scale);
   const arenaPath = landPath(arena);
   ctx.globalAlpha = MINIMAP_FLOOR_ALPHA;
-  ctx.fillStyle = ARENA_PAINT.floor;
+  ctx.fillStyle = ARENA_PAINT.minimapFloor;
   ctx.fill(arenaPath);
   ctx.globalAlpha = 1;
   for (const p of frame.players) {

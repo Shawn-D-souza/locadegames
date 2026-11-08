@@ -26,6 +26,12 @@ export const colors = {
   modeViolet: "#C23BE0",
   modeMagenta: "#E0308F",
   grassGreen: "#4A8C1C",
+  /** Crowns in games (Territory's leader): a deep orange gold, and its bright yellow where light hits it. */
+  gold: "#FF9A14",
+  goldLight: "#FFE04A",
+  /** Places on results tables: 2nd and 3rd (1st is gold). Ink text reads on both. */
+  silver: "#D3D8E4",
+  bronze: "#EBA46E",
 
   online: "#78C840",
   waiting: "#FFC02E",

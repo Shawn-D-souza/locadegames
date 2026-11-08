@@ -304,10 +304,10 @@ describe("game sounds", () => {
   });
 
   it("captures go by size", () => {
-    const { captureMediumArea, captureLargeArea } = TERRITORY_CLIENT_CONFIG.sound;
-    expect(captureSound(captureMediumArea - 1)).toBe("territoryCaptureSmall");
-    expect(captureSound(captureMediumArea)).toBe("territoryCaptureMedium");
-    expect(captureSound(captureLargeArea)).toBe("territoryCaptureLarge");
+    const { mediumArea, largeArea } = TERRITORY_CLIENT_CONFIG.captureSize;
+    expect(captureSound(mediumArea - 1)).toBe("territoryCaptureSmall");
+    expect(captureSound(mediumArea)).toBe("territoryCaptureMedium");
+    expect(captureSound(largeArea)).toBe("territoryCaptureLarge");
   });
 
   it("others are heard as far away as they are", () => {

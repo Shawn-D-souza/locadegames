@@ -67,7 +67,7 @@ export default async function territory(session) {
     await heard(builder, "territoryLeftLand", "territoryTrailLoop", "territoryCaptureSmall");
     await felt(builder, "territoryLeftLand", "territoryCaptureSmall");
   });
-  await session.step("a cut: the cutter's stamp and notice, the host's out card", async () => {
+  await session.step("a cut: the cutter's trail becomes land, their stamp and notice, the host's out card", async () => {
     // The host heads for the middle and on past it; the cutter crosses the host's trail on the way.
     const h = spawns[ids.host];
     const mid = { x: h.x * 0.5, y: h.y * 0.5 };
@@ -76,6 +76,14 @@ export default async function territory(session) {
     const c = spawns[ids.cutter];
     await steer(cutter, [mid, { x: mid.x + (mid.x - c.x) * 0.4, y: mid.y + (mid.y - c.y) * 0.4 }]);
     await until(async () => !(await alive(host, ids.host)), "the host to be cut");
+    // The cutter's own trail became land on the step of the cut (joining the host's land to theirs).
+    const trailBecameLand = () =>
+      cutter.evaluate(({ me, victim }) => {
+        const r = window.territory.replica;
+        const out = r.players.get(victim).outTick;
+        return out !== null && r.players.get(me).trails.some((t) => t.endTick === out);
+      }, { me: ids.cutter, victim: ids.host });
+    await until(trailBecameLand, "the cutter's trail to become land", 3_000);
     await sees(cutter, /cut .+!/i);
     await sees(cutter, /you cut/i);
     await sees(host, /you're out/i);

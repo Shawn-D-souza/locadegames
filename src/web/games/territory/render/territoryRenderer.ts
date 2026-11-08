@@ -12,20 +12,27 @@ import { drawMinimap, drawMinimapHeads, drawNames } from "./drawOverlay";
 import {
   cutTrenches,
   drawEffects,
+  drawFills,
   drawFloor,
-  drawHeads,
   drawLandLips,
   drawLands,
   drawLandTops,
   drawTrails,
   drawVanishing,
+  drawWake,
   drawWall,
   LAND_LIP,
 } from "./drawWorld";
+import { drawHeads } from "./drawHeads";
+import { HeadWake } from "./headWake";
+import { HeadMotion } from "./headMotion";
 import { ARENA_PAINT } from "./palette";
 
 const HUD = TERRITORY_CLIENT_CONFIG.hud;
 const HALF_TRAIL = TERRITORY_CONFIG.trailWidth / 2;
+/** Where trenches are cut: the lips over the trail only; the tops also one lip higher, opening the far wall beyond the trail. */
+const LIPS_CUT = [0] as const;
+const TOPS_CUT = [0, -LAND_LIP] as const;
 
 const boundsCache = new WeakMap<Land, Bounds | null>();
 function cachedBounds(land: Land): Bounds | null {
@@ -58,6 +65,8 @@ function trailsCrossLand(players: readonly PlayerFrame[]): boolean {
 export class TerritoryRenderer {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly camera = new Camera();
+  private readonly headMotion = new HeadMotion();
+  private readonly headWake = new HeadWake();
   private readonly minimap = document.createElement("canvas");
   /** Scratch layer for land with trenches cut in it (same size as the canvas). */
   private readonly layer = document.createElement("canvas");
@@ -130,19 +139,25 @@ export class TerritoryRenderer {
       drawTrails(ctx, frame.players, frame.radius);
       this.drawLandLayer(world, (layer) => {
         drawLandLips(layer, frame.players, arena);
-        cutTrenches(layer, frame.players, frame.radius, LAND_LIP, pxPerUnit);
+        cutTrenches(layer, frame.players, frame.radius, LIPS_CUT, pxPerUnit);
       });
       this.drawLandLayer(world, (layer) => {
         drawLandTops(layer, frame.players, arena, pxPerUnit);
-        cutTrenches(layer, frame.players, frame.radius, 0, pxPerUnit);
+        cutTrenches(layer, frame.players, frame.radius, TOPS_CUT, pxPerUnit);
       });
       drawVanishing(ctx, frame.effects, now);
+      drawFills(ctx, frame.effects, now);
+      drawWake(ctx, this.headWake, now);
     } else {
       drawLands(ctx, frame.players, arena, pxPerUnit);
       drawVanishing(ctx, frame.effects, now);
+      drawFills(ctx, frame.effects, now);
+      drawWake(ctx, this.headWake, now);
       drawTrails(ctx, frame.players, frame.radius);
     }
-    drawHeads(ctx, frame.players);
+    this.headMotion.update(frame.players, now, frame.effects);
+    if (!ending) this.headWake.update(frame.players, now);
+    drawHeads(ctx, frame.players, frame.radius, this.headMotion, frame.leader);
     if (ending) {
       // Everyone washes out; the winners come back on top.
       drawWash(ctx, ending, arena, now);
@@ -150,7 +165,7 @@ export class TerritoryRenderer {
         const winners = frame.players.filter((p) => ending.winners.includes(p.id));
         drawLands(ctx, winners, arena, pxPerUnit);
         drawTrails(ctx, winners, frame.radius);
-        drawHeads(ctx, winners);
+        drawHeads(ctx, winners, frame.radius, this.headMotion);
       }
     }
     drawEffects(ctx, frame.effects, now);

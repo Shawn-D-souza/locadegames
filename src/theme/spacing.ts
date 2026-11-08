@@ -46,6 +46,10 @@ export const layout = {
   confetti: 10,
   avatar: 44,
   avatarSmall: 28,
+  /** The champion's disc on the results card, the gold crown sitting on it, and the small one on 1st place in the table. */
+  avatarHero: 64,
+  crownHero: 44,
+  crownSmall: 18,
   /** Game tiles reflow: two columns on phones, more on wider screens. */
   gameTile: 140,
   /** Settings switch: the pill track, its knob, and how far the knob slides. */

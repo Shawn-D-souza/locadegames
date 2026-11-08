@@ -21,6 +21,10 @@ describe("theme contrast", () => {
     });
   });
 
+  it("keeps ink places readable on gold, silver and bronze discs", () => {
+    for (const disc of [colors.gold, colors.silver, colors.bronze]) expect(contrastRatio(disc, colors.ink), disc).toBeGreaterThanOrEqual(TEXT_CONTRAST);
+  });
+
   it("keeps white button text readable on coral and ink", () => {
     expect(contrastRatio(colors.coral, colors.white)).toBeGreaterThanOrEqual(LARGE_TEXT_CONTRAST);
     expect(contrastRatio(colors.ink, colors.white)).toBeGreaterThanOrEqual(LARGE_TEXT_CONTRAST);

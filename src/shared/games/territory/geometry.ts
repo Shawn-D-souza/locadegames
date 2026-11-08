@@ -71,6 +71,40 @@ export function distanceToLandSq(land: Land, p: Point): number {
   return best;
 }
 
+/** Whether p is in the land or within `reach` of its edge. */
+export function nearLand(land: Land, p: Point, reach: number): boolean {
+  if (pointInLand(land, p)) return true;
+  const reachSq = reach * reach;
+  for (const ring of land) {
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) if (pointSegmentDistanceSq(p, ring[j]!, ring[i]!) <= reachSq) return true;
+  }
+  return false;
+}
+
+/** The point on the land's edge closest to p, rounded to whole units; null for no land. */
+export function nearestEdgePoint(land: Land, p: Point): Point | null {
+  let best: Point | null = null;
+  let bestSq = Infinity;
+  for (const ring of land) {
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const a = ring[j]!;
+      const b = ring[i]!;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const lengthSq = dx * dx + dy * dy;
+      const t = lengthSq === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq));
+      const x = a.x + dx * t;
+      const y = a.y + dy * t;
+      const dSq = (x - p.x) ** 2 + (y - p.y) ** 2;
+      if (dSq < bestSq) {
+        bestSq = dSq;
+        best = { x: Math.round(x), y: Math.round(y) };
+      }
+    }
+  }
+  return best;
+}
+
 /**
  * Where the segment a→b first crosses the land's edge (closest to a), rounded to whole units;
  * null if it doesn't cross. Used to start and end trails exactly on the edge.
@@ -150,4 +184,29 @@ export function trimPolylineEnd(points: readonly Point[], length: number): Point
     remaining -= segment;
   }
   return [];
+}
+
+/** The polyline from its start to its closest point to `p` (the first such point on a tie). */
+export function polylineUpTo(points: readonly Point[], p: Point): Point[] {
+  if (points.length < 2) return [...points];
+  let at = 1;
+  let atT = 0;
+  let bestSq = Infinity;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1]!;
+    const b = points[i]!;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lengthSq = dx * dx + dy * dy;
+    const t = lengthSq === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq));
+    const distSq = distanceSq(p, { x: a.x + dx * t, y: a.y + dy * t });
+    if (distSq < bestSq) {
+      bestSq = distSq;
+      at = i;
+      atT = t;
+    }
+  }
+  const a = points[at - 1]!;
+  const b = points[at]!;
+  return [...points.slice(0, at), { x: a.x + (b.x - a.x) * atT, y: a.y + (b.y - a.y) * atT }];
 }

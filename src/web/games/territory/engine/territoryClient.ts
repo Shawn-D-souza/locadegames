@@ -2,7 +2,7 @@ import { difference, FillRule } from "clipper2-ts";
 import { headLimit } from "../../../../shared/games/territory/arena";
 import { captureLand, type ArenaShape } from "../../../../shared/games/territory/capture";
 import { TERRITORY_CONFIG } from "../../../../shared/games/territory/config";
-import { landArea } from "../../../../shared/games/territory/geometry";
+import { landArea, landBounds } from "../../../../shared/games/territory/geometry";
 import { angleToRadians } from "../../../../shared/games/territory/movement";
 import { landShare } from "../../../../shared/games/territory/ranking";
 import { arenaShape } from "../../../../shared/games/territory/simulation";
@@ -10,9 +10,11 @@ import type { Land, Point } from "../../../../shared/games/territory/types";
 import { decodeServerMessage, encodeClientMessage, type TerritoryClientMessage } from "../../../../shared/games/territory/wire";
 import type { Bytes } from "../../../../shared/protocol/bytes";
 import type { PlayerId } from "../../../../shared/rooms/types";
+import { captureSize } from "../captureSize";
 import { TERRITORY_CLIENT_CONFIG } from "../config";
 import type { EffectView, EndingView, FrameView, HeadView, HudView, KnockoutView, MomentView, PlayerFrame } from "./frame";
 import { OwnPredictor, type PredictedStep, type Prediction } from "./prediction";
+import { leaderOf } from "./leader";
 import { landAt, latestLand, Replica, type ReplicaPlayer } from "./replica";
 import { ServerClock } from "./serverClock";
 
@@ -238,10 +240,11 @@ export class TerritoryClient {
       players.push(frame);
       focus = frame.head;
     }
-    this.effects = this.effects.filter((e) => now - e.startedAt < Math.max(LOOK.captureFlashMs, LOOK.burstMs, LOOK.vanishMs, LOOK.shakeMs));
+    this.effects = this.effects.filter((e) => now - e.startedAt < effectMs(e));
     this.knockouts = this.knockouts.filter((k) => now - k.at < TERRITORY_CLIENT_CONFIG.hud.knockoutShowMs);
-    // The ending shows the whole arena.
-    return { radius: r.radius, players, effects: this.effects, focus: this.ending ? null : focus, ending: this.ending };
+    // The ending shows the whole arena (and crowns its own winners).
+    const leader = this.ending ? null : this.leader();
+    return { radius: r.radius, players, effects: this.effects, focus: this.ending ? null : focus, ending: this.ending, leader };
   }
 
   /**
@@ -354,8 +357,9 @@ export class TerritoryClient {
       if (this.flashedCaptureKey !== key) {
         this.flashedCaptureKey = key;
         const gained = difference(home, latest, FillRule.NonZero);
-        this.flash(gained, now);
+        this.fill(me.id, gained, head, now);
         this.noteCapture(gained, now);
+        this.cheer(me.id, gained, now);
       }
     } else {
       this.predictedCapture = null;
@@ -443,7 +447,7 @@ export class TerritoryClient {
     if (!p) return;
     if (type === "out") {
       const at = this.lastDrawnHeads.get(id);
-      if (at) this.effects.push({ kind: "burst", id, x: at.x, y: at.y, startedAt: now });
+      if (at) this.effects.push({ kind: "burst", id, x: at.x, y: at.y, angle: at.angle, spin: p.outReason !== "quit", startedAt: now });
       this.moments.push({ kind: "out", id, by: p.cutBy, reason: p.outReason, x: at?.x ?? 0, y: at?.y ?? 0, at: now });
       if (p.outReason) {
         this.knockouts.push({ id, by: p.cutBy, reason: p.outReason, at: now });
@@ -451,11 +455,17 @@ export class TerritoryClient {
       }
       const mine = this.options.myId;
       if (this.options.playing && (id === mine || p.cutBy === mine)) this.effects.push({ kind: "shake", strength: id === mine ? "hard" : "light", startedAt: now });
+      // Whoever knocked them out hops for joy, with a spin.
+      if (p.cutBy !== null && this.replica.players.get(p.cutBy)?.alive) {
+        this.hop(p.cutBy, LOOK.headMotion.hops.knockout, now);
+      }
       // Land passing to the cutter flashes too.
       const heir = p.cutBy !== null ? this.replica.players.get(p.cutBy) : undefined;
       const after = heir?.lands.find((v) => v.tick === tick);
       const before = heir ? landAt(heir, tick - 1) : undefined;
       if (after && before) this.flash(difference(after.land, before.land, FillRule.NonZero), now);
+      // The trails that joined it to the cutter's land may have cut someone else's land in two.
+      if (after?.land.length && p.cutBy !== null) this.fadeCutOffLand(tick, p.cutBy, now);
       return;
     }
     this.fadeCutOffLand(tick, id, now);
@@ -464,8 +474,36 @@ export class TerritoryClient {
     const after = p.lands.find((v) => v.tick === tick);
     if (!after) return;
     const gained = difference(after.land, landAt(p, tick - 1).land, FillRule.NonZero);
-    this.flash(gained, now);
-    if (id === this.options.myId) this.noteCapture(gained, now);
+    this.cheer(id, gained, now);
+    if (id === this.options.myId) {
+      this.noteCapture(gained, now);
+      const head = this.lastDrawnHeads.get(id);
+      this.fill(id, gained, head ?? null, now);
+    } else this.flash(gained, now);
+  }
+
+  /** Your own new land fills in: pale, then your color spreading from `from` (where your head got home). */
+  private fill(id: PlayerId, gained: Land, from: Point | null, now: number) {
+    const bounds = gained.length ? landBounds(gained) : null;
+    if (!bounds) return;
+    const x = from?.x ?? (bounds.minX + bounds.maxX) / 2;
+    const y = from?.y ?? (bounds.minY + bounds.maxY) / 2;
+    const reach = Math.max(
+      1,
+      ...[bounds.minX, bounds.maxX].flatMap((cx) => [bounds.minY, bounds.maxY].map((cy) => Math.hypot(cx - x, cy - y))),
+    );
+    this.effects.push({ kind: "fill", id, land: gained, x, y, reach, startedAt: now });
+  }
+
+  /** A head hops for joy over new land: a fixed hop for a medium capture, a bigger one for a large one, none for a small one. */
+  private cheer(id: PlayerId, gained: Land, now: number) {
+    if (!gained.length) return;
+    const size = captureSize(landArea(gained));
+    if (size !== "small") this.hop(id, LOOK.headMotion.hops[size], now);
+  }
+
+  private hop(id: PlayerId, hop: { height: number; ms: number; spins: number }, now: number) {
+    this.effects.push({ kind: "cheer", id, height: hop.height * TERRITORY_CONFIG.trailWidth, ms: hop.ms, spins: hop.spins, startedAt: now });
   }
 
   private noteCapture(gained: Land, now: number) {
@@ -496,6 +534,12 @@ export class TerritoryClient {
   }
 
   // --- Helpers ---
+
+  /** Who has the most land as shown (they wear the crown); no one while the top is a tie. */
+  private leader(): PlayerId | null {
+    const alive = [...this.replica.players.values()].filter((p) => p.alive);
+    return leaderOf(alive.map((p) => ({ id: p.id, area: this.area(this.displayedLand(p)) })));
+  }
 
   private displayedLand(p: ReplicaPlayer): Land {
     if (p.id === this.options.myId && this.predictedCapture) return this.predictedCapture.land;
@@ -561,4 +605,22 @@ function positionAt(steps: readonly PredictedStep[], tick: number): Point | null
   if (!b) return { x: a.x, y: a.y };
   const f = tick - Math.floor(tick);
   return { x: lerp(a.x, b.x, f), y: lerp(a.y, b.y, f) };
+}
+
+/** How long an effect lasts (ms), so it's dropped once it's over. */
+function effectMs(e: EffectView): number {
+  switch (e.kind) {
+    case "cheer":
+      return e.ms;
+    case "burst":
+      return (e.spin ? LOOK.outSpin.ms : 0) + LOOK.burstMs;
+    case "flash":
+      return LOOK.captureFlashMs;
+    case "vanish":
+      return LOOK.vanishMs;
+    case "shake":
+      return LOOK.shakeMs;
+    case "fill":
+      return LOOK.captureFill.holdMs + LOOK.captureFill.sweepMs + LOOK.captureFill.fadeMs;
+  }
 }

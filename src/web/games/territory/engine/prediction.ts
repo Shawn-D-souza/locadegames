@@ -1,4 +1,4 @@
-import { firstEdgeCrossing, pointInLand } from "../../../../shared/games/territory/geometry";
+import { isHome, trailEntry, trailExit } from "../../../../shared/games/territory/home";
 import { moveHead, separateHeads } from "../../../../shared/games/territory/movement";
 import type { Land, Point } from "../../../../shared/games/territory/types";
 import { currentTrail, latestLand, type ReplicaPlayer } from "./replica";
@@ -72,13 +72,13 @@ export class OwnPredictor {
       if (heads.length > 1) separateHeads(heads, limit);
       const state = { x: mine.x, y: mine.y, heading: mine.heading };
       steps.push({ tick, ...state });
-      const inside = pointInLand(land, state);
-      if (!trail && !inside) {
-        const exit = firstEdgeCrossing(land, prev, state) ?? prev;
+      const home = isHome(land, state);
+      if (!trail && !home) {
+        const exit = trailExit(land, prev, state);
         trail = exit.x === state.x && exit.y === state.y ? [exit] : [exit, { x: state.x, y: state.y }];
-      } else if (trail && inside) {
+      } else if (trail && home) {
         const last = trail[trail.length - 1]!;
-        if (!capture) capture = { tick, trail: [...trail, firstEdgeCrossing(land, last, state) ?? { x: state.x, y: state.y }] };
+        if (!capture) capture = { tick, trail: [...trail, trailEntry(land, last, state)] };
         trail = null;
       } else if (trail) {
         const last = trail[trail.length - 1]!;

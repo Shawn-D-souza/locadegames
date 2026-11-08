@@ -6,6 +6,13 @@ export function formatShare(share: number): string {
   return `${(share / 100).toFixed(2)}%`;
 }
 
+/** A land share split for showing the decimals smaller: "7.36%" → ["7", ".36%"]. */
+export function splitShare(share: number): [whole: string, rest: string] {
+  const text = formatShare(share);
+  const dot = text.indexOf(".");
+  return [text.slice(0, dot), text.slice(dot)];
+}
+
 /** A match clock: "2:05". Rounds up, so it shows 0:00 only when time is up. */
 export function formatClock(ms: number): string {
   const seconds = Math.max(0, Math.ceil(ms / 1000));

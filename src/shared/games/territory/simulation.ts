@@ -1,18 +1,18 @@
 import type { PlayerId } from "../../rooms/types";
 import { arenaPolygon, headLimit, spawnPoint, startLand, wallBand } from "./arena";
-import { captureLand, keepConnected, mergeLand, subtractLand, type ArenaShape } from "./capture";
+import { captureLand, joinLand, keepConnected, subtractLand, type ArenaShape } from "./capture";
 import { TERRITORY_CONFIG, TERRITORY_TICKS } from "./config";
 import {
   boundsOverlap,
-  firstEdgeCrossing,
   landArea,
   landBounds,
-  pointInLand,
+  polylineUpTo,
   segmentDistanceSq,
   trimPolylineEnd,
 } from "./geometry";
+import { isHome, trailEntry, trailExit } from "./home";
 import { angleOf, moveHead, separateHeads } from "./movement";
-import type { LandChange, Point, TerritoryEvent, TerritoryPlayer, TerritoryState } from "./types";
+import type { Land, LandChange, Point, TerritoryEvent, TerritoryPlayer, TerritoryState } from "./types";
 
 /**
  * The authoritative match: state + inputs → next state, one fixed step at a time. No I/O, no timers,
@@ -85,6 +85,15 @@ function heirOf(victim: TerritoryPlayer, byId: ReadonlyMap<PlayerId, TerritoryPl
   return null;
 }
 
+/**
+ * The stretch of a cut trail that becomes the cutter's land: from where it left home to where it was cut,
+ * then on to the cutter's head (which may be up to `cutReach` from it), so the strip reaches the cutter.
+ */
+function cutBridge(trail: readonly Point[], cutter: Point): Point[] {
+  const cuttable = trimPolylineEnd(trail, TERRITORY_CONFIG.headGraceLength);
+  return [...polylineUpTo(cuttable.length >= 2 ? cuttable : trail, cutter), { x: cutter.x, y: cutter.y }];
+}
+
 export interface StepInput {
   /** New steering targets, applied before moving. */
   targets?: ReadonlyMap<PlayerId, number>;
@@ -130,16 +139,16 @@ export function stepTerritory(state: TerritoryState, shape: ArenaShape, input: S
   for (const p of alive) {
     const start = from.get(p.id)!;
     const head = { x: p.x, y: p.y };
-    const inside = pointInLand(p.land, head);
+    const home = isHome(p.land, head);
     if (p.trail.length === 0) {
-      if (inside) continue;
+      if (home) continue;
       // The trail starts exactly on the land's edge (or where they stood, if the land under them was taken).
-      const exit = firstEdgeCrossing(p.land, start, head) ?? start;
+      const exit = trailExit(p.land, start, head);
       p.trail = exit.x === head.x && exit.y === head.y ? [exit] : [exit, head];
       events.push({ type: "trailStart", id: p.id, point: exit });
-    } else if (inside) {
+    } else if (home) {
       const last = p.trail[p.trail.length - 1]!;
-      p.trail.push(firstEdgeCrossing(p.land, last, head) ?? head);
+      p.trail.push(trailEntry(p.land, last, head));
       homecomers.push(p);
     } else {
       const last = p.trail[p.trail.length - 1]!;
@@ -147,28 +156,35 @@ export function stepTerritory(state: TerritoryState, shape: ArenaShape, input: S
     }
   }
 
-  // Captures, lowest id first when two land on the same step. Land cut in two keeps only one part.
+  // `p` takes `land`: it's taken from everyone else. Land cut in two keeps only one part; whoever is
+  // left with none is out, credited to `p`.
   const landLost = new Map<PlayerId, PlayerId>();
-  for (const p of homecomers) {
-    if (!p.alive) continue;
-    const entry = p.trail[p.trail.length - 1]!;
-    p.land = captureLand(p.land, p.trail, shape);
-    p.trail = [];
-    const lands: LandChange[] = [{ id: p.id, land: p.land }];
-    const gained = landBounds(p.land);
+  const claim = (p: TerritoryPlayer, land: Land): LandChange[] => {
+    p.land = land;
+    const lands: LandChange[] = [{ id: p.id, land }];
+    const gained = landBounds(land);
     for (const other of state.players) {
       if (other.id === p.id || other.land.length === 0) continue;
       const theirs = landBounds(other.land);
       if (!gained || !theirs || !boundsOverlap(gained, theirs)) continue;
-      const left = subtractLand(other.land, p.land);
+      const left = subtractLand(other.land, land);
       if (landArea(left) === landArea(other.land)) continue;
       const anchor = other.trail[0] ?? { x: other.x, y: other.y };
-      const kept = other.alive ? keepConnected(other.land, left, anchor) : left;
+      const kept = other.alive ? keepConnected(left, anchor) : left;
       other.land = kept;
       lands.push({ id: other.id, land: kept });
       if (kept.length === 0 && other.alive && !landLost.has(other.id)) landLost.set(other.id, p.id);
     }
-    events.push({ type: "capture", id: p.id, point: entry, lands });
+    return lands;
+  };
+
+  // Captures, lowest id first when two land on the same step.
+  for (const p of homecomers) {
+    if (!p.alive) continue;
+    const entry = p.trail[p.trail.length - 1]!;
+    const land = captureLand(p.land, p.trail, shape);
+    p.trail = [];
+    events.push({ type: "capture", id: p.id, point: entry, lands: claim(p, land) });
   }
 
   // Cuts: judged on this step's trails, so a victim who made it home this step is safe.
@@ -178,19 +194,35 @@ export function stepTerritory(state: TerritoryState, shape: ArenaShape, input: S
     if (cutter !== null) cutThisStep.set(victim.id, cutter);
   }
 
-  // Everyone out this step goes out together; then land passes to the first cutter still in.
+  // Everyone out this step goes out together; then land passes to the first cutter still in. The cut
+  // trail (from its land to the cut) and the cutter's own trail (to their land) become the cutter's land
+  // too, so it stays one piece. A cutter who is also out passes on their whole trail, so the chain holds.
   const outNow = alive.filter((p) => cutThisStep.has(p.id) || landLost.has(p.id));
+  const trails = new Map(outNow.map((p) => [p.id, p.trail]));
+  const bridges = new Map<PlayerId, Point[]>();
+  for (const [victim, cutter] of cutThisStep) bridges.set(victim, cutBridge(byId.get(victim)!.trail, byId.get(cutter)!));
   // Whoever took the last of someone's land gets the knockout (their land is already theirs).
   for (const p of outNow) goOut(p, cutThisStep.has(p.id) ? "cut" : "land", cutThisStep.get(p.id) ?? landLost.get(p.id) ?? null);
-  for (const p of outNow) {
-    const lands: LandChange[] = [{ id: p.id, land: [] }];
-    const heir = p.land.length ? heirOf(p, byId, cutThisStep) : null;
-    if (heir) {
-      heir.land = mergeLand(heir.land, p.land);
-      lands.push({ id: heir.id, land: heir.land });
-    }
+  for (let i = 0; i < outNow.length; i++) {
+    const p = outNow[i]!;
+    const won = p.land;
     p.land = [];
+    const lands: LandChange[] = [{ id: p.id, land: [] }];
+    const heir = won.length ? heirOf(p, byId, cutThisStep) : null;
+    if (heir) {
+      const cutter = cutThisStep.get(p.id)!;
+      const joins = [bridges.get(p.id) ?? [], cutter === heir.id ? [] : (trails.get(cutter) ?? []), heir.trail];
+      heir.trail = [];
+      lands.push(...claim(heir, joinLand(heir.land, won, joins, shape)));
+    }
     events.push({ type: "out", id: p.id, reason: p.outReason!, by: p.cutBy, lands });
+    // Anyone the joining trails left with no land is out too.
+    for (const [id, by] of landLost) {
+      const other = byId.get(id)!;
+      if (!other.alive) continue;
+      goOut(other, "land", by);
+      outNow.push(other);
+    }
   }
 
   const stillIn = state.players.filter((p) => p.alive).length;

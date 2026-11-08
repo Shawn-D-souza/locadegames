@@ -34,6 +34,12 @@ export const TERRITORY_CONFIG = {
   startLandRadius: 3_000,
   startLandVertices: 48,
 
+  /**
+   * A head is home in its land or with its center this close to it, so it gets home as the drawn head
+   * touches its land (owner decision, 2026-11-08: needing the head's center in felt too deep). Under half a
+   * trail width, so the trail's stroke always reaches the land; leaving home takes the same distance.
+   */
+  homeReach: 300,
   /** A head cuts a trail when its center comes this close to the trail's center line: the head's edge touching the trail's edge (head radius + half a trail width). */
   cutReach: 1_100,
   /** The newest stretch of a trail, under its owner's own head, cannot be cut. */
@@ -44,8 +50,6 @@ export const TERRITORY_CONFIG = {
   wallBandWidth: 3,
   /** Land left thinner than this after someone's capture vanishes (nobody can stand on it, and it is hard to even see). */
   minLandThickness: 400,
-  /** A point this close to a piece of land counts as on it (trail starts sit exactly on the edge, rounded). */
-  anchorSlack: 4,
   /** Largest gap allowed between the true arc and its polygon when a trail's rounded edges turn into land. */
   arcTolerance: 8,
 } as const;
