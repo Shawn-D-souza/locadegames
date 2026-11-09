@@ -123,7 +123,7 @@ An X (P1 Red), an O (P2 Blue), a pawn (P3 Green) and a die (white, ink pips, sli
 ## 4. Shape & Depth
 
 - **Radius:** buttons and fields 16px (rounded rectangles, not pills); cards 28px; panels 40px; chips stay fully rounded.
-- **Outlines:** 2px solid ink around cards, buttons and fields; 3px on the field being edited. Game pieces may use a dark player variant.
+- **Outlines:** 2px solid ink around cards, buttons and fields; 3px on the field being edited; 1px (`hair`) only between the tiny cells of a game tile's art. Game pieces may use a dark player variant.
 - **Lip shadow:** only on things you can tap (a lip means "press me"). A solid, non-blurred 6px offset straight down in ink under active buttons; pressing squashes the button onto it. No soft drop shadows. Disabled buttons have no lip.
 - **Dividers:** 2px dashed `line` rules with a short `subtle` word in the middle (`OR`).
 - **Sunburst fan:** a radial-sunburst disk in a player's color, used behind that player's avatar on turn banners and results.
@@ -134,7 +134,7 @@ An X (P1 Red), an O (P2 Blue), a pawn (P3 Green) and a die (white, ink pips, sli
 Ink rounded body → giant colored numeral or icon breaking out the top edge, flanked by "speed lines" → full-width colored pill label at the bottom (`QUICK MATCH`, `PRIVATE ROOM`, `TEAM PLAY`).
 
 ### Game tile
-Square white tile, always the same size (votes never resize it), 3px ink outline and small lip → the game's art filling it, drawn in the app's own style (pale fills, ink outlines, player colors; tic-tac-toe is a small copy of the real board) → game name in display caps under the art (never on it). Votes: up to 3 suggester avatars overlapping on the top-right corner (your own first), then `+n`. The game you suggested gets a coral outline. Too few players online: a white `NEEDS 2+` tab on the top edge and the tile greys out for the host. Tiles stay two across even on small phones.
+Square white tile, always the same size (votes never resize it), 3px ink outline and small lip → the game's art filling it, drawn in the app's own style (pale fills, ink outlines, player colors; tic-tac-toe is a small copy of the real board) → game name in display caps under the art (never on it); a long name takes two lines, breaking only between words (its art gets a little smaller), never cut off. Votes: up to 3 suggester avatars overlapping on the top-right corner (your own first), then `+n`. The game you suggested gets a coral outline. Too few players online: a white `NEEDS 2+` tab on the top edge and the tile greys out for the host. Tiles stay two across even on small phones.
 
 Art is code (an SVG / React drawing) for simple board and card games; action games may use an image instead, as long as it follows the same style.
 
@@ -191,9 +191,9 @@ Diagonal corner ribbon, "NEW!" in Player Yellow, slightly tilted.
 Dark rounded bar with white bold number, icon (gem, coin) overlapping the right end.
 
 ### Match screen (turn-based, 1v1)
-Calm on purpose (owner decision: no header, no turn banner, no timer bar while playing). The only control is a small ✕ icon button in the top-left corner during your own live match; it (and the phone's back button) asks "Quit this game?" first: you lose the match, sit out the rest and stay in the room. No dot grid here: the whole screen is a flat, very light **wash** of the color of whoever's turn it is (60% toward white, owner decision: strong enough to tell turns apart at a glance, while ink text stays readable; tested), easing to the other player's wash each turn. One centered column:
+Calm on purpose (owner decision: no header, no turn banner, no timer bar while playing). The only control is a small ✕ icon button in the top-left corner during your own live match; it (and the phone's back button) asks "Quit this game?" first: you lose the match, sit out the rest and stay in the room. In portrait the column keeps room under it for the whole match, so on a small phone it never sits on your card (and nothing moves when it goes). No dot grid here: the whole screen is a flat, very light **wash** of the color of whoever's turn it is (60% toward white, owner decision: strong enough to tell turns apart at a glance, while ink text stays readable; tested), easing to the other player's wash each turn. One centered column:
 1. **Seat cards:** the two players side by side in two equal cards, you always on the left (watchers see the higher seed on the left). Everything about the match lives in these cards, with no extra text around them (owner decision). Each card: the player's piece (X or O, in their color) on a white disc and the name; a `YOU` (or `AWAY`) ink tab sits on the top edge. No status words (owner decision): the card of the player whose turn it is simply fills with their color, and the other stays white. In the last 5 seconds a small ink pill with the seconds appears under the name (its row keeps its height so nothing jumps). Not tappable, so no lip.
-2. **Board.** On your turn the empty cells also rise (they get a lip).
+2. **Board.** On your turn the empty cells also rise (they get a lip). A board of small boards (Ultimate Tic-tac-toe) gets a wider column, and in landscape sits beside the two cards (stacked) in a wider screen column, sized to the screen's height (up to 720px on a laptop).
 
 Results start the moment the match ends, and **each phone gets its own ending** (owner decision). The ending happens **on the board itself and nothing on the screen moves** (owner decision: a word between the cards and the board pushed the board down; a full-screen splash hid the board, and everyone should see how it was won). The style is **"All in"** (owner decision, picked on the preview page):
 

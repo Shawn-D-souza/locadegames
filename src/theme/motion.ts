@@ -52,6 +52,8 @@ export const transforms = {
   winScale: 1.05,
   /** YOU WIN! / DRAW! slam in from this size. */
   stampFromScale: 2.2,
+  /** A small board's big mark stamps on from this size (Ultimate Tic-tac-toe): smaller than a result's, it happens often. */
+  claimFromScale: 1.6,
   /** YOU WIN! sits slightly tilted, like a stamp. */
   stampTilt: "-6deg",
   confettiSpin: "720deg",

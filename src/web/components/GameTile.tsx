@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { Fragment } from "react";
 import type { GameInfo } from "../../shared/games/catalog";
 import { CLIENT_CONFIG } from "../config";
 import type { GameLook } from "../games/gameLooks";
@@ -45,7 +46,15 @@ export function GameTile({ game, look, disabled, needs, suggesters = [], selecte
           <look.Art />
         </span>
       </span>
-      <span className="max-w-full truncate font-display text-caption uppercase">{game.name}</span>
+      {/* A long name takes two lines (its art gets a little smaller) rather than being cut off, breaking only between words. */}
+      <span className="line-clamp-2 max-w-full text-center font-display text-caption uppercase">
+        {game.name.split(" ").map((word, index) => (
+          <Fragment key={index}>
+            {index > 0 && " "}
+            <span className="whitespace-nowrap">{word}</span>
+          </Fragment>
+        ))}
+      </span>
       {needs && (
         <Badge tone="white" className="absolute top-0 left-1/2 -translate-1/2 whitespace-nowrap">
           {needs}

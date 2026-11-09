@@ -8,6 +8,7 @@ export function playerStyle(colorIndex: number): CSSProperties {
     "--player": color.base,
     "--player-dark": color.dark,
     "--player-tint": color.tint,
+    "--player-light": color.light,
     "--player-wash": color.wash,
     "--player-text": color.text,
   } as CSSProperties;

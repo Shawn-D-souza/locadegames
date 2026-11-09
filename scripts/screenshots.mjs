@@ -137,7 +137,7 @@ try {
     await wait(1000);
     pages.push(guest);
   }
-  await pages[1].getByRole("button", { name: /tic/i }).click();
+  await pages[1].getByRole("button", { name: /^tic/i }).click();
   await wait(500);
   await shoot(host, "07-room-host");
   await shoot(pages[1], "08-room-guest");
@@ -151,7 +151,7 @@ try {
   await host.getByRole("button", { name: "CLOSE" }).click();
 
   // Round 1: two play, one sits out.
-  await host.getByRole("button", { name: /tic/i }).click();
+  await host.getByRole("button", { name: /^tic/i }).click();
   await wait(1200);
   const split = async () => {
     const players = [];
@@ -230,7 +230,7 @@ try {
     await guest.goto(BASE + "?room=" + busyCode);
     await guest.getByRole("button", { name: /join room/i }).click();
     await wait(1000);
-    await guest.getByRole("button", { name: /tic/i }).click();
+    await guest.getByRole("button", { name: /^tic/i }).click();
     await wait(300);
     if (i === 4) await shoot(guest, "24-room-many-votes-guest");
   }
@@ -282,6 +282,30 @@ try {
   await wait(4000);
   await shoot(arenaHost, "32-territory-results-host");
   await shoot(arenaGuests[0], "33-territory-results-guest");
+
+  // Ultimate Tic-tac-toe: two players, mid-game (a small board won by each), on the mover's phone and the other's.
+  const bigHost = await page();
+  await bigHost.goto(BASE);
+  await bigHost.getByRole("button", { name: /create room/i }).click();
+  await wait(1500);
+  const bigGuest = await page();
+  await bigGuest.goto(BASE + "?room=" + new URL(bigHost.url()).searchParams.get("room"));
+  await bigGuest.getByRole("button", { name: /join room/i }).click();
+  await wait(1000);
+  await bigHost.getByRole("button", { name: /ultimate/i }).click();
+  await wait(1500);
+  const bigPlayers = [bigHost, bigGuest];
+  const bigCell = (p, i) => board(p).getByRole("button").nth(i);
+  let mover = null;
+  // X takes the top-left board, O the left one (the playtest's game, cut short); X is then sent to the bottom-right board.
+  for (const i of [3, 27, 4, 36, 5, 45, 39, 31, 40, 44, 75, 35]) {
+    mover = await Promise.any(bigPlayers.map(async (p) => (await bigCell(p, i).and(p.locator(":enabled")).waitFor({ timeout: 5000 }), p)));
+    await bigCell(mover, i).click();
+    for (const p of bigPlayers) await bigCell(p, i).and(p.locator(":disabled")).waitFor({ timeout: 5000 });
+  }
+  await wait(1000);
+  await shoot(bigPlayers.find((p) => p !== mover), "34-ultimate-your-turn");
+  await shoot(mover, "35-ultimate-their-turn");
 } finally {
   await browser.close();
   await vite.close();

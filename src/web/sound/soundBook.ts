@@ -1,6 +1,7 @@
 import type { GameId } from "../../shared/games/catalog";
 import { TERRITORY_SOUNDS } from "../games/territory/sounds";
 import { TICTACTOE_SOUNDS } from "../games/tictactoe/sounds";
+import { ULTIMATE_SOUNDS } from "../games/ultimate/sounds";
 import type { SoundDefinition } from "./definition";
 import { ENDING_SOUNDS } from "./library/endingSounds";
 import { INTERFACE_SOUNDS } from "./library/interfaceSounds";
@@ -10,6 +11,7 @@ import { ROOM_SOUNDS } from "./library/roomSounds";
 /** Each game's own sounds, made only when that game is played. A new game adds its `games/<game>/sounds.ts` here, and in `SOUNDS`. */
 export const GAME_SOUNDS = {
   tictactoe: TICTACTOE_SOUNDS,
+  ultimate: ULTIMATE_SOUNDS,
   territory: TERRITORY_SOUNDS,
 } as const satisfies Record<GameId, Record<string, SoundDefinition>>;
 
@@ -24,6 +26,7 @@ const PLATFORM_SOUNDS = {
 export const SOUNDS = {
   ...PLATFORM_SOUNDS,
   ...TICTACTOE_SOUNDS,
+  ...ULTIMATE_SOUNDS,
   ...TERRITORY_SOUNDS,
 };
 

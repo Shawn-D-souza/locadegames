@@ -44,6 +44,8 @@ export const HAPTIC_OF_SOUND: Partial<Record<SoundName, HapticName>> = {
   championFanfare: "champion",
   championFanfareShared: "champion",
   championAnnounced: "smallNews",
+  // Ultimate Tic-tac-toe: winning a small board (others winning one, or one filling up, isn't felt).
+  ultimateYouClaimedBoard: "ultimateBoardClaimed",
   // Territory.
   territoryLeftLand: "territoryLeftLand",
   territoryCaptureSmall: "territoryCaptureSmall",

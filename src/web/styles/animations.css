@@ -18,6 +18,8 @@
   --animate-confetti: confetti-fall var(--duration-confetti) var(--ease-out) calc(var(--duration-stagger) * (2 + var(--delay))) both;
   /* The dot on a live match's LIVE badge (points screen). */
   --animate-live: live-pulse var(--duration-pulse) var(--ease-out) infinite alternate;
+  /* Ultimate Tic-tac-toe: on your turn, where you must play blinks (its tint and outline together), fading out completely. */
+  --animate-target-blink: target-blink var(--duration-pulse) var(--ease-out) infinite alternate;
   /* Joining a room: three dots hop one after the other. */
   --animate-dot: dot-hop var(--duration-dot-hop) var(--ease-out) calc(var(--duration-fast) * var(--order)) infinite alternate both;
 
@@ -40,6 +42,21 @@
   /* The result tag stamps in (a draw's comes with the shake) or, for a loss, slides up; its points pop as they tick. */
   --animate-stamp: stamp var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) both;
   --animate-stamp-draw: stamp var(--duration-celebrate) var(--ease-spring) var(--duration-slow) both;
+  /*
+   * Ultimate Tic-tac-toe: a small board just won. Once the last mark has landed its line slashes through (`--line-at`
+   * set on the line), then the winner's color fills it, their big mark stamps on and the line fades back with the small marks.
+   */
+  --animate-claim: claim var(--duration-celebrate) var(--ease-spring) var(--claim-at) both;
+  /* The winning move's own board: it stamps on, then jumps with the others on the winner's phone. */
+  --animate-claim-hop:
+    claim var(--duration-celebrate) var(--ease-spring) var(--claim-at) both,
+    mark-hop var(--duration-hop) var(--ease-out) calc(var(--celebrate-at) + var(--hop-order) * var(--duration-hop-stagger)) both;
+  --animate-claim-tint: tint-in var(--duration-celebrate) var(--ease-out) var(--claim-at) both;
+  --animate-settle-back: settle-back var(--duration-celebrate) var(--ease-out) var(--claim-at) forwards;
+  /* The mark that won (or filled) its small board: pops in, then settles back with the others. */
+  --animate-pop-settle:
+    pop-in var(--duration-slow) var(--ease-spring),
+    settle-back var(--duration-celebrate) var(--ease-out) var(--claim-at) forwards;
   --animate-slide-up: slide-up var(--duration-celebrate) var(--ease-out) var(--celebrate-at) both;
   --animate-tick: bounce var(--duration-slow) var(--ease-spring);
   /* Seat cards: the winner's grows and a crown drops on; the loser's shakes and fades; the pieces jump, droop or shrug. */
@@ -86,6 +103,12 @@
   @keyframes live-pulse {
     to {
       opacity: var(--opacity-disconnected);
+    }
+  }
+
+  @keyframes target-blink {
+    to {
+      opacity: 0;
     }
   }
 
@@ -166,6 +189,25 @@
   @keyframes stamp {
     from {
       scale: var(--transform-stamp-from-scale);
+      opacity: 0;
+    }
+  }
+
+  @keyframes claim {
+    from {
+      scale: var(--transform-claim-from-scale);
+      opacity: 0;
+    }
+  }
+
+  @keyframes settle-back {
+    to {
+      opacity: var(--opacity-closed-board);
+    }
+  }
+
+  @keyframes tint-in {
+    from {
       opacity: 0;
     }
   }

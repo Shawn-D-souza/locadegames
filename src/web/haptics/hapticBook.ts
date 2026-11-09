@@ -1,5 +1,6 @@
 import { TERRITORY_HAPTICS } from "../games/territory/haptics";
 import { TICTACTOE_HAPTICS } from "../games/tictactoe/haptics";
+import { ULTIMATE_HAPTICS } from "../games/ultimate/haptics";
 import { defineHaptics, pulseEnd, type HapticStep, type Pulse } from "./definition";
 
 /** The platform's feels. Short where frequent, patterns only for moments that matter (DESIGN.md, Haptics). */
@@ -29,6 +30,7 @@ const PLATFORM_HAPTICS = defineHaptics({
 export const HAPTICS = {
   ...PLATFORM_HAPTICS,
   ...TICTACTOE_HAPTICS,
+  ...ULTIMATE_HAPTICS,
   ...TERRITORY_HAPTICS,
 };
 

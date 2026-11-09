@@ -1,21 +1,10 @@
-import { clsx } from "clsx";
 import type { Ref } from "react";
 import { TICTACTOE_CONFIG } from "../../shared/games/tictactoe/config";
 import type { Seat, TicTacToeState } from "../../shared/games/tictactoe/types";
-import { playerStyle } from "../utils/playerStyle";
 import { BoardCell } from "./BoardCell";
-import { ResultTag, type ResultTone } from "./ResultTag";
-import { WinLine } from "./WinLine";
+import { BoardFrame, type BoardEnding } from "./BoardFrame";
 
-/** How the match ended for whoever is looking, shown on the board itself. */
-export interface BoardEnding {
-  tone: ResultTone;
-  label: string;
-  points: number | null;
-  detail: string | null;
-  /** The winner's player id (null for a draw); paints the board. */
-  winnerId: number | null;
-}
+export type { BoardEnding } from "./BoardFrame";
 
 interface BoardProps {
   game: TicTacToeState;
@@ -39,6 +28,7 @@ interface BoardProps {
 
 const MARK_NAMES = ["X", "O"] as const;
 
+/** The tic-tac-toe board: nine cells in the shared board frame. */
 export function Board({
   game,
   seatColors,
@@ -53,20 +43,18 @@ export function Board({
 }: BoardProps) {
   const { boardSize } = TICTACTOE_CONFIG;
   const canPlay = playableSeat !== null && game.turn === playableSeat && game.winner === null && !game.isDraw;
-  // A finished match is shown on the board itself, so nothing on the screen moves: the last move lands with a thump
-  // and a short freeze, then a win draws its line and the board fills with the winner's color; a draw shakes.
   const winnerId = ending?.winnerId ?? null;
   return (
     // White outlined card like the rest of the app; only the cells you can tap get a lip.
-    <div
+    <BoardFrame
       ref={ref}
-      className={clsx(
-        "relative grid w-full max-w-board gap-3 rounded-card border-thin border-ink bg-white p-4",
-        winnerId !== null ? "animate-board-win" : game.isDraw && "animate-board-draw",
-      )}
-      style={{ gridTemplateColumns: `repeat(${boardSize}, 1fr)`, ...(winnerId !== null ? playerStyle(winnerId) : {}) }}
-      role="group"
-      aria-label="Board"
+      size={boardSize}
+      spacing="roomy"
+      winningLine={game.winningLine}
+      isDraw={game.isDraw}
+      ending={ending}
+      countUp={countUp}
+      tagLandsAtMs={tagLandsAtMs}
     >
       {game.board.map((value, index) => {
         const row = Math.floor(index / boardSize) + 1;
@@ -89,17 +77,6 @@ export function Board({
           />
         );
       })}
-      {game.winningLine && <WinLine cells={game.winningLine} />}
-      {ending && (
-        <ResultTag
-          tone={ending.tone}
-          label={ending.label}
-          points={ending.points}
-          detail={ending.detail}
-          countUp={countUp}
-          landsAtMs={tagLandsAtMs}
-        />
-      )}
-    </div>
+    </BoardFrame>
   );
 }

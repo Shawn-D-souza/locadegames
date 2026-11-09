@@ -44,7 +44,8 @@ Format: **tournament** (Swiss-style, 1v1 matches; see the tournament rules in [`
 | `src/shared/games/tictactoe/rules.ts` | Pure `createGame` / `applyMove` / win + draw |
 | `src/shared/games/tictactoe/game.ts` | `MatchGame` adapter + auto move |
 | `src/web/games/tictactoe/TicTacToeArt.tsx` | Tile art |
-| `src/web/components/Board.tsx`, `BoardCell.tsx`, `WinLine.tsx`, `Mark.tsx` | The board, its cells, the win line, the X / O glyphs (used by the match screen and the celebration preview) |
+| `src/web/games/tictactoe/look.ts`, `TicTacToeBoard.tsx` | Its look on the match screen (`MATCH_LOOKS`): the board with the winning marks jumping, and its mark sound per move |
+| `src/web/components/Board.tsx`, `BoardCell.tsx`, `Mark.tsx` | The board (nine cells in the shared `BoardFrame`, which also holds the win line and result tag), its cells, the X / O glyphs (used by the match screen and the celebration preview; Ultimate Tic-tac-toe uses the same glyphs) |
 | `src/web/games/tictactoe/sounds.ts` | Its sounds: `ticTacToeMarkX`, `ticTacToeMarkO`; `lastMarkSound` (which mark the last move made) |
 | `src/web/games/tictactoe/haptics.ts` | Its feels: `ticTacToeMarkPlaced`, `ticTacToeOpponentMoved` |
 | `tests/tictactoe.test.ts` | Rules: moves, wins, draws, errors |

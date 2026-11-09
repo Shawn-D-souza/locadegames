@@ -29,6 +29,7 @@ export default plugin(({ addBase }) => addBase({ ":root": buildCssVariables() })
       player: "var(--player)",
       "player-dark": "var(--player-dark)",
       "player-tint": "var(--player-tint)",
+      "player-light": "var(--player-light)",
       "player-wash": "var(--player-wash)",
       "player-text": "var(--player-text)",
     },

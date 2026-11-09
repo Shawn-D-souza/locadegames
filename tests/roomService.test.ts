@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { TICTACTOE_CONFIG } from "../src/shared/games/tictactoe/config";
+import type { TicTacToeState } from "../src/shared/games/tictactoe/types";
 import { CLOSE_CODES } from "../src/shared/protocol/errors";
 import { ROOM_CONFIG } from "../src/shared/rooms/config";
 import { currentRound, findActiveMatch } from "../src/shared/tournament/tournament";
@@ -151,11 +152,11 @@ describe("RoomService", () => {
     const matchId = currentRound(tournament()).matches[0]!.id;
     now += TICTACTOE_CONFIG.turnTimeMs - 1;
     send(guest, { type: "timeout", matchId });
-    expect(findActiveMatch(tournament(), 0)!.game.board[0]).toBeNull();
+    expect((findActiveMatch(tournament(), 0)!.game as TicTacToeState).board[0]).toBeNull();
     now += 1;
     send(guest, { type: "timeout", matchId });
     const match = findActiveMatch(tournament(), 0)!;
-    expect(match.game.board[0]).toBe(0); // the starter's (seat 0) auto move
+    expect((match.game as TicTacToeState).board[0]).toBe(0); // the starter's (seat 0) auto move
   });
 
   it("lets a disconnected player reclaim their slot with the token", () => {

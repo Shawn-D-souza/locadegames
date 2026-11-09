@@ -17,10 +17,10 @@ export function buildCssVariables(): Record<string, string> {
   for (const [name, value] of Object.entries(colors)) vars[`--color-${kebab(name)}`] = value;
   for (const [name, value] of Object.entries(spacing)) vars[`--space-${name}`] = px(value);
   for (const [name, value] of Object.entries(layout)) vars[`--layout-${kebab(name)}`] = px(value);
-  for (const [name, value] of Object.entries(radii)) vars[`--radius-${name}`] = px(value);
+  for (const [name, value] of Object.entries(radii)) vars[`--radius-${kebab(name)}`] = px(value);
   for (const [name, value] of Object.entries(strokes)) vars[`--stroke-${kebab(name)}`] = px(value);
   for (const [name, value] of Object.entries(lips)) vars[`--lip-${name}`] = px(value);
-  for (const [name, value] of Object.entries(opacity)) vars[`--opacity-${name}`] = String(value);
+  for (const [name, value] of Object.entries(opacity)) vars[`--opacity-${kebab(name)}`] = String(value);
   for (const [name, value] of Object.entries(fonts)) vars[`--font-${name}`] = value;
   for (const [name, value] of Object.entries(fontWeights)) vars[`--weight-${name}`] = String(value);
   for (const [name, value] of Object.entries(typeScale)) {

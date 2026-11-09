@@ -38,8 +38,17 @@ export const layout = {
   qrReserve: 232,
   /** Widest the content column gets. */
   content: 560,
+  /** Widest it gets for a board of small boards beside the seat cards (landscape: laptops, tablets). */
+  contentWide: 960,
   /** Widest the game board gets. */
   board: 420,
+  /** Widest a board of small boards gets (Ultimate Tic-tac-toe: 81 cells need the room). */
+  boardLarge: 520,
+  /** In landscape that board sits beside the seat cards (in a column this wide) and fits the screen's height, less this (margins and the result tag below it). */
+  boardSide: 168,
+  boardReserve: 72,
+  /** Widest that board gets in landscape, where a laptop has the room. */
+  boardWide: 720,
   /** White disc holding a player's X or O on their match card. */
   markBadge: 44,
   /** One confetti piece on the champion screen. */

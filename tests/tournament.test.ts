@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TICTACTOE_CONFIG } from "../src/shared/games/tictactoe/config";
+import type { TicTacToeState } from "../src/shared/games/tictactoe/types";
 import type { PlayerId } from "../src/shared/rooms/types";
 import {
   claimTimeout,
@@ -153,7 +154,7 @@ describe("tournament", () => {
     const update = claimTimeout(t, matchId, TICTACTOE_CONFIG.turnTimeMs);
     if (!update.ok) throw new Error(update.error);
     t = update.tournament;
-    expect(findActiveMatch(t, 0)!.game.board.filter((c) => c !== null)).toHaveLength(1);
+    expect((findActiveMatch(t, 0)!.game as TicTacToeState).board.filter((c) => c !== null)).toHaveLength(1);
   });
 
   it("rejects moves from players not in a live match", () => {

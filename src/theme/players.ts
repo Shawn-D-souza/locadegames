@@ -21,6 +21,8 @@ const DARK_AMOUNT = 0.25;
 const TINT_ALPHA = 0.4;
 /** How far toward white the screen wash goes; ink text must stay readable on it (tested). */
 const WASH_AMOUNT = 0.6;
+/** How far toward white the light version goes: clearly the player's color, lighter than their marks, so a mark stands out on it. */
+const LIGHT_AMOUNT = 0.35;
 
 export type PlayerPattern = "none" | "stripes" | "dots" | "checks";
 const PATTERNS: readonly PlayerPattern[] = ["none", "stripes", "dots", "checks"];
@@ -30,6 +32,8 @@ export interface PlayerColor {
   base: string;
   dark: string;
   tint: string;
+  /** Lighter solid version of the color: a won small board's fill under its big mark (Ultimate Tic-tac-toe). */
+  light: string;
   /** Very light solid version of the color: the match screen background on this player's turn. */
   wash: string;
   /** White or ink, whichever reads better on `base` (player bars, labels). */
@@ -46,6 +50,7 @@ export function getPlayerColor(index: number): PlayerColor {
     base: color.hex,
     dark: darken(color.hex, DARK_AMOUNT),
     tint: withAlpha(color.hex, TINT_ALPHA),
+    light: lighten(color.hex, LIGHT_AMOUNT),
     wash: lighten(color.hex, WASH_AMOUNT),
     text: readableText(color.hex, colors.white, colors.ink),
     pattern: PATTERNS[cycle % PATTERNS.length]!,

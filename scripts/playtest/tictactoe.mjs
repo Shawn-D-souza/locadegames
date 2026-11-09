@@ -23,7 +23,7 @@ export default async function tictactoe(session) {
     players = await session.room(2);
   });
   await session.step("the host starts tic-tac-toe; both see the board", async () => {
-    await players[0].getByRole("button", { name: /tic/i }).click();
+    await players[0].getByRole("button", { name: /^tic/i }).click();
     for (const page of players) await board(page).waitFor();
     await heard(players[0], "roomEntered", "playerJoined", "cardPress", "gameStarting");
     await felt(players[0], "smallNews", "smallPress", "gameStarting");

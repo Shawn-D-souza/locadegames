@@ -1,5 +1,6 @@
 import { TERRITORY_CONFIG } from "./territory/config";
 import { TICTACTOE_CONFIG } from "./tictactoe/config";
+import { ULTIMATE_CONFIG } from "./ultimate/config";
 
 interface BaseGameInfo {
   id: string;
@@ -29,6 +30,13 @@ export const GAMES = [
     minPlayers: 2,
     format: "tournament",
     turnTimeMs: TICTACTOE_CONFIG.turnTimeMs,
+  },
+  {
+    id: "ultimate",
+    name: "Ultimate Tic-tac-toe",
+    minPlayers: 2,
+    format: "tournament",
+    turnTimeMs: ULTIMATE_CONFIG.turnTimeMs,
   },
   {
     id: "territory",

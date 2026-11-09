@@ -17,6 +17,8 @@
   :root {
     --line-at: calc(var(--duration-slow) + var(--duration-freeze));
     --celebrate-at: calc(var(--duration-slow) + var(--duration-freeze) + var(--duration-line-draw));
+    /* Ultimate Tic-tac-toe, a small board won (same as CLAIM_TIMING): its line starts as the last mark lands, then the big mark stamps on at --claim-at. */
+    --claim-at: calc(var(--duration-slow) + var(--duration-line-draw));
   }
 
   /* The iPhone's tap tick (`hapticTarget`) sits on top of a button: not on a disabled one, nor with haptics off. */
