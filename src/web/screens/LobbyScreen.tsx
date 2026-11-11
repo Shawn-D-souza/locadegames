@@ -9,6 +9,7 @@ import { RoomCodePanel } from "../components/RoomCodePanel";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { SectionCard } from "../components/SectionCard";
 import { GAME_LOOKS } from "../games/gameLooks";
+import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { playSound } from "../services/soundPlayer";
 
@@ -24,9 +25,10 @@ export function LobbyScreen({ room, myId, send, onLeave }: LobbyScreenProps) {
   const isHost = room.hostId === myId;
   const me = room.players.find((p) => p.id === myId);
   const online = room.players.filter((p) => p.connected).length;
-  // Fetch the real-time game's code while friends gather, so it starts without a wait.
+  // Fetch the real-time games' code while friends gather, so they start without a wait.
   useEffect(() => {
     void loadTerritory();
+    void loadHeadCrash();
   }, []);
 
   const pick = (gameId: GameId) => {

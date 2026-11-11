@@ -1,9 +1,11 @@
 import type { ArenaResult } from "../../shared/arena/types";
+import type { Seat } from "../../shared/games/types";
 import { CLOSE_CODES } from "../../shared/protocol/errors";
 import { parseClientMessage } from "../../shared/protocol/parse";
 import { ROOM_CONFIG } from "../../shared/rooms/config";
 import type { PlayerId } from "../../shared/rooms/types";
 import { ArenaService } from "../arena/arenaService";
+import { DuelService } from "../duel/duelService";
 import type { PendingConnection, RoomStore, RoomTransport, Ticker } from "./ports";
 import {
   abandonArena,
@@ -11,12 +13,15 @@ import {
   createRoomRecord,
   disconnectPlayer,
   finishArena,
+  finishLive,
   isRoomEmpty,
   joinRoom,
+  scoreLive,
   toRoomView,
   type JoinRequest,
 } from "./roomLogic";
 import type { RoomRecord } from "./roomRecord";
+import { TickerHub } from "./tickerHub";
 
 /** A random 32-bit integer (Web Crypto: in Workers and Node.js alike). */
 function randomSeed(): number {
@@ -27,6 +32,7 @@ function randomSeed(): number {
 export class RoomService {
   private lastSweepAt = 0;
   private readonly arenas: ArenaService;
+  private readonly duels: DuelService;
 
   constructor(
     private readonly store: RoomStore,
@@ -34,7 +40,16 @@ export class RoomService {
     private readonly now: () => number,
     ticker: Ticker,
   ) {
-    this.arenas = new ArenaService(transport, ticker, now, (code, results) => this.finishArena(code, results));
+    // The two kinds of real-time match share the host's one timer.
+    const hub = new TickerHub(ticker);
+    this.arenas = new ArenaService(transport, hub.lane(), now, (code, results) => this.finishArena(code, results));
+    this.duels = new DuelService(
+      transport,
+      hub.lane(),
+      now,
+      (code, matchId, score) => this.update(code, (record) => scoreLive(record, matchId, score, this.now())),
+      (code, matchId, winner: Seat | null, score) => this.update(code, (record) => finishLive(record, matchId, winner, score, this.now())),
+    );
   }
 
   /** Returns false if the code is already taken. Also sweeps stale rooms. */
@@ -95,9 +110,14 @@ export class RoomService {
     if (msg.type === "start" && arena && !arena.finished) this.arenas.start(code, arena);
   }
 
-  /** A binary frame: real-time game traffic for the room's live match. */
+  /** A binary frame: real-time game traffic for the room's live match (each kind only reads its own frames). */
   receiveBinary(code: string, playerId: PlayerId, data: ArrayBuffer): void {
     this.arenas.receive(code, playerId, data);
+    if (this.duels.receive(code, playerId, data)) return;
+    // For a live 1v1 match this server isn't running: it restarted mid-match. The record says what should be live.
+    const record = this.store.get(code);
+    this.duels.reconcile(code, record?.phase === "playing" ? record.tournament : null);
+    if (this.duels.has(code)) this.duels.receive(code, playerId, data);
   }
 
   disconnect(code: string, playerId: PlayerId): void {
@@ -113,8 +133,13 @@ export class RoomService {
   }
 
   private finishArena(code: string, results: ArenaResult[]): void {
+    this.update(code, (record) => finishArena(record, results, this.now()));
+  }
+
+  /** A change from a live match (not a player's message): the room's record, changed and sent to everyone. */
+  private update(code: string, change: (record: RoomRecord) => RoomRecord): void {
     const record = this.store.get(code);
-    if (record) this.save(finishArena(record, results, this.now()));
+    if (record) this.save(change(record));
   }
 
   private save(record: RoomRecord): void {
@@ -122,9 +147,12 @@ export class RoomService {
     if (isRoomEmpty(record)) {
       this.store.delete(record.code);
       this.arenas.stop(record.code);
+      this.duels.reconcile(record.code, null);
       return;
     }
     this.store.put(record);
     this.transport.broadcast(record.code, { type: "room", room: toRoomView(record, this.now()) });
+    // Live 1v1 matches follow the record: a new round starts its matches, a quit or the end stops them.
+    this.duels.reconcile(record.code, record.phase === "playing" ? record.tournament : null);
   }
 }

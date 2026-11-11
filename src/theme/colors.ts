@@ -33,6 +33,18 @@ export const colors = {
   silver: "#D3D8E4",
   bronze: "#EBA46E",
 
+  /**
+   * Game worlds seen from the side (Head Crash): a pale lavender sky with softer hills far behind, the indigo
+   * ground everything stands on (with darker pebbles), and royal-blue water (never a player color) with a pale crest.
+   */
+  sky: "#ECEAFB",
+  skyHillFar: "#DEDAF6",
+  skyHillNear: "#CFCAF0",
+  ground: "#4E479F",
+  groundPebble: "#3E388A",
+  water: "#2F5FD8",
+  waterCrest: "#9DB6F5",
+
   online: "#78C840",
   waiting: "#FFC02E",
   offline: "#8A94A6",

@@ -11,18 +11,34 @@ export interface Entrant {
 /** How a match ended: someone won, it was drawn, or the other player left. */
 export type MatchResult = "win" | "draw" | "forfeit";
 
-export interface Match {
+/** What the room keeps of a live (real-time) match: the score so far. The game itself runs in the server's memory. */
+export interface LiveScore {
+  score: [number, number];
+}
+
+interface MatchBase {
   id: number;
-  /** `players[seat]`; seat 0 starts. */
+  /** `players[seat]`; seat 0 starts (a live game: seat 0 is on the left). */
   players: [PlayerId, PlayerId];
-  game: GameState;
-  /** Server time the current turn began; the turn timer runs from here. */
+  /** Server time the current turn began; the turn timer runs from here. A live match: when it starts. */
   turnStartedAt: number;
   /** Null while the match is live. */
   result: MatchResult | null;
   /** Set for a win or forfeit; null for a draw. */
   winner: PlayerId | null;
 }
+
+/** A match of a turn-based game: the room holds its whole state. */
+export interface TurnMatch extends MatchBase {
+  game: GameState;
+}
+
+/** A match of a real-time game. */
+export interface LiveMatch extends MatchBase {
+  game: LiveScore;
+}
+
+export type Match = TurnMatch | LiveMatch;
 
 export interface Round {
   /** Server time all its matches begin (rounds after the first wait a short break). */

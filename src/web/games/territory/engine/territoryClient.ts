@@ -16,7 +16,7 @@ import type { EffectView, EndingView, FrameView, HeadView, HudView, KnockoutView
 import { OwnPredictor, type PredictedStep, type Prediction } from "./prediction";
 import { leaderOf } from "./leader";
 import { landAt, latestLand, Replica, type ReplicaPlayer } from "./replica";
-import { ServerClock } from "./serverClock";
+import { TerritoryClock } from "./serverClock";
 
 const NET = TERRITORY_CLIENT_CONFIG.net;
 const LOOK = TERRITORY_CLIENT_CONFIG.look;
@@ -50,7 +50,7 @@ function lerpAngle(a: number, b: number, f: number): number {
  */
 export class TerritoryClient {
   readonly replica = new Replica();
-  private readonly clock: ServerClock;
+  private readonly clock: TerritoryClock;
   private readonly predictor = new OwnPredictor();
   private readonly shape: ArenaShape;
   private readonly arenaArea: number;
@@ -101,7 +101,7 @@ export class TerritoryClient {
 
   constructor(private readonly options: TerritoryClientOptions) {
     const perfToDate = Date.now() - performance.now();
-    this.clock = new ServerClock(perfToDate + options.roomClockOffsetMs, options.startsAt);
+    this.clock = new TerritoryClock(perfToDate + options.roomClockOffsetMs, options.startsAt);
     this.shape = arenaShape(options.radius);
     this.arenaArea = landArea(this.shape.arena);
   }
@@ -151,7 +151,7 @@ export class TerritoryClient {
     if (msg.kind === "pong") {
       const sentAt = this.pingSentAt.get(msg.clientTime);
       this.pingSentAt.delete(msg.clientTime);
-      if (sentAt !== undefined) this.clock.addPong(sentAt, msg.serverTime, now, msg.tickZeroAt);
+      if (sentAt !== undefined) this.clock.addTickPong(sentAt, msg.serverTime, now, msg.tickZeroAt);
       return;
     }
     if (msg.kind === "full") {

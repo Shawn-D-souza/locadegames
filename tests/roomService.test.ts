@@ -7,6 +7,10 @@ import { currentRound, findActiveMatch } from "../src/shared/tournament/tourname
 import { RoomService } from "../src/server/rooms/roomService";
 import { TERRITORY_CONFIG } from "../src/shared/games/territory/config";
 import { decodeServerMessage, encodeClientMessage } from "../src/shared/games/territory/wire";
+import { BUTTON_RIGHT, HEADCRASH_CONFIG } from "../src/shared/games/headcrash/config";
+import { PHASE } from "../src/shared/games/headcrash/types";
+import { decodeServerMessage as decodeDuelMessage, encodeClientMessage as encodeDuelMessage, type HeadCrashClientMessage } from "../src/shared/games/headcrash/wire";
+import { TOURNAMENT_CONFIG } from "../src/shared/tournament/config";
 import { FakeTicker } from "./support/fakeTicker";
 import { FakeTransport, lastRoom, type FakeConnection } from "./support/fakeTransport";
 import { MemoryRoomStore } from "./support/memoryRoomStore";
@@ -294,6 +298,158 @@ describe("RoomService", () => {
       send(host, { type: "suggest", gameId: "tictactoe" });
       expect(lastRoom(host)!.phase).toBe("lobby");
       expect(lastRoom(host)!.arena).toBeNull();
+    });
+  });
+
+  describe("real-time 1v1 matches (Head Crash)", () => {
+    const TICK = HEADCRASH_CONFIG.tickMs;
+    const snapshots = (conn: FakeConnection) =>
+      conn.frames.map((f) => decodeDuelMessage(f)).flatMap((m) => (m?.kind === "snapshot" ? [m] : []));
+    const binary = (conn: FakeConnection, msg: HeadCrashClientMessage) => {
+      const data = encodeDuelMessage(msg);
+      service.receiveBinary(CODE, conn.playerId!, data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer);
+    };
+    /** Runs the server's loop over this much time, a step at a time. */
+    const run = (ms: number) => {
+      for (const end = now + ms; now < end; ) {
+        now = Math.min(end, now + TICK);
+        ticker.fire();
+      }
+    };
+    /** Runs until the tournament's record satisfies `done` (or far too long has passed). */
+    const runUntil = (done: () => boolean) => {
+      for (let i = 0; i < 400 && !done(); i++) run(1_000);
+      expect(done()).toBe(true);
+    };
+    const matchOf = (id: number) => tournament().rounds.flatMap((r) => r.matches).find((m) => m.id === id)!;
+
+    it("runs each match of the round for its two players, and for whoever watches it", () => {
+      const conns = [join("A"), join("B"), join("C"), join("D")];
+      send(conns[0]!, { type: "start", gameId: "headcrash" });
+      const [first, second] = currentRound(tournament()).matches;
+      expect(ticker.running).toBe(true);
+      run(10 * TICK);
+
+      for (const conn of conns) {
+        const mine = findActiveMatch(tournament(), conn.playerId!)!;
+        const seen = snapshots(conn);
+        expect(seen.length).toBeGreaterThanOrEqual(4);
+        expect(seen.length).toBeLessThanOrEqual(6);
+        expect(seen.every((s) => s.matchId === mine.id)).toBe(true);
+        expect(seen.at(-1)!.state).toMatchObject({ phase: PHASE.countdown, round: 0, score: [0, 0] });
+      }
+
+      // Watching the other match: its state at once, then both streams until the watcher stops.
+      const watcher = conns.find((c) => first!.players.includes(c.playerId!))!;
+      const before = snapshots(watcher).length;
+      binary(watcher, { kind: "watch", matchId: second!.id });
+      expect(snapshots(watcher).slice(before).map((s) => s.matchId)).toEqual([second!.id]);
+      run(4 * TICK);
+      expect(new Set(snapshots(watcher).slice(before).map((s) => s.matchId))).toEqual(new Set([first!.id, second!.id]));
+      binary(watcher, { kind: "unwatch", matchId: second!.id });
+      const after = snapshots(watcher).length;
+      run(4 * TICK);
+      expect(snapshots(watcher).slice(after).every((s) => s.matchId === first!.id)).toBe(true);
+
+      binary(watcher, { kind: "ping", clientTime: 77 });
+      expect(decodeDuelMessage(watcher.frames.at(-1)!)).toEqual({ kind: "pong", clientTime: 77, serverTime: now });
+    });
+
+    it("takes buttons only from the match's own players", () => {
+      const conns = [join("A"), join("B"), join("C"), join("D")];
+      send(conns[0]!, { type: "start", gameId: "headcrash" });
+      const [first, second] = currentRound(tournament()).matches;
+      const player = conns.find((c) => c.playerId === first!.players[1])!;
+      const stranger = conns.find((c) => c.playerId === second!.players[0])!;
+      binary(stranger, { kind: "input", matchId: first!.id, seq: 1, tick: 2, buttons: BUTTON_RIGHT });
+      binary(player, { kind: "input", matchId: first!.id, seq: 1, tick: 2, buttons: BUTTON_RIGHT });
+      run(4 * TICK);
+      expect(snapshots(player).at(-1)!.state.buttons).toEqual([0, BUTTON_RIGHT]);
+      expect(snapshots(stranger).at(-1)!.state.buttons).toEqual([0, 0]);
+    });
+
+    it("plays a match to its end: points reach the room as they are scored, and the tournament finishes", () => {
+      const host = join("Host");
+      const guest = join("Guest");
+      send(host, { type: "start", gameId: "headcrash" });
+      const match = currentRound(tournament()).matches[0]!;
+      const driver = [host, guest].find((c) => c.playerId === match.players[0])!;
+      // One car drives right the whole match, the other never moves: sooner or later heads get hit.
+      binary(driver, { kind: "input", matchId: match.id, seq: 1, tick: 1, buttons: BUTTON_RIGHT });
+      const scores: string[] = [];
+      runUntil(() => {
+        const score = "score" in matchOf(match.id).game ? (matchOf(match.id).game as { score: number[] }).score.join(":") : "";
+        if (scores.at(-1) !== score) scores.push(score);
+        return tournament().finished;
+      });
+      expect(scores[0]).toBe("0:0");
+      expect(scores.length).toBeGreaterThan(1);
+      const done = matchOf(match.id);
+      const [a, b] = (done.game as { score: [number, number] }).score;
+      if (done.result === "win") {
+        // Five points, or ahead when rounds without a point ended it (both heads in the water on a map where the car can't reach the other).
+        expect(Math.max(a, b)).toBeLessThanOrEqual(HEADCRASH_CONFIG.pointsToWin);
+        expect(a).not.toBe(b);
+        expect(done.winner).toBe(match.players[a > b ? 0 : 1]);
+        expect(tournament().championIds).toEqual([done.winner]);
+      } else {
+        expect(done.result).toBe("draw");
+        expect([...tournament().championIds].sort()).toEqual([0, 1]);
+      }
+      expect(lastRoom(host)!.phase).toBe("finished");
+      expect(snapshots(guest).at(-1)!.state.phase).toBe(PHASE.over);
+      expect(ticker.running).toBe(false);
+    });
+
+    it("stops a match when a player quits, and starts the next round's matches at its shared start", () => {
+      const conns = [join("A"), join("B"), join("C"), join("D")];
+      send(conns[0]!, { type: "start", gameId: "headcrash" });
+      const [first, second] = currentRound(tournament()).matches;
+      const quitter = conns.find((c) => c.playerId === first!.players[0])!;
+      send(quitter, { type: "quit" });
+      expect(matchOf(first!.id)).toMatchObject({ result: "forfeit", winner: first!.players[1] });
+      const stayed = conns.find((c) => c.playerId === first!.players[1])!;
+      const seen = snapshots(stayed).length;
+      run(6 * TICK);
+      expect(snapshots(stayed)).toHaveLength(seen);
+      expect(ticker.running).toBe(true);
+
+      // The other match ends too (its players both quit... one quits): the next round is set, and its match waits for the break.
+      send(conns.find((c) => c.playerId === second!.players[0])!, { type: "quit" });
+      expect(tournament().rounds).toHaveLength(2);
+      const next = currentRound(tournament()).matches[0]!;
+      expect(next.turnStartedAt).toBe(now + TOURNAMENT_CONFIG.roundBreakMs);
+      const player = conns.find((c) => c.playerId === next.players[0])!;
+      const waiting = snapshots(player).length;
+      run(TOURNAMENT_CONFIG.roundBreakMs - 2 * TICK);
+      expect(snapshots(player)).toHaveLength(waiting);
+      run(6 * TICK);
+      expect(snapshots(player).at(-1)).toMatchObject({ matchId: next.id, tickZeroAt: next.turnStartedAt });
+    });
+
+    it("picks a match up from its score on a fresh round if the server lost it (restart)", () => {
+      const host = join("Host");
+      const guest = join("Guest");
+      send(host, { type: "start", gameId: "headcrash" });
+      const match = currentRound(tournament()).matches[0]!;
+      const driver = [host, guest].find((c) => c.playerId === match.players[0])!;
+      binary(driver, { kind: "input", matchId: match.id, seq: 1, tick: 1, buttons: BUTTON_RIGHT });
+      runUntil(() => (matchOf(match.id).game as { score: number[] }).score.some((n) => n > 0) || tournament().finished);
+      if (tournament().finished) return;
+      const score = (matchOf(match.id).game as { score: number[] }).score;
+
+      // A fresh service over the same store: the live match is gone until a player's next frame.
+      ticker = new FakeTicker();
+      service = new RoomService(store, transport, () => now, ticker);
+      expect(ticker.running).toBe(false);
+      const before = snapshots(host).length;
+      binary(host, { kind: "ping", clientTime: 1 });
+      binary(host, { kind: "input", matchId: match.id, seq: 9, tick: 1, buttons: 0 });
+      expect(ticker.running).toBe(true);
+      run(4 * TICK);
+      const resumed = snapshots(host).slice(before).at(-1)!;
+      expect(resumed.state).toMatchObject({ score, round: score[0]! + score[1]!, phase: PHASE.countdown });
+      expect(lastRoom(host)!.phase).toBe("playing");
     });
   });
 });

@@ -4,13 +4,13 @@ import type { OutReason } from "../../../shared/games/territory/types";
 import type { Bytes } from "../../../shared/protocol/bytes";
 import type { PlayerId } from "../../../shared/rooms/types";
 import { Badge } from "../../components/Badge";
+import { CountdownDisc } from "../../components/CountdownDisc";
 import { IconButton } from "../../components/IconButton";
 import { useAutoContinue } from "../../hooks/useAutoContinue";
 import { useCountdownSounds } from "../../hooks/useCountdownSounds";
 import type { BinaryListener } from "../../hooks/useRoomConnection";
 import { arenaName } from "../../utils/arenaText";
 import { TERRITORY_CLIENT_CONFIG } from "./config";
-import { CountdownDisc } from "./hud/CountdownDisc";
 import { LandTable } from "./hud/LandTable";
 import { MatchClock } from "./hud/MatchClock";
 import { KillPop } from "./hud/KillPop";
@@ -102,7 +102,7 @@ export function TerritoryScreen({ arena, myId, clockOffsetMs, sendBinary, subscr
       {countingDown && (
         // In the upper half, so your own head (the middle of the screen) stays in view.
         <div className="pointer-events-none absolute inset-x-0 top-0 flex h-1/2 items-center justify-center">
-          <CountdownDisc msLeft={hud.countdownMs} />
+          <CountdownDisc count={Math.ceil(hud.countdownMs / 1000)} />
         </div>
       )}
 

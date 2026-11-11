@@ -62,6 +62,18 @@ A player's color is the same on every device in the session: if you are Blue, ev
 
 Secondary accents are deliberately distinct from player colors; on in-game screens, prefer neutrals for UI so player colors stay unambiguous.
 
+### Game worlds
+A game seen from the side (Head Crash) is a world that fills the screen: sky behind, ground, water in front. Whatever throws or moves a car there (a bounce pad, a fan) is `coral`, the action color.
+
+| Token | Hex | Use |
+|---|---|---|
+| `sky` | `#ECEAFB` | The open air: pale, so every player color stands out on it |
+| `skyHillFar` / `skyHillNear` | `#DEDAF6` / `#CFCAF0` | Soft round hills far behind, flat, no outline (and white clouds) |
+| `ground` | `#4E479F` | Everything solid: rock, islands, planks; ink outline |
+| `groundPebble` | `#3E388A` | Small round pebbles in the ground |
+| `water` | `#2F5FD8` | Water, drawn in front of everything (royal blue: never a player color) |
+| `waterCrest` | `#9DB6F5` | The band along the water's wavy top |
+
 ### Status colors
 | Name | Hex | Use |
 |---|---|---|
@@ -213,7 +225,7 @@ Points show only in a tournament (more than one round). If a player quit, the ta
 There is no CONTINUE button (owner decision: it felt like the game froze). The result stays for `resultShowMs` (4 s, celebration included), then moves on by itself: to the points table, or, after the last match of a tournament, to the champion screen (the last match is never cut off). A tap anywhere skips the wait. If a player quit, one short line under the cards says so. While a match is live, watchers get a `WATCHING LIVE` badge (ink, pulsing coral dot) centered above the cards, so it never looks like their own match, a header with only the back arrow and the settings gear, and `BACK TO SCORES` at the bottom too (owner pick).
 
 ### Game-specific looks
-Each game's own visuals (its board or arena, pieces, HUD, tile art) are in its doc in `docs/games/` (e.g. the tic-tac-toe board, Territory's raised land, trails and heads), built from the language in this file.
+Each game's own visuals (its board or arena, pieces, HUD, tile art) are in its doc in `docs/games/` (e.g. the tic-tac-toe board, Territory's raised land, trails and heads, Head Crash's world and cars), built from the language in this file.
 
 ### Round intro
 The break before every round after the first (owner decision: everyone enters together and the round starts at one exact moment). Same calm column as the match screen, on the plain dot grid, no header: `ROUND 2 OF 3` title, your two seat cards (you on the left, nobody lit, no timer row) with an ink `VS` pill between them, or, in a white box, "You sit this round out" with "+2 points" under it, a big centered countdown numeral to the shared start (each new second pops), then the `POINTS` section card. When the countdown ends, every match of the round opens at once.

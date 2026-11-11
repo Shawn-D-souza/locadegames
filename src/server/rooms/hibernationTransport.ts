@@ -43,6 +43,13 @@ export class HibernationTransport implements RoomTransport {
     for (const ws of this.attached(code, playerId)) safeSend(ws, data);
   }
 
+  sendBinaryToMany(code: string, playerIds: readonly PlayerId[], data: Uint8Array): void {
+    for (const ws of this.ctx.getWebSockets(code)) {
+      const id = readAttachment(ws)?.playerId;
+      if (id !== null && id !== undefined && playerIds.includes(id)) safeSend(ws, data);
+    }
+  }
+
   dropPlayer(code: string, playerId: PlayerId, closeCode: CloseCode, reason: string): void {
     for (const ws of this.attached(code, playerId)) {
       // Detach first so the close handler doesn't mark the player disconnected.

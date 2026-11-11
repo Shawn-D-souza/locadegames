@@ -7,12 +7,16 @@ import {
   coinFlip,
   currentRound,
   findActiveMatch,
+  finishLiveMatch,
+  isLiveMatch,
   playMove,
   pointsOf,
   removePlayer,
   roundsFor,
+  scoreLiveMatch,
   standings,
   startTournament,
+  turnDeadline,
 } from "../src/shared/tournament/tournament";
 import { TOURNAMENT_CONFIG } from "../src/shared/tournament/config";
 import type { Seed, Tournament } from "../src/shared/tournament/types";
@@ -36,7 +40,7 @@ const seeds = (count: number, trophies: number[] = []): Seed[] =>
 function playCells(t: Tournament, playerId: PlayerId, cells: number[]): Tournament {
   for (const cell of cells) {
     const match = findActiveMatch(t, playerId)!;
-    const update = playMove(t, match.players[match.game.turn], cell, match.turnStartedAt);
+    const update = playMove(t, match.players[(match.game as TicTacToeState).turn], cell, match.turnStartedAt);
     if (!update.ok) throw new Error(update.error);
     t = update.tournament;
   }
@@ -160,5 +164,59 @@ describe("tournament", () => {
   it("rejects moves from players not in a live match", () => {
     const t = startTournament(GAME, seeds(3), 0, SEED);
     expect(playMove(t, 2, 4, 0)).toEqual({ ok: false, error: "NOT_IN_MATCH" });
+  });
+
+  describe("real-time games (Head Crash)", () => {
+    const LIVE = "headcrash";
+
+    it("starts every match at 0–0 with no turns: moves and timeouts are refused", () => {
+      const t = startTournament(LIVE, seeds(4), 1_000, SEED);
+      const matches = currentRound(t).matches;
+      expect(matches).toHaveLength(2);
+      for (const match of matches) {
+        expect(isLiveMatch(match)).toBe(true);
+        expect(match.game).toEqual({ score: [0, 0] });
+        expect(turnDeadline(t, match)).toBe(Infinity);
+        expect(playMove(t, match.players[0], 0, 2_000)).toEqual({ ok: false, error: "INVALID_MOVE" });
+        expect(claimTimeout(t, match.id, 9_999_999)).toEqual({ ok: false, error: "NOT_IN_MATCH" });
+      }
+    });
+
+    it("keeps the score the server reports and moves on when it reports the end", () => {
+      let t = startTournament(LIVE, seeds(4), 1_000, SEED);
+      const [first, second] = currentRound(t).matches as [typeof t.rounds[0]["matches"][0], typeof t.rounds[0]["matches"][0]];
+      t = scoreLiveMatch(t, first.id, [2, 1]);
+      expect(currentRound(t).matches[0]!.game).toEqual({ score: [2, 1] });
+      expect(currentRound(t).matches[0]!.result).toBeNull();
+
+      t = finishLiveMatch(t, first.id, 1, [3, 5], 5_000);
+      expect(t.rounds).toHaveLength(1);
+      expect(t.rounds[0]!.matches[0]).toMatchObject({ result: "win", winner: first.players[1], game: { score: [3, 5] } });
+      expect(pointsOf(t, first.players[1])).toBe(TOURNAMENT_CONFIG.winPoints);
+
+      // The last match of the round: a draw, then the next round starts after the break.
+      t = finishLiveMatch(t, second.id, null, [2, 2], 6_000);
+      expect(t.rounds[0]!.matches[1]).toMatchObject({ result: "draw", winner: null });
+      expect(pointsOf(t, second.players[0])).toBe(TOURNAMENT_CONFIG.drawPoints);
+      expect(t.rounds).toHaveLength(2);
+      expect(currentRound(t).matches.every((m) => m.turnStartedAt === 6_000 + TOURNAMENT_CONFIG.roundBreakMs && isLiveMatch(m))).toBe(true);
+
+      // Reports for a match that is already over change nothing.
+      expect(finishLiveMatch(t, first.id, 0, [5, 0], 7_000)).toBe(t);
+      expect(scoreLiveMatch(t, first.id, [5, 0])).toBe(t);
+    });
+
+    it("a drawn 2-player match makes both champions; a quit gives the other the win", () => {
+      const start = startTournament(LIVE, seeds(2), 1_000, SEED);
+      const match = currentRound(start).matches[0]!;
+      const drawn = finishLiveMatch(start, match.id, null, [1, 1], 2_000);
+      expect(drawn.finished).toBe(true);
+      expect([...drawn.championIds].sort()).toEqual([0, 1]);
+
+      const quit = removePlayer(scoreLiveMatch(start, match.id, [4, 0]), match.players[0], 2_000);
+      expect(quit.finished).toBe(true);
+      expect(quit.championIds).toEqual([match.players[1]]);
+      expect(currentRound(quit).matches[0]).toMatchObject({ result: "forfeit", game: { score: [4, 0] } });
+    });
   });
 });

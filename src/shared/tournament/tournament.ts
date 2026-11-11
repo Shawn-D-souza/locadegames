@@ -1,9 +1,9 @@
-import { getTournamentGame, type TournamentGameId } from "../games/catalog";
+import { getTurnGame, isLiveGame, type TournamentGameId } from "../games/catalog";
 import { MATCH_GAMES } from "../games/registry";
 import type { MoveError, Seat } from "../games/types";
 import type { PlayerId } from "../rooms/types";
 import { TOURNAMENT_CONFIG } from "./config";
-import type { Match, Round, Seed, Standing, Tournament } from "./types";
+import type { LiveMatch, Match, Round, Seed, Standing, Tournament, TurnMatch } from "./types";
 
 /**
  * Swiss-style tournament, pure and deterministic: pairing and byes follow fixed rules
@@ -11,6 +11,7 @@ import type { Match, Round, Seed, Standing, Tournament } from "./types";
  * when both players have started as many games: it comes from `coinSeed`, a random
  * number the server picks once per tournament, so the logic stays pure and testable.
  * Draws are a normal result. A room with exactly two players plays one match.
+ * A real-time game's matches are played live on the server, which reports each one's score and result here.
  */
 
 export type TournamentError = MoveError | "NOT_IN_MATCH" | "TOO_EARLY";
@@ -24,8 +25,13 @@ export function isLive(match: Match): boolean {
   return match.result === null;
 }
 
+export function isLiveMatch(match: Match): match is LiveMatch {
+  return "score" in match.game;
+}
+
+/** When the current turn runs out (never, in a real-time game: it has no turns). */
 export function turnDeadline(t: Tournament, match: Match): number {
-  return match.turnStartedAt + getTournamentGame(t.gameId).turnTimeMs;
+  return isLiveGame(t.gameId) ? Infinity : match.turnStartedAt + getTurnGame(t.gameId).turnTimeMs;
 }
 
 /** Enough rounds for a clear leader: 2 players → 1, 3–4 → 2, 5–8 → 3. */
@@ -97,14 +103,8 @@ function seatPair(t: Tournament, [a, b]: [PlayerId, PlayerId], matchId: number):
 
 function newMatch(t: Tournament, pair: [PlayerId, PlayerId], now: number): Match {
   const id = t.nextMatchId++;
-  return {
-    id,
-    players: seatPair(t, pair, id),
-    game: MATCH_GAMES[t.gameId].create(0),
-    turnStartedAt: now,
-    result: null,
-    winner: null,
-  };
+  const base = { id, players: seatPair(t, pair, id), turnStartedAt: now, result: null, winner: null };
+  return isLiveGame(t.gameId) ? { ...base, game: { score: [0, 0] } } : { ...base, game: MATCH_GAMES[t.gameId].create(0) };
 }
 
 /** Pairs everyone still in for a round starting at `startAt`. The bye goes to the lowest-ranked player who has not had one. */
@@ -165,11 +165,13 @@ function replaceMatch(t: Tournament, match: Match): Tournament {
 }
 
 function play(t: Tournament, match: Match, seat: Seat, move: unknown, now: number): TournamentUpdate {
+  // A real-time match has no moves: it is played live and reported with `finishLiveMatch`.
+  if (isLiveGame(t.gameId) || isLiveMatch(match)) return { ok: false, error: "INVALID_MOVE" };
   const rules = MATCH_GAMES[t.gameId];
   const result = rules.applyMove(match.game, seat, move);
   if (!result.ok) return { ok: false, error: result.error };
   const outcome = rules.outcome(result.state);
-  let played: Match = { ...match, game: result.state, turnStartedAt: now };
+  let played: TurnMatch = { ...match, game: result.state, turnStartedAt: now };
   if (outcome.kind === "win") played = { ...played, result: "win", winner: match.players[outcome.seat] };
   if (outcome.kind === "draw") played = { ...played, result: "draw" };
   return { ok: true, tournament: advance(replaceMatch(t, played), now) };
@@ -180,6 +182,7 @@ export function playMove(t: Tournament, playerId: PlayerId, rawMove: unknown, no
   if (!match) return { ok: false, error: "NOT_IN_MATCH" };
   // The round has not started yet (break between rounds).
   if (now < match.turnStartedAt) return { ok: false, error: "TOO_EARLY" };
+  if (isLiveGame(t.gameId)) return { ok: false, error: "INVALID_MOVE" };
   const move = MATCH_GAMES[t.gameId].parseMove(rawMove);
   if (move === null) return { ok: false, error: "INVALID_MOVE" };
   return play(t, match, match.players.indexOf(playerId) as Seat, move, now);
@@ -189,9 +192,30 @@ export function playMove(t: Tournament, playerId: PlayerId, rawMove: unknown, no
 export function claimTimeout(t: Tournament, matchId: number, now: number): TournamentUpdate {
   const match = t.finished ? undefined : currentRound(t).matches.find((m) => m.id === matchId && isLive(m));
   if (!match) return { ok: false, error: "NOT_IN_MATCH" };
+  if (isLiveGame(t.gameId) || isLiveMatch(match)) return { ok: false, error: "NOT_IN_MATCH" };
   if (now < turnDeadline(t, match)) return { ok: false, error: "TOO_EARLY" };
   const rules = MATCH_GAMES[t.gameId];
   return play(t, match, rules.turn(match.game), rules.autoMove(match.game), now);
+}
+
+/** A live match that is still being played, by id. */
+function liveMatchInPlay(t: Tournament, matchId: number): LiveMatch | undefined {
+  const match = t.finished ? undefined : currentRound(t).matches.find((m) => m.id === matchId && isLive(m));
+  return match && isLiveMatch(match) ? match : undefined;
+}
+
+/** The server reports a point in a live match: the room keeps the score (shown to everyone, and where to pick the match up if the server loses it). */
+export function scoreLiveMatch(t: Tournament, matchId: number, score: readonly [number, number]): Tournament {
+  const match = liveMatchInPlay(t, matchId);
+  return match ? replaceMatch(t, { ...match, game: { score: [score[0], score[1]] } }) : t;
+}
+
+/** The server reports that a live match is over: `winner` is a seat, or null for a draw. */
+export function finishLiveMatch(t: Tournament, matchId: number, winner: Seat | null, score: readonly [number, number], now: number): Tournament {
+  const match = liveMatchInPlay(t, matchId);
+  if (!match) return t;
+  const done: LiveMatch = { ...match, game: { score: [score[0], score[1]] }, result: winner === null ? "draw" : "win", winner: winner === null ? null : match.players[winner] };
+  return advance(replaceMatch(t, done), now);
 }
 
 /** A player quit or left the room: they lose their live match and are not paired again. */

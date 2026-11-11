@@ -40,6 +40,9 @@ export class FakeTransport implements RoomTransport {
   sendBinary(code: string, playerId: PlayerId, data: Uint8Array) {
     for (const c of this.open(code)) if (c.playerId === playerId) c.frames.push(data);
   }
+  sendBinaryToMany(code: string, playerIds: readonly PlayerId[], data: Uint8Array) {
+    for (const c of this.open(code)) if (c.playerId !== null && playerIds.includes(c.playerId)) c.frames.push(data);
+  }
   dropPlayer(code: string, playerId: PlayerId, closeCode: number) {
     for (const c of this.open(code)) {
       if (c.playerId === playerId) {

@@ -306,6 +306,33 @@ try {
   await wait(1000);
   await shoot(bigPlayers.find((p) => p !== mover), "34-ultimate-your-turn");
   await shoot(mover, "35-ultimate-their-turn");
+
+  // Head Crash (real time, 1v1): the countdown, driving up the wall, quitting, the ending, the results.
+  const crashHost = await page();
+  await crashHost.goto(BASE);
+  await crashHost.getByRole("button", { name: /create room/i }).click();
+  await wait(1500);
+  const crashGuest = await page();
+  await crashGuest.goto(BASE + "?room=" + new URL(crashHost.url()).searchParams.get("room"));
+  await crashGuest.getByRole("button", { name: /join room/i }).click();
+  await wait(1000);
+  await shoot(crashHost, "36-room-with-head-crash");
+  await crashHost.getByRole("button", { name: /head crash/i }).click();
+  await wait(1500);
+  await shoot(crashHost, "37-headcrash-countdown");
+  await wait(2000);
+  await crashHost.keyboard.down("ArrowRight");
+  await wait(900);
+  await shoot(crashHost, "38-headcrash-driving");
+  await crashHost.keyboard.up("ArrowRight");
+  await crashGuest.getByRole("button", { name: "Quit match" }).click();
+  await wait(300);
+  await shoot(crashGuest, "39-headcrash-quit-popup");
+  await crashGuest.getByRole("button", { name: "QUIT", exact: true }).click();
+  await wait(1500);
+  await shoot(crashHost, "40-headcrash-ended");
+  await wait(4500);
+  await shoot(crashHost, "41-headcrash-results");
 } finally {
   await browser.close();
   await vite.close();

@@ -1,3 +1,4 @@
+import { HEADCRASH_CONFIG } from "./headcrash/config";
 import { TERRITORY_CONFIG } from "./territory/config";
 import { TICTACTOE_CONFIG } from "./tictactoe/config";
 import { ULTIMATE_CONFIG } from "./ultimate/config";
@@ -10,10 +11,19 @@ interface BaseGameInfo {
 }
 
 /** A 1v1 turn-based game: with more players in the room it becomes a Swiss-style tournament (points, no knockouts). */
-export interface TournamentGameInfo extends BaseGameInfo {
+export interface TurnGameInfo extends BaseGameInfo {
   format: "tournament";
+  play: "turns";
   turnTimeMs: number;
 }
+
+/** A 1v1 real-time game: the same tournament, each match played live (the server runs it in memory, like an arena match). */
+export interface LiveGameInfo extends BaseGameInfo {
+  format: "tournament";
+  play: "live";
+}
+
+export type TournamentGameInfo = TurnGameInfo | LiveGameInfo;
 
 /** A real-time game: everyone in the room plays one match together in one arena. */
 export interface ArenaGameInfo extends BaseGameInfo {
@@ -29,6 +39,7 @@ export const GAMES = [
     name: "Tic-tac-toe",
     minPlayers: 2,
     format: "tournament",
+    play: "turns",
     turnTimeMs: TICTACTOE_CONFIG.turnTimeMs,
   },
   {
@@ -36,7 +47,15 @@ export const GAMES = [
     name: "Ultimate Tic-tac-toe",
     minPlayers: 2,
     format: "tournament",
+    play: "turns",
     turnTimeMs: ULTIMATE_CONFIG.turnTimeMs,
+  },
+  {
+    id: "headcrash",
+    name: "Head Crash",
+    minPlayers: HEADCRASH_CONFIG.minPlayers,
+    format: "tournament",
+    play: "live",
   },
   {
     id: "territory",
@@ -49,6 +68,8 @@ export const GAMES = [
 type CatalogEntry = (typeof GAMES)[number];
 export type GameId = CatalogEntry["id"];
 export type TournamentGameId = Extract<CatalogEntry, { format: "tournament" }>["id"];
+export type TurnGameId = Extract<CatalogEntry, { play: "turns" }>["id"];
+export type LiveGameId = Extract<CatalogEntry, { play: "live" }>["id"];
 export type ArenaGameId = Extract<CatalogEntry, { format: "arena" }>["id"];
 
 export function isGameId(value: unknown): value is GameId {
@@ -63,6 +84,12 @@ export function isTournamentGame(id: GameId): id is TournamentGameId {
   return getGame(id).format === "tournament";
 }
 
-export function getTournamentGame(id: TournamentGameId): TournamentGameInfo {
-  return getGame(id) as TournamentGameInfo;
+/** Whether a tournament game's matches are played live (real time) rather than turn by turn. */
+export function isLiveGame(id: GameId): id is LiveGameId {
+  const game = getGame(id);
+  return game.format === "tournament" && game.play === "live";
+}
+
+export function getTurnGame(id: TurnGameId): TurnGameInfo {
+  return getGame(id) as TurnGameInfo;
 }

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import type { ClientMessage, RoomView } from "../../shared/protocol/messages";
+import { isLiveGame } from "../../shared/games/catalog";
 import type { PlayerId } from "../../shared/rooms/types";
 import { currentRound, isLive, turnDeadline } from "../../shared/tournament/tournament";
 import { CLIENT_CONFIG } from "../config";
@@ -16,9 +17,9 @@ export function useTimeoutClaims(
   send: (message: ClientMessage) => void,
 ) {
   const t = room?.phase === "playing" ? room.tournament : null;
-  // One key per live turn, so timers reset exactly when a move lands.
+  // One key per live turn, so timers reset exactly when a move lands. (A real-time game has no turns to run out.)
   const claims =
-    t && !t.finished && myId !== null
+    t && !t.finished && myId !== null && !isLiveGame(t.gameId)
       ? currentRound(t)
           .matches.filter(isLive)
           .filter((m) => {

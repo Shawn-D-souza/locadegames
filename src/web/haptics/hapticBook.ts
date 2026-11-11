@@ -1,3 +1,4 @@
+import { HEADCRASH_HAPTICS } from "../games/headcrash/haptics";
 import { TERRITORY_HAPTICS } from "../games/territory/haptics";
 import { TICTACTOE_HAPTICS } from "../games/tictactoe/haptics";
 import { ULTIMATE_HAPTICS } from "../games/ultimate/haptics";
@@ -31,6 +32,7 @@ export const HAPTICS = {
   ...PLATFORM_HAPTICS,
   ...TICTACTOE_HAPTICS,
   ...ULTIMATE_HAPTICS,
+  ...HEADCRASH_HAPTICS,
   ...TERRITORY_HAPTICS,
 };
 

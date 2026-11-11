@@ -46,6 +46,12 @@ export const HAPTIC_OF_SOUND: Partial<Record<SoundName, HapticName>> = {
   championAnnounced: "smallNews",
   // Ultimate Tic-tac-toe: winning a small board (others winning one, or one filling up, isn't felt).
   ultimateYouClaimedBoard: "ultimateBoardClaimed",
+  // Head Crash: your own car's weight, and the hit that ends your round (the water's wash and warning, and hits in a match you watch, aren't felt).
+  headCrashLanding: "headCrashLanding",
+  headCrashCarBump: "headCrashCarBump",
+  headCrashYouScored: "headCrashYouScored",
+  headCrashYouWereHit: "headCrashYouWereHit",
+  headCrashBothHeadsHit: "headCrashBothHeadsHit",
   // Territory.
   territoryLeftLand: "territoryLeftLand",
   territoryCaptureSmall: "territoryCaptureSmall",

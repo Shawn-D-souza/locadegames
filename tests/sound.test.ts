@@ -19,6 +19,8 @@ import { SOUND_NAMES, soundDefinition, SOUNDS, type SoundName } from "../src/web
 import { DEFAULT_VOLUME, parseVolume, VOLUME_STEP, volumeGain } from "../src/web/sound/volume";
 import { CELEBRATION_TIMING } from "../src/web/utils/celebrationTiming";
 import { TERRITORY_CLIENT_CONFIG } from "../src/web/games/territory/config";
+import { HEADCRASH_CLIENT_CONFIG } from "../src/web/games/headcrash/config";
+import { bumpVolume, headCrashEndingSteps, hitSound, landingTake } from "../src/web/games/headcrash/headCrashCues";
 
 
 /** The first and, if it differs, the last take: the extremes of a sound with many. */
@@ -350,5 +352,33 @@ describe("the volume", () => {
     expect(parseVolume("40")).toBe(40);
     expect(parseVolume("140")).toBe(100);
     expect(parseVolume("-5")).toBe(0);
+  });
+});
+
+describe("Head Crash cues", () => {
+  const { minImpact, hardImpact, minAirTicks } = HEADCRASH_CLIENT_CONFIG.sound;
+
+  it("a hit sounds like what it means to you", () => {
+    expect(hitSound(0, 0)).toBe("headCrashYouScored");
+    expect(hitSound(1, 0)).toBe("headCrashYouWereHit");
+    expect(hitSound(null, 1)).toBe("headCrashBothHeadsHit");
+    expect(hitSound(0, null)).toBe("headCrashWatchedHit");
+    expect(hitSound(null, null)).toBe("headCrashWatchedHit");
+  });
+
+  it("only real landings and knocks are heard, harder ones louder", () => {
+    expect(landingTake(minImpact - 0.1, minAirTicks)).toBeNull();
+    expect(landingTake(hardImpact, minAirTicks - 1)).toBeNull();
+    expect(landingTake(minImpact, minAirTicks)).toEqual({ variant: 0, volume: 0.55 });
+    expect(landingTake(hardImpact * 2, minAirTicks)).toEqual({ variant: 1, volume: 1 });
+    expect(bumpVolume(minImpact - 0.1)).toBe(0);
+    expect(bumpVolume(minImpact)).toBe(0.5);
+    expect(bumpVolume(hardImpact)).toBe(1);
+  });
+
+  it("the result sounds as the tag stamps on", () => {
+    for (const [tone, sound] of [["win", "matchWinFanfare"], ["lose", "matchLossSting"], ["draw", "matchDrawShrug"], ["watch", "matchWatchedResult"]] as const) {
+      expect(headCrashEndingSteps(tone)).toEqual([{ sound, at: HEADCRASH_CLIENT_CONFIG.hud.endTagAtMs }]);
+    }
   });
 });

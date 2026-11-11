@@ -19,20 +19,22 @@ interface RoundIntroScreenProps {
   myId: PlayerId;
   /** Local time the round's matches all begin. */
   startsAt: number;
+  /** A real-time game: it counts its own 3, 2, 1 in the arena (here it only says to get ready) and has no X / O pieces (the cards show avatars). */
+  live: boolean;
 }
 
-/** The break between rounds: round title, who you play (or that you sit out), a countdown to the shared start, and the points. */
-export function RoundIntroScreen({ room, tournament, myId, startsAt }: RoundIntroScreenProps) {
+/** The break between rounds: round title, who you play (or that you sit out), a countdown to the shared start (or GET READY! before a real-time game's own countdown), and the points. */
+export function RoundIntroScreen({ room, tournament, myId, startsAt, live }: RoundIntroScreenProps) {
   const now = useNow(CLIENT_CONFIG.timerTickMs);
   const seconds = Math.max(1, Math.ceil((startsAt - now) / 1000));
-  useCountdownSounds(seconds);
+  useCountdownSounds(live ? 0 : seconds);
   const round = currentRound(tournament);
   const mine = round.matches.find((m) => m.players.includes(myId));
 
   const card = (id: PlayerId, seat: 0 | 1) => (
     <SeatCard
       player={{ id, name: entrantName(tournament, id), connected: room.players.find((p) => p.id === id)?.connected ?? false }}
-      seat={seat}
+      seat={live ? undefined : seat}
       isYou={id === myId}
       active={false}
     />
@@ -58,15 +60,21 @@ export function RoundIntroScreen({ room, tournament, myId, startsAt }: RoundIntr
             {round.bye === myId && <span className="text-caption text-ink-soft">+{TOURNAMENT_CONFIG.byePoints} points</span>}
           </p>
         )}
-        {/* Keyed by the second, so each new number pops. */}
-        <p
-          key={seconds}
-          className="animate-tick text-center font-display text-numeral text-waiting text-lip-ink"
-          role="timer"
-          aria-label={`Starts in ${seconds} seconds`}
-        >
-          {seconds}
-        </p>
+        {live ? (
+          <p className="text-center font-display text-display font-black text-waiting uppercase text-lip-ink" role="status">
+            Get ready!
+          </p>
+        ) : (
+          // Keyed by the second, so each new number pops.
+          <p
+            key={seconds}
+            className="animate-tick text-center font-display text-numeral text-waiting text-lip-ink"
+            role="timer"
+            aria-label={`Starts in ${seconds} seconds`}
+          >
+            {seconds}
+          </p>
+        )}
         <SectionCard label="Points">
           <StandingsTable standings={standings(tournament)} myId={myId} />
         </SectionCard>

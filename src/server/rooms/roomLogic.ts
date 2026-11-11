@@ -7,7 +7,8 @@ import type { ClientMessage, RoomView } from "../../shared/protocol/messages";
 import { ROOM_CONFIG } from "../../shared/rooms/config";
 import { sanitizePlayerName } from "../../shared/rooms/playerName";
 import type { PlayerId } from "../../shared/rooms/types";
-import { claimTimeout, playMove, removePlayer, startTournament } from "../../shared/tournament/tournament";
+import type { Seat } from "../../shared/games/types";
+import { claimTimeout, finishLiveMatch, playMove, removePlayer, scoreLiveMatch, startTournament } from "../../shared/tournament/tournament";
 import type { Tournament } from "../../shared/tournament/types";
 import type { PlayerRecord, RoomRecord } from "./roomRecord";
 
@@ -115,6 +116,18 @@ function withTournament(record: RoomRecord, tournament: Tournament): RoomRecord 
   if (tournament.championIds.length === 0) return { ...record, phase: "lobby", tournament: null };
   const players = record.players.map((p) => (tournament.championIds.includes(p.id) ? { ...p, trophies: p.trophies + 1 } : p));
   return { ...record, players, phase: "finished", tournament };
+}
+
+/** A point in a live 1v1 match (a real-time tournament game): the room keeps the score. */
+export function scoreLive(record: RoomRecord, matchId: number, score: readonly [number, number], now: number): RoomRecord {
+  if (record.phase !== "playing" || !record.tournament) return record;
+  return touch({ ...record, tournament: scoreLiveMatch(record.tournament, matchId, score) }, now);
+}
+
+/** A live 1v1 match is over (`winner`: a seat, or null for a draw): the tournament moves on. */
+export function finishLive(record: RoomRecord, matchId: number, winner: Seat | null, score: readonly [number, number], now: number): RoomRecord {
+  if (record.phase !== "playing" || !record.tournament) return record;
+  return touch(withTournament(record, finishLiveMatch(record.tournament, matchId, winner, score, now)), now);
 }
 
 /** A real-time match ended: results in, a trophy for each champion (everyone sharing first place). */

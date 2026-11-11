@@ -22,6 +22,8 @@ export interface RoomTransport {
   /** Real-time game frames (binary) to everyone in the room, players and watchers. */
   broadcastBinary(code: string, data: Uint8Array): void;
   sendBinary(code: string, playerId: PlayerId, data: Uint8Array): void;
+  /** The same frame to several players of the room at once (a live 1v1 match: its two players and its watchers). */
+  sendBinaryToMany(code: string, playerIds: readonly PlayerId[], data: Uint8Array): void;
   /** Detaches and closes every connection currently held by `playerId`. */
   dropPlayer(code: string, playerId: PlayerId, closeCode: CloseCode, reason: string): void;
 }

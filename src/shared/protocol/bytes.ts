@@ -51,6 +51,13 @@ export class ByteWriter {
     return this;
   }
 
+  f32(value: number): this {
+    this.reserve(4);
+    this.view.setFloat32(this.offset, value, true);
+    this.offset += 4;
+    return this;
+  }
+
   f64(value: number): this {
     this.reserve(8);
     this.view.setFloat64(this.offset, value, true);
@@ -111,6 +118,12 @@ export class ByteReader {
 
   i32(): number {
     const v = this.view.getInt32(this.offset, true);
+    this.offset += 4;
+    return v;
+  }
+
+  f32(): number {
+    const v = this.view.getFloat32(this.offset, true);
     this.offset += 4;
     return v;
   }

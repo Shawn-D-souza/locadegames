@@ -76,4 +76,9 @@ export const layout = {
   hudFeed: 112,
   /** How high above the bottom the arena game's result tag sits (its center). */
   endTag: 120,
+  /** Head Crash: a drive button in a bottom corner (the whole half of the screen around it takes the touch; in landscape it is also the width of the side columns) and the arrow on it. */
+  driveButton: 72,
+  driveIcon: 32,
+  /** Dev tool pages: a side panel (Head Crash's tuner). */
+  devPanel: 300,
 } as const;

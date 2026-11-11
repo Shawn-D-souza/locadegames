@@ -5,13 +5,14 @@
 //        npm run playtest territory    one game (while working on it)
 import { chromium } from "playwright";
 import { createServer } from "vite";
+import headcrash from "./playtest/headcrash.mjs";
 import { Session } from "./playtest/session.mjs";
 import territory from "./playtest/territory.mjs";
 import tictactoe from "./playtest/tictactoe.mjs";
 import ultimate from "./playtest/ultimate.mjs";
 
 /** One flow per game; a new game adds its file here. */
-const GAMES = { tictactoe, ultimate, territory };
+const GAMES = { tictactoe, ultimate, headcrash, territory };
 const SERVER = "http://localhost:8787";
 const PORT = 5198;
 

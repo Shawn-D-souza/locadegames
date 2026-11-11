@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import type { Seat } from "../../shared/games/types";
 import { playerStyle } from "../utils/playerStyle";
+import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
 import { Mark } from "./Mark";
 
@@ -8,8 +9,8 @@ type PieceMotion = "hop" | "droop" | "shrug";
 
 interface SeatCardProps {
   player: { id: number; name: string; connected: boolean };
-  /** The piece this player plays (X or O). */
-  seat: Seat;
+  /** The piece this player plays (X or O). Left out for a game without pieces (the round intro of a real-time game): their avatar shows. */
+  seat?: Seat;
   isYou: boolean;
   /** Lit in the player's color: their turn, or the winner once decided. */
   active: boolean;
@@ -33,7 +34,7 @@ const PIECE_MOTION_CLASSES: Record<PieceMotion, string> = {
 const PILL_CLASSES = "rounded-pill bg-ink px-2 py-1 text-badge tracking-badge text-white";
 
 /**
- * One side of a match: piece, name, YOU / AWAY tab on the top edge. Lit means "their turn" (or "winner"),
+ * One side of a match: piece (or avatar), name, YOU / AWAY tab on the top edge. Lit means "their turn" (or "winner"),
  * so no extra words. Not tappable, so no lip.
  */
 export function SeatCard({ player, seat, isYou, active, countdown, celebrate, defeated, pieceMotion = null }: SeatCardProps) {
@@ -58,10 +59,14 @@ export function SeatCard({ player, seat, isYou, active, countdown, celebrate, de
           className="absolute top-0 left-0 size-mark-badge translate-x-[-30%] -translate-y-1/2 rotate-(--transform-badge-tilt) animate-crown fill-waiting stroke-ink"
         />
       )}
-      {/* The piece on a white disc, so it reads on every player color. */}
-      <span className={clsx("inline-flex size-mark-badge rounded-pill border-thin border-ink bg-white p-1", pieceMotion && PIECE_MOTION_CLASSES[pieceMotion])}>
-        <Mark seat={seat} className="size-full" />
-      </span>
+      {seat === undefined ? (
+        <Avatar name={player.name} colorIndex={player.id} />
+      ) : (
+        // The piece on a white disc, so it reads on every player color.
+        <span className={clsx("inline-flex size-mark-badge rounded-pill border-thin border-ink bg-white p-1", pieceMotion && PIECE_MOTION_CLASSES[pieceMotion])}>
+          <Mark seat={seat} className="size-full" />
+        </span>
+      )}
       <span className="line-clamp-2 max-w-full text-center wrap-break-word">{player.name}</span>
       {/* Always there in a match (hidden until the last seconds), so the card never jumps when it appears. */}
       {countdown !== undefined && (

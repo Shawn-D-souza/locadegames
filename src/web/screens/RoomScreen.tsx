@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { isLiveGame } from "../../shared/games/catalog";
 import { CLOSE_CODES } from "../../shared/protocol/errors";
 import type { PlayerId } from "../../shared/rooms/types";
-import { currentRound, isLive, standings } from "../../shared/tournament/tournament";
+import { currentRound, isLive, isLiveMatch, standings } from "../../shared/tournament/tournament";
 import type { Match, Tournament } from "../../shared/tournament/types";
 import { ArenaRankingTable } from "../components/ArenaRankingTable";
 import { Modal } from "../components/Modal";
@@ -14,6 +15,7 @@ import { useBackButtonGuard } from "../hooks/useBackButtonGuard";
 import { useBefore } from "../hooks/useBefore";
 import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
+import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { arenaName } from "../utils/arenaText";
 import { closeMessage, roomErrorMessage } from "../utils/messages";
@@ -33,6 +35,7 @@ interface RoomScreenProps {
 }
 
 const TerritoryScreen = lazy(() => loadTerritory().then((m) => ({ default: m.TerritoryScreen })));
+const HeadCrashScreen = lazy(() => loadHeadCrash().then((m) => ({ default: m.HeadCrashScreen })));
 
 /** A match within a specific tournament (match ids restart each tournament). */
 type MatchRef = { startedAt: number; matchId: number };
@@ -97,7 +100,9 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const roundKey = running && running.rounds.length > 1 ? `${running.startedAt}:${running.rounds.length}` : null;
   const roundStart = running ? currentRound(running).startsAt - clockOffsetMs : 0;
   const beforeRoundStart = useBefore(roundKey, roundStart);
-  useRoomSounds(room, playerId, status, lastError?.id ?? null, beforeRoundStart);
+  // A real-time game counts its own 3, 2, 1 once the round starts: the intro's countdown and its GO stay quiet.
+  const ownCountdown = !!running && isLiveGame(running.gameId);
+  useRoomSounds(room, playerId, status, lastError?.id ?? null, beforeRoundStart && !ownCountdown);
   // Your own live match is on screen (not a result still showing first).
   const playingNow =
     !!running && !!liveMine && isLive(liveMine) && !resultPending && !beforeRoundStart && !refersTo(dismissed, running, liveMine);
@@ -194,33 +199,40 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
     const watched = allMatches.find((m) => refersTo(watching, t, m));
     // When a round's last match ends, the server starts the next round at once; hold the result first.
     const justPlayed = allMatches.find((m) => refersTo(lastPlayed, t, m) && !isLive(m) && !refersTo(dismissed, t, m));
-    const matchProps = { room, tournament: t, myId: playerId, clockOffsetMs, send };
     const close = () => setWatching(null);
-    if (justPlayed) {
-      content = (
-        <MatchScreen
-          {...matchProps}
-          match={justPlayed}
-          onContinue={() => setDismissed({ startedAt: t.startedAt, matchId: justPlayed.id })}
-        />
+    /** A match on screen: a turn-based game's board, or a real-time game's own screen (a fresh one per match). */
+    const matchScreen = (match: Match, on: { onBack?: () => void; onContinue?: () => void; onQuit?: () => void }) =>
+      isLiveMatch(match) ? (
+        <Suspense fallback={<JoiningScreen code={code} onBack={requestLeave} />}>
+          <HeadCrashScreen
+            key={`${t.startedAt}:${match.id}`}
+            tournament={t}
+            match={match}
+            myId={playerId}
+            clockOffsetMs={clockOffsetMs}
+            sendBinary={sendBinary}
+            subscribeBinary={subscribeBinary}
+            {...on}
+          />
+        </Suspense>
+      ) : isLiveGame(t.gameId) ? null : (
+        <MatchScreen room={room} tournament={t} gameId={t.gameId} match={match} myId={playerId} clockOffsetMs={clockOffsetMs} send={send} {...on} />
       );
+    if (justPlayed) {
+      content = matchScreen(justPlayed, { onContinue: () => setDismissed({ startedAt: t.startedAt, matchId: justPlayed.id }) });
     } else if (watched && !isLive(watched)) {
       // Same for a match you were watching: its ending shows before anything else.
-      content = <MatchScreen {...matchProps} match={watched} onContinue={close} />;
+      content = matchScreen(watched, { onContinue: close });
     } else if (beforeRoundStart) {
-      content = <RoundIntroScreen room={room} tournament={t} myId={playerId} startsAt={roundStart} />;
+      content = <RoundIntroScreen room={room} tournament={t} myId={playerId} startsAt={roundStart} live={ownCountdown} />;
     } else if (mine && !refersTo(dismissed, t, mine)) {
-      content = (
-        <MatchScreen
-          {...matchProps}
-          match={mine}
-          onContinue={!isLive(mine) ? () => setDismissed({ startedAt: t.startedAt, matchId: mine.id }) : undefined}
-          onQuit={askQuit}
-        />
-      );
+      content = matchScreen(mine, {
+        onContinue: !isLive(mine) ? () => setDismissed({ startedAt: t.startedAt, matchId: mine.id }) : undefined,
+        onQuit: askQuit,
+      });
     } else if (watched) {
       // BACK TO SCORES while it's live; once it ends it moves on by itself like your own match.
-      content = <MatchScreen {...matchProps} match={watched} onBack={close} onContinue={close} />;
+      content = matchScreen(watched, { onBack: close, onContinue: close });
     } else if (finished && leftResults !== t.startedAt) {
       content = (
         <ResultsScreen
