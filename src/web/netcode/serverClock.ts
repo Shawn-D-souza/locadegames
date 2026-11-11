@@ -4,7 +4,10 @@ export interface ClockTuning {
   clockSamples: number;
   /** The displayed clock eases toward a new estimate at this share of real time, so nothing jumps. */
   clockSlewRate: number;
-  /** A clock error bigger than this is fixed at once (after a stall or a sleeping phone). */
+  /**
+   * A clock error bigger than this is fixed at once (after a stall or a sleeping phone), but only when it is also
+   * bigger than the fastest round trip: a slow sample can be wrong by up to half its trip, so it is eased in instead.
+   */
   clockSnapMs: number;
 }
 
@@ -14,17 +17,25 @@ interface Sample {
   offset: number;
 }
 
+/** The middle of sorted numbers (the lower of the two middle ones for an even count, so one slow sample of two never counts). */
+const lowerMedian = (sorted: readonly number[]) => sorted[Math.floor((sorted.length - 1) / 2)]!;
+
 /**
  * The server's clock as seen from this device, from ping/pong round trips (shared by every real-time game).
- * The fastest recent round trip sets the offset (it waited least in queues); the shown clock
- * eases toward new estimates so drawing never jumps. All times are `performance.now()` based.
+ * The fastest recent round trip sets the offset (it waited least in queues); the shown clock eases toward new
+ * estimates so drawing never jumps. The round trip and its jitter are medians of the recent samples, so one pong
+ * that arrived late (the page was busy, a hiccup on the line) never moves them. All times are `performance.now()` based.
  */
 export class ServerClock {
   private samples: Sample[] = [];
   private target: number;
   private shown: number;
   private lastShownAt: number | null = null;
-  /** Smoothed round trip and its spread. */
+  /** The fastest round trip kept (how far the clock's estimate can be off: half of it at most). */
+  private bestRttMs = Infinity;
+  /** A trustworthy sample has set the clock since the start (or since the tab woke). */
+  private settled = false;
+  /** Typical round trip and how much it varies (before any pong: a cautious guess). */
   rttMs = 150;
   jitterMs = 30;
 
@@ -42,14 +53,22 @@ export class ServerClock {
     if (this.samples.length > this.tuning.clockSamples) this.samples.shift();
     const best = this.samples.reduce((a, b) => (b.rtt < a.rtt ? b : a));
     this.target = best.offset;
-    if (this.samples.length === 1) this.shown = this.target;
-    this.jitterMs = this.samples.length === 1 ? rtt / 4 : this.jitterMs * 0.8 + Math.abs(rtt - this.rttMs) * 0.2;
-    this.rttMs = this.samples.length === 1 ? rtt : this.rttMs * 0.8 + rtt * 0.2;
+    this.bestRttMs = best.rtt;
+    // The first sample quick enough to trust sets the clock at once; until then the room's guess is eased toward it.
+    if (!this.settled && best.rtt <= this.tuning.clockSnapMs) {
+      this.shown = this.target;
+      this.settled = true;
+    }
+    const trips = this.samples.map((sample) => sample.rtt).sort((a, b) => a - b);
+    this.rttMs = lowerMedian(trips);
+    this.jitterMs = lowerMedian(trips.map((trip) => Math.abs(trip - this.rttMs)).sort((a, b) => a - b));
   }
 
   /** Forgets every sample (the tab slept: old round trips say nothing about now). */
   reset() {
     this.samples = [];
+    this.bestRttMs = Infinity;
+    this.settled = false;
   }
 
   /** Server time now, eased (call once per frame or more; it advances the easing). */
@@ -57,7 +76,7 @@ export class ServerClock {
     const elapsed = this.lastShownAt === null ? 0 : Math.max(0, now - this.lastShownAt);
     this.lastShownAt = now;
     const diff = this.target - this.shown;
-    if (Math.abs(diff) > this.tuning.clockSnapMs) this.shown = this.target;
+    if (Math.abs(diff) > this.tuning.clockSnapMs && Math.abs(diff) > this.bestRttMs) this.shown = this.target;
     else this.shown += Math.max(-elapsed * this.tuning.clockSlewRate, Math.min(elapsed * this.tuning.clockSlewRate, diff));
     return now + this.shown;
   }

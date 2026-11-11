@@ -220,7 +220,8 @@ export class HeadCrashClient {
   private playFrame(serverTick: number, elapsed: number, now: number): FrameView {
     const server = this.server!;
     const neededLead = this.clock.rttMs / 2 + 2 * this.clock.jitterMs + NET.leadSafetyMs + this.lateBoostMs;
-    const leadMs = this.easeLead(neededLead, elapsed);
+    // In the countdown the cars stand still, so the lead takes its new value at once (the 3, 2, 1 keeps its pace).
+    const leadMs = this.easeLead(neededLead, elapsed, this.predicted?.phase === PHASE.countdown);
     this.stats.leadMs = leadMs;
     // Never behind the server's word, never far past it (the cars wait there through a stall).
     const ahead = this.held ? this.ahead : Math.min(Math.max(serverTick + leadMs / tickMs, server.tick), server.tick + NET.maxPredictTicks);
@@ -341,11 +342,12 @@ export class HeadCrashClient {
 
   /**
    * Moving the lead at once would move the cars along their paths in one frame, so it eases there instead:
-   * the match runs a few percent faster or slower for a moment. A big change (a stall) snaps.
+   * the match runs a few percent faster or slower for a moment. A big change (a stall) snaps, and so does any
+   * change while nothing moves (`still`).
    */
-  private easeLead(needed: number, elapsed: number): number {
+  private easeLead(needed: number, elapsed: number, still = false): number {
     const diff = needed - (this.shownLeadMs ?? needed);
-    if (this.shownLeadMs === null || Math.abs(diff) > NET.leadSnapMs) this.shownLeadMs = needed;
+    if (this.shownLeadMs === null || still || Math.abs(diff) > NET.leadSnapMs) this.shownLeadMs = needed;
     else this.shownLeadMs += Math.max(-elapsed * NET.leadSlewRate, Math.min(elapsed * NET.leadSlewRate, diff));
     return this.shownLeadMs;
   }

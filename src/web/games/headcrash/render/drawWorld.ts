@@ -9,8 +9,8 @@ const LOOK = HEADCRASH_CLIENT_CONFIG.look;
 /** Further than any screen shows (meters): the sky, the hills and a cave's rock reach this far. */
 const FAR = 200;
 
-/** Pebbles reach this far past the frame (meters): further than a phone held upright shows. */
-const PEBBLES_REACH = 70;
+/** Bézier handles that draw a quarter of a circle (a whole ellipse is four of them). */
+const QUARTER_CIRCLE = 0.5522847498;
 
 /** The world's rectangle a canvas shows (meters). */
 export interface WorldRect {
@@ -28,8 +28,6 @@ export interface WorldPaths {
   outline: Path2D;
   /** Bounce pads, drawn over the rock in the gadgets' color. */
   pads: Path2D;
-  /** Pebbles in the ground. */
-  pebbles: Path2D;
 }
 
 /** How many times an outline winds round a point (counter-clockwise positive). */
@@ -79,23 +77,44 @@ export function worldPaths(layout: Layout): WorldPaths {
     ground.closePath();
   }
   ground.addPath(all);
+  return { ground, outline: bySurface[SURFACE.rock], pads: bySurface[SURFACE.pad] };
+}
 
-  // Pebbles on a jittered grid, the same every time for a map, only where they sit well inside the ground.
+/** A turned ellipse as four Bézier curves (`Path2D.ellipse` slows down more and more as a path grows: seconds for a map's pebbles). */
+function addEllipse(path: Path2D, x: number, y: number, rx: number, ry: number, rotation: number) {
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  const at = (u: number, v: number): [number, number] => [x + u * rx * cos - v * ry * sin, y + u * rx * sin + v * ry * cos];
+  const corners = [[1, 0], [0, 1], [-1, 0], [0, -1]] as const;
+  path.moveTo(...at(1, 0));
+  corners.forEach(([ax, ay], i) => {
+    const [bx, by] = corners[(i + 1) % corners.length]!;
+    path.bezierCurveTo(...at(ax - QUARTER_CIRCLE * ay, ay + QUARTER_CIRCLE * ax), ...at(bx + QUARTER_CIRCLE * by, by - QUARTER_CIRCLE * bx), ...at(bx, by));
+  });
+  path.closePath();
+}
+
+/**
+ * Pebbles on a jittered grid, only where they sit well inside the ground and only across `rect` (what the screen
+ * shows). Each cell has its own random numbers, so a map's pebbles stay put whatever the screen's size.
+ */
+function pebblesIn(layout: Layout, rect: WorldRect): Path2D {
   const pebbles = new Path2D();
-  const random = seededRandom(mixSeed(layout.name.length, layout.edges.length));
+  const mapSeed = mixSeed(layout.name.length, layout.edges.length);
   const [small, big] = LOOK.pebbleSize;
   const gap = LOOK.pebbleGap;
-  for (let y = layout.floorY - PEBBLES_REACH; y < layout.topY + PEBBLES_REACH; y += gap) {
-    for (let x = layout.minX - PEBBLES_REACH; x < layout.maxX + PEBBLES_REACH; x += gap) {
-      const px = x + (random() - 0.5) * gap * 0.8;
-      const py = y + (random() - 0.5) * gap * 0.8;
+  for (let row = Math.floor(rect.bottom / gap) - 1; row <= Math.ceil(rect.top / gap) + 1; row++) {
+    for (let column = Math.floor(rect.left / gap) - 1; column <= Math.ceil(rect.right / gap) + 1; column++) {
+      const random = seededRandom(mixSeed(mixSeed(mapSeed, row), column));
+      const px = (column + (random() - 0.5) * 0.8) * gap;
+      const py = (row + (random() - 0.5) * 0.8) * gap;
       const r = small + (big - small) * random();
+      const rotation = random() * Math.PI;
       if (random() < 0.35 || !deepInGround(layout, px, py, r + LOOK.pebbleInset)) continue;
-      pebbles.moveTo(px + r, py);
-      pebbles.ellipse(px, py, r, r * 0.8, random() * Math.PI, 0, 2 * Math.PI);
+      addEllipse(pebbles, px, py, r, r * 0.8, rotation);
     }
   }
-  return { ground, outline: bySurface[SURFACE.rock], pads: bySurface[SURFACE.pad], pebbles };
+  return pebbles;
 }
 
 /** The sky, soft round hills far behind it and a few clouds (flat, no outline), across all of `rect`. */
@@ -213,7 +232,7 @@ export function drawWorld(ctx: CanvasRenderingContext2D, layout: Layout, paths: 
   ctx.fillStyle = ARENA_PAINT.ground;
   ctx.fill(paths.ground);
   ctx.fillStyle = ARENA_PAINT.pebble;
-  ctx.fill(paths.pebbles);
+  ctx.fill(pebblesIn(layout, rect));
   ctx.strokeStyle = ARENA_PAINT.ink;
   ctx.lineWidth = LOOK.groundLine;
   ctx.lineJoin = "round";
