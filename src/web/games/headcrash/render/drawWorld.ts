@@ -247,7 +247,7 @@ export function drawWorld(ctx: CanvasRenderingContext2D, layout: Layout, paths: 
 
 /**
  * The water, in front of everything and across the whole screen: deep blue with a pale wavy band on top. Once it
- * rises the band turns coral and blinks, so nobody is surprised by it.
+ * rises the band blinks white, so nobody is surprised by it.
  */
 export function drawWater(ctx: CanvasRenderingContext2D, rect: WorldRect, waterY: number, rising: boolean, now: number) {
   const { waveHeight, waveLength, waveSpeed } = LOOK;

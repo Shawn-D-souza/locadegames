@@ -79,6 +79,8 @@ export const layout = {
   /** Head Crash: a drive button in a bottom corner (the whole half of the screen around it takes the touch; in landscape it is also the width of the side columns) and the arrow on it. */
   driveButton: 72,
   driveIcon: 32,
+  /** Head Crash: each driver's half of the score tab at the top (wide enough for two digits). */
+  scoreSide: 64,
   /** Dev tool pages: a side panel (Head Crash's tuner). */
   devPanel: 300,
 } as const;

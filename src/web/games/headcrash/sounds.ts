@@ -252,7 +252,7 @@ export const HEADCRASH_SOUNDS = defineSounds({
     },
   },
   headCrashWaterRising: {
-    about: "The water starts to rise (its edge turns coral and blinks): a slow swell of air and one low note, a warning without alarm.",
+    about: "The water starts to rise (its edge blinks white): a slow swell of air and one low note, a warning without alarm.",
     level: "quiet",
     room: 0.3,
     render(mix) {

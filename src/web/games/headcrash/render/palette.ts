@@ -44,10 +44,10 @@ export const ARENA_PAINT = {
   glass: colors.waterCrest,
   taillight: colors.coral,
   star: colors.waiting,
-  /** Water in front of everything (royal blue, never a player's color), its pale band on top, and that band once it rises. */
+  /** Water in front of everything (royal blue, never a player's color), its pale band on top, and that band once it rises (white foam: it stays in the water's colors; owner: the coral didn't fit). */
   water: withAlpha(colors.water, HEADCRASH_CLIENT_CONFIG.look.waterAlpha),
   waterCrest: colors.waterCrest,
-  waterRising: colors.coral,
+  waterRising: colors.white,
   dust: colors.inkSoft,
   burst: colors.white,
   burstCore: colors.waiting,

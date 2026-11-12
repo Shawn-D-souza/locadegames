@@ -8,28 +8,35 @@ interface ScoreBarProps {
 }
 
 /**
- * The score: a small white tab hanging from the top edge of the screen, each driver's points on a disc in their
- * color, on the side their car starts on. It takes almost no room from the world. A new point pops.
+ * The score: a tab hanging from the top edge of the screen, split down the middle by an ink line. Each half is filled
+ * with its driver's color and holds their points, on the side their car starts on. A new point pops.
  */
 export function ScoreBar({ players, score }: ScoreBarProps) {
-  const points = (seat: 0 | 1) => (
-    <span
-      key={`${seat}:${score[seat]}`}
+  const half = (seat: 0 | 1) => (
+    <div
       style={playerStyle(players[seat].id)}
-      className="flex size-icon animate-pop-in items-center justify-center rounded-pill border-thin border-ink bg-player font-display text-label font-black text-player-text"
+      className={
+        seat === 0
+          ? "flex min-w-score-side items-center justify-center border-r-thin border-ink bg-player px-3 pt-1 pb-2"
+          : "flex min-w-score-side items-center justify-center bg-player px-3 pt-1 pb-2"
+      }
     >
-      {score[seat]}
-    </span>
+      <span
+        key={score[seat]}
+        className="animate-pop-in font-display text-title font-black text-player-text"
+      >
+        {score[seat]}
+      </span>
+    </div>
   );
   return (
     <div
-      className="flex items-center gap-2 rounded-b-control border-x-thin border-b-thin border-ink bg-white px-3 pt-1 pb-2"
+      className="flex overflow-hidden rounded-b-control border-x-thin border-b-thin border-ink"
       role="status"
       aria-label={`${players[0].name} ${score[0]}, ${players[1].name} ${score[1]}`}
     >
-      {points(0)}
-      <span className="size-1 rounded-pill bg-ink" />
-      {points(1)}
+      {half(0)}
+      {half(1)}
     </div>
   );
 }
