@@ -1,5 +1,6 @@
 import type { Arena } from "../arena/types";
 import type { GameId } from "../games/catalog";
+import type { Party } from "../party/types";
 import type { PlayerId } from "../rooms/types";
 import type { Tournament } from "../tournament/types";
 import type { HttpError, RoomError } from "./errors";
@@ -26,6 +27,8 @@ export interface RoomView {
   tournament: Tournament | null;
   /** The real-time match (arena games); its live play streams separately as binary frames. */
   arena: Arena | null;
+  /** A turn-based game everyone plays together on one board (Dots Clash). */
+  party: Party | null;
   /** Server clock when this view was sent, so clients can show turn timers. */
   serverNow: number;
 }
@@ -34,6 +37,7 @@ export type ClientMessage =
   | { type: "suggest"; gameId: GameId | null }
   | { type: "start"; gameId: GameId }
   | { type: "move"; move: unknown }
+  /** A turn ran out: `matchId` names a tournament's match, or in a game everyone plays together, the turn (its move count). */
   | { type: "timeout"; matchId: number }
   /** Host, on the results: everyone back to the room. */
   | { type: "backToRoom" }

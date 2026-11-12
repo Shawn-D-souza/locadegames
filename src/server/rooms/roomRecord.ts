@@ -1,5 +1,6 @@
 import type { Arena } from "../../shared/arena/types";
 import type { GameId } from "../../shared/games/catalog";
+import type { Party } from "../../shared/party/types";
 import type { RoomPhase } from "../../shared/protocol/messages";
 import type { PlayerId } from "../../shared/rooms/types";
 import type { Tournament } from "../../shared/tournament/types";
@@ -14,6 +15,8 @@ export interface PlayerRecord {
   joinOrder: number;
   trophies: number;
   suggestion: GameId | null;
+  /** Games everyone plays together (Dots Clash) this player went first in, so the turn order is fair over the session. Missing in rooms made before it existed. */
+  firsts?: number;
 }
 
 /** Persisted room state. Plain JSON so any store can hold it. */
@@ -30,4 +33,6 @@ export interface RoomRecord {
   tournament: Tournament | null;
   /** The real-time match, for arena games (the live state is in server memory, not here). */
   arena: Arena | null;
+  /** A turn-based game everyone plays together on one board (Dots Clash); missing in rooms made before it existed. */
+  party?: Party | null;
 }

@@ -1,3 +1,4 @@
+import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { HEADCRASH_CONFIG } from "./headcrash/config";
 import { TERRITORY_CONFIG } from "./territory/config";
 import { TICTACTOE_CONFIG } from "./tictactoe/config";
@@ -30,7 +31,13 @@ export interface ArenaGameInfo extends BaseGameInfo {
   format: "arena";
 }
 
-export type GameInfo = TournamentGameInfo | ArenaGameInfo;
+/** A turn-based game everyone in the room plays together on one board, taking turns (not 1v1, so no tournament). */
+export interface PartyGameInfo extends BaseGameInfo {
+  format: "party";
+  turnTimeMs: number;
+}
+
+export type GameInfo = TournamentGameInfo | ArenaGameInfo | PartyGameInfo;
 
 /** Every game the platform offers. */
 export const GAMES = [
@@ -63,6 +70,13 @@ export const GAMES = [
     minPlayers: TERRITORY_CONFIG.minPlayers,
     format: "arena",
   },
+  {
+    id: "dotsclash",
+    name: "Dots Clash",
+    minPlayers: DOTSCLASH_CONFIG.minPlayers,
+    format: "party",
+    turnTimeMs: DOTSCLASH_CONFIG.turnTimeMs,
+  },
 ] as const satisfies readonly GameInfo[];
 
 type CatalogEntry = (typeof GAMES)[number];
@@ -71,6 +85,7 @@ export type TournamentGameId = Extract<CatalogEntry, { format: "tournament" }>["
 export type TurnGameId = Extract<CatalogEntry, { play: "turns" }>["id"];
 export type LiveGameId = Extract<CatalogEntry, { play: "live" }>["id"];
 export type ArenaGameId = Extract<CatalogEntry, { format: "arena" }>["id"];
+export type PartyGameId = Extract<CatalogEntry, { format: "party" }>["id"];
 
 export function isGameId(value: unknown): value is GameId {
   return GAMES.some((game) => game.id === value);
@@ -92,4 +107,12 @@ export function isLiveGame(id: GameId): id is LiveGameId {
 
 export function getTurnGame(id: TurnGameId): TurnGameInfo {
   return getGame(id) as TurnGameInfo;
+}
+
+export function isPartyGame(id: GameId): id is PartyGameId {
+  return getGame(id).format === "party";
+}
+
+export function getPartyGame(id: PartyGameId): PartyGameInfo {
+  return getGame(id) as PartyGameInfo;
 }

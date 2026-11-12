@@ -30,6 +30,8 @@ export const durations = {
 export const easings = {
   spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
   out: "cubic-bezier(0.22, 1, 0.36, 1)",
+  /** Dots Clash: a dot flying to the next tile, launching quickly and easing into its landing. */
+  flight: "cubic-bezier(0.4, 0, 0.2, 1)",
 } as const;
 
 export const transforms = {
@@ -59,4 +61,12 @@ export const transforms = {
   confettiSpin: "720deg",
   /** How high a loading dot hops, as a share of its own size. */
   dotHopHeight: "-100%",
+  /** Dots Clash: whose turn it is stands this much bigger in the row above the board. */
+  turnScale: 1.25,
+  /** Dots Clash: how high whose-turn's tile hops above the board, as a share of its own size. */
+  turnHopHeight: "-30%",
+  /** Dots Clash: a flying dot grows this much at the top of its arc, as if lifted off the board. */
+  flightScale: 1.35,
+  /** Dots Clash: a tile's dots settle from this size when a dot lands on it (no fade, so nothing flickers). */
+  landFromScale: 1.3,
 } as const;

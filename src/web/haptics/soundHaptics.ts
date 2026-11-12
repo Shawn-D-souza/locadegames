@@ -66,6 +66,8 @@ export const HAPTIC_OF_SOUND: Partial<Record<SoundName, HapticName>> = {
   territoryWallBump: "territoryWallBump",
   territoryMatchOver: "thump",
   territoryWinnerHeadDrop: "territoryWinnerHeadDrop",
+  // Dots Clash: going out (your tap is felt as your finger lands; the starts revealed, your chain's waves, a knockout by your chain and your turn from the screen; others' picks, dots and knockouts aren't felt).
+  dotsClashYouAreOut: "dotsClashOut",
 };
 
 /** A sequence of sounds as what it feels like, at the same times. */

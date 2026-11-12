@@ -333,6 +333,59 @@ try {
   await shoot(crashHost, "40-headcrash-ended");
   await wait(4500);
   await shoot(crashHost, "41-headcrash-results");
+
+  // Dots Clash: three players on one board. Picking starts, a chain that knocks one out, quitting, the ending, the results.
+  const dotsPlayers = [await page()];
+  await dotsPlayers[0].goto(BASE);
+  await dotsPlayers[0].getByRole("button", { name: /create room/i }).click();
+  await wait(1500);
+  for (let i = 0; i < 2; i++) {
+    const guest = await page();
+    await guest.goto(BASE + "?room=" + new URL(dotsPlayers[0].url()).searchParams.get("room"));
+    await guest.getByRole("button", { name: /join room/i }).click();
+    dotsPlayers.push(guest);
+  }
+  await wait(1000);
+  await dotsPlayers[0].getByRole("button", { name: /dots clash/i }).click();
+  await wait(1500);
+  const dotsTappable = (p) => board(p).getByRole("button").and(p.locator(":enabled"));
+  /** Whoever may tap taps `cell` (or their first cell they may tap); returns their page once the turn has moved on. */
+  const dotsTap = async (cell = null) => {
+    const who = await Promise.any(dotsPlayers.map(async (p) => (await dotsTappable(p).first().waitFor({ timeout: 8000 }), p)));
+    const target = await (cell === null ? dotsTappable(who).first() : board(who).getByRole("button").nth(cell)).elementHandle();
+    await target.click();
+    await who.waitForFunction((button) => button.disabled, target);
+    return who;
+  };
+  // Everyone picks at once, in secret: the turn order is read from the players' row (each phone's YOU).
+  const dotsOrder = [];
+  for (const p of dotsPlayers) {
+    const labels = await p.getByRole("list", { name: "Turn order" }).getByRole("listitem").evaluateAll((items) => items.map((li) => li.getAttribute("aria-label")));
+    dotsOrder[labels.findIndex((label) => label.includes("(you)"))] = p;
+  }
+  // 7×7: the first two pick side by side, the third far away; two rounds fill everyone to 3, the first player's next tap bursts.
+  await board(dotsOrder[1]).getByRole("button").nth(1).click();
+  await board(dotsOrder[2]).getByRole("button").nth(30).click();
+  await wait(500);
+  await shoot(dotsOrder[0], "42-dotsclash-picking");
+  await board(dotsOrder[0]).getByRole("button").nth(0).click();
+  await wait(800);
+  for (let i = 0; i < 6; i++) await dotsTap();
+  await wait(1000);
+  await shoot(dotsOrder[0], "43-dotsclash-your-turn");
+  await shoot(dotsOrder[1], "44-dotsclash-their-turn");
+  await dotsTap();
+  await wait(2500);
+  await shoot(dotsOrder[1], "45-dotsclash-out");
+  await dotsOrder[2].getByRole("button", { name: "Quit game" }).click();
+  await wait(300);
+  await shoot(dotsOrder[2], "46-dotsclash-quit-popup");
+  await dotsOrder[2].getByRole("button", { name: "QUIT", exact: true }).click();
+  await wait(1500);
+  await shoot(dotsOrder[0], "47-dotsclash-won");
+  await shoot(dotsOrder[2], "48-dotsclash-place");
+  await wait(4500);
+  await shoot(dotsOrder[0], "49-dotsclash-results");
 } finally {
   await browser.close();
   await vite.close();

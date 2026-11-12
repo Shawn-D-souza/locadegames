@@ -3,7 +3,7 @@ import { colors } from "./colors";
 import { buildCssVariables } from "./cssVariables";
 import { durations, easings } from "./motion";
 import { lips, opacity, radii, strokes } from "./radii";
-import { breakpoints, layout, spacing } from "./spacing";
+import { breakpoints, layout, screenHeights, spacing } from "./spacing";
 import { fonts, fontWeights, typeScale } from "./typography";
 
 const kebab = (value: string) => value.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
@@ -19,7 +19,13 @@ function named<T>(tokens: Record<string, T>, format: (value: T) => string, prefi
  * `bg-ink`, `p-4`, `rounded-card` or `text-caption` exist and nothing off-theme does. Also puts every
  * token on `:root` as a CSS variable for the rules written in CSS (animations, backgrounds).
  */
-export default plugin(({ addBase }) => addBase({ ":root": buildCssVariables() }), {
+const addTokens: Parameters<typeof plugin>[0] = ({ addBase, addVariant }) => {
+  addBase({ ":root": buildCssVariables() });
+  // `sideways:`: a phone held sideways, too short to stack things above a board.
+  addVariant("sideways", `@media (orientation: landscape) and (max-height: ${px(screenHeights.sideways)})`);
+};
+
+export default plugin(addTokens, {
   theme: {
     colors: {
       ...named(colors, String),
@@ -31,6 +37,8 @@ export default plugin(({ addBase }) => addBase({ ":root": buildCssVariables() })
       "player-tint": "var(--player-tint)",
       "player-light": "var(--player-light)",
       "player-wash": "var(--player-wash)",
+      "player-edge": "var(--player-edge)",
+      "player-edge-light": "var(--player-edge-light)",
       "player-text": "var(--player-text)",
     },
     screens: named(breakpoints, px),
@@ -54,6 +62,6 @@ export default plugin(({ addBase }) => addBase({ ":root": buildCssVariables() })
     letterSpacing: Object.fromEntries(Object.entries(typeScale).map(([name, t]) => [name, t.tracking])),
     transitionDuration: named(durations, (ms) => `${ms}ms`),
     transitionTimingFunction: { ...easings, linear: "linear" },
-    zIndex: { behind: "-1", toast: "10", modal: "20", devTool: "30" },
+    zIndex: { behind: "-1", raised: "1", toast: "10", modal: "20", devTool: "30" },
   },
 });

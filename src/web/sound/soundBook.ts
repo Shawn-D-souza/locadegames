@@ -1,4 +1,5 @@
 import type { GameId } from "../../shared/games/catalog";
+import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
 import { HEADCRASH_SOUNDS } from "../games/headcrash/sounds";
 import { TERRITORY_SOUNDS } from "../games/territory/sounds";
 import { TICTACTOE_SOUNDS } from "../games/tictactoe/sounds";
@@ -15,6 +16,7 @@ export const GAME_SOUNDS = {
   ultimate: ULTIMATE_SOUNDS,
   headcrash: HEADCRASH_SOUNDS,
   territory: TERRITORY_SOUNDS,
+  dotsclash: DOTSCLASH_SOUNDS,
 } as const satisfies Record<GameId, Record<string, SoundDefinition>>;
 
 /** Sounds every visit needs, in the order they get made in the background: what's needed soonest first, the big endings last. */
@@ -31,6 +33,7 @@ export const SOUNDS = {
   ...ULTIMATE_SOUNDS,
   ...HEADCRASH_SOUNDS,
   ...TERRITORY_SOUNDS,
+  ...DOTSCLASH_SOUNDS,
 };
 
 /** The plain name of any sound; a typo is a compile error. */

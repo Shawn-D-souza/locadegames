@@ -1,3 +1,4 @@
+import { DOTSCLASH_HAPTICS } from "../games/dotsclash/haptics";
 import { HEADCRASH_HAPTICS } from "../games/headcrash/haptics";
 import { TERRITORY_HAPTICS } from "../games/territory/haptics";
 import { TICTACTOE_HAPTICS } from "../games/tictactoe/haptics";
@@ -34,6 +35,7 @@ export const HAPTICS = {
   ...ULTIMATE_HAPTICS,
   ...HEADCRASH_HAPTICS,
   ...TERRITORY_HAPTICS,
+  ...DOTSCLASH_HAPTICS,
 };
 
 /** The plain name of any feel; a typo is a compile error. */

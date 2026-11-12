@@ -7,7 +7,7 @@ import type { ConnectionStatus } from "./connectionState";
 
 /** Sounds of the room as a whole: friends coming and going, games starting, the connection, short "no" notices. */
 export function useRoomSounds(room: RoomView | null, myId: PlayerId | null, status: ConnectionStatus, errorId: number | null, beforeRoundStart: boolean) {
-  const game = room?.tournament?.gameId ?? room?.arena?.gameId ?? null;
+  const game = room?.tournament?.gameId ?? room?.arena?.gameId ?? room?.party?.gameId ?? null;
   useEffect(() => {
     if (game) prepareGameSounds(game);
   }, [game]);

@@ -4,7 +4,9 @@ import { CLOSE_CODES } from "../../shared/protocol/errors";
 import type { PlayerId } from "../../shared/rooms/types";
 import { currentRound, isLive, isLiveMatch, standings } from "../../shared/tournament/tournament";
 import type { Match, Tournament } from "../../shared/tournament/types";
+import { stillInParty } from "../../shared/party/party";
 import { ArenaRankingTable } from "../components/ArenaRankingTable";
+import { PartyRankingTable } from "../components/PartyRankingTable";
 import { Modal } from "../components/Modal";
 import { PillButton } from "../components/PillButton";
 import { StandingsTable } from "../components/StandingsTable";
@@ -15,9 +17,11 @@ import { useBackButtonGuard } from "../hooks/useBackButtonGuard";
 import { useBefore } from "../hooks/useBefore";
 import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
+import { DotsClashScreen } from "../games/dotsclash/DotsClashScreen";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { arenaName } from "../utils/arenaText";
+import { partyName } from "../utils/partyText";
 import { closeMessage, roomErrorMessage } from "../utils/messages";
 import { entrantName } from "../utils/tournamentText";
 import { JoiningScreen } from "./JoiningScreen";
@@ -51,6 +55,9 @@ function myMatch(t: Tournament, myId: PlayerId): Match | undefined {
 /** What quitting a real-time match costs. */
 const ARENA_QUIT_COST = "You'll be out of this match.";
 
+/** What quitting a game everyone plays together costs. */
+const PARTY_QUIT_COST = "You'll be out of this game. Your dots turn grey.";
+
 /** What quitting costs: one game with 2 players, the whole tournament with more. */
 const quitCost = (t: Tournament) => (t.entrants.length > 2 ? "You'll be out of the tournament." : "You'll lose this game.");
 
@@ -78,6 +85,10 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const [arenaEndSeen, setArenaEndSeen] = useState<number | null>(null);
   const [arenaStillIn, setArenaStillIn] = useState(false);
   const [confirmArenaQuit, setConfirmArenaQuit] = useState<number | null>(null);
+  // A game everyone plays together (its `startedAt`): seen live, its ending shown, and quitting it asked.
+  const [partySeenLive, setPartySeenLive] = useState<number | null>(null);
+  const [partyEndSeen, setPartyEndSeen] = useState<number | null>(null);
+  const [confirmPartyQuit, setConfirmPartyQuit] = useState<number | null>(null);
   useTimeoutClaims(room, playerId, clockOffsetMs, send);
 
   const liveArena = room?.phase === "playing" && room.arena && !room.arena.finished ? room.arena : null;
@@ -85,6 +96,11 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const inLiveArena = !!liveArena && arenaStillIn;
   // Tied to the match it was asked for, so it closes by itself if the match ends first.
   const arenaQuitAsked = inLiveArena && confirmArenaQuit === liveArena.startedAt;
+
+  const liveParty = room?.phase === "playing" && room.party && !room.party.finished ? room.party : null;
+  if (liveParty && partySeenLive !== liveParty.startedAt) setPartySeenLive(liveParty.startedAt);
+  const inLiveParty = !!liveParty && playerId !== null && stillInParty(liveParty, playerId);
+  const partyQuitAsked = inLiveParty && confirmPartyQuit === liveParty.startedAt;
 
   // Your own live match on screen: the ✕ and the back button both ask before quitting.
   const running = room?.phase === "playing" ? room.tournament : null;
@@ -112,7 +128,10 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const askArenaQuit = () => {
     if (liveArena) setConfirmArenaQuit(liveArena.startedAt);
   };
-  useBackButtonGuard(playingNow || inLiveArena, inLiveArena ? askArenaQuit : askQuit);
+  const askPartyQuit = () => {
+    if (liveParty) setConfirmPartyQuit(liveParty.startedAt);
+  };
+  useBackButtonGuard(playingNow || inLiveArena || inLiveParty, inLiveParty ? askPartyQuit : inLiveArena ? askArenaQuit : askQuit);
   // Tied to the match it was asked for, so it closes by itself if that match ends first.
   const quitAsked = playingNow && refersTo(confirmQuit, running!, liveMine!);
 
@@ -132,7 +151,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
     onExit();
   };
   const requestLeave = () => {
-    if ((running && playerId !== null && stillCompeting(running, playerId)) || inLiveArena) setConfirmLeave(true);
+    if ((running && playerId !== null && stillCompeting(running, playerId)) || inLiveArena || inLiveParty) setConfirmLeave(true);
     else leaveNow();
   };
   const quitNow = () => {
@@ -145,12 +164,50 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
     send({ type: "quit" });
     setConfirmArenaQuit(null);
   };
+  const quitPartyNow = () => {
+    send({ type: "quit" });
+    setConfirmPartyQuit(null);
+  };
 
   let content;
   if (!room || playerId === null) {
     content = <JoiningScreen code={code} onBack={leaveNow} />;
-  } else if (room.phase === "lobby" || (!room.tournament && !room.arena)) {
+  } else if (room.phase === "lobby" || (!room.tournament && !room.arena && !room.party)) {
     content = <LobbyScreen room={room} myId={playerId} send={send} onLeave={requestLeave} />;
+  } else if (room.party) {
+    const p = room.party;
+    // A finished game stays on screen for its ending (if you saw it live), then the results, then the room.
+    if (!p.finished || (partySeenLive === p.startedAt && partyEndSeen !== p.startedAt)) {
+      content = (
+        <DotsClashScreen
+          party={p}
+          myId={playerId}
+          clockOffsetMs={clockOffsetMs}
+          send={send}
+          onQuit={askPartyQuit}
+          onLeave={requestLeave}
+          onContinue={() => setPartyEndSeen(p.startedAt)}
+        />
+      );
+    } else if (leftResults !== p.startedAt) {
+      content = (
+        <ResultsScreen
+          room={room}
+          myId={playerId}
+          send={send}
+          onBack={() => setLeftResults(p.startedAt)}
+          gameId={p.gameId}
+          championIds={p.championIds}
+          playerCount={p.entrants.length}
+          nameOf={(id) => partyName(p, id)}
+          tableLabel="Ranking"
+        >
+          <PartyRankingTable party={p} myId={playerId} />
+        </ResultsScreen>
+      );
+    } else {
+      content = <LobbyScreen room={room} myId={playerId} send={send} onLeave={requestLeave} />;
+    }
   } else if (room.arena) {
     const a = room.arena;
     // A finished match stays on screen for its ending (if you saw it live), then the results, then the room.
@@ -305,7 +362,25 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
           <p className="text-center">{ARENA_QUIT_COST}</p>
         </Modal>
       )}
-      {confirmLeave && (running || inLiveArena) && (
+      {partyQuitAsked && (
+        <Modal
+          serious
+          title="Quit this game?"
+          actions={
+            <div className="flex w-full flex-col gap-4">
+              <PillButton fullWidth variant="deep" onClick={quitPartyNow}>
+                QUIT
+              </PillButton>
+              <PillButton fullWidth sound="popupClose" onClick={() => setConfirmPartyQuit(null)}>
+                KEEP PLAYING
+              </PillButton>
+            </div>
+          }
+        >
+          <p className="text-center">{PARTY_QUIT_COST}</p>
+        </Modal>
+      )}
+      {confirmLeave && (running || inLiveArena || inLiveParty) && (
         <Modal
           serious
           title="Leave the room?"
@@ -320,7 +395,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
             </div>
           }
         >
-          <p className="text-center">{running ? quitCost(running) : ARENA_QUIT_COST}</p>
+          <p className="text-center">{running ? quitCost(running) : inLiveParty ? PARTY_QUIT_COST : ARENA_QUIT_COST}</p>
         </Modal>
       )}
       {status === "lost" && (

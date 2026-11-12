@@ -3,6 +3,7 @@ import type { ClientMessage, RoomView } from "../../shared/protocol/messages";
 import { isLiveGame } from "../../shared/games/catalog";
 import type { PlayerId } from "../../shared/rooms/types";
 import { currentRound, isLive, turnDeadline } from "../../shared/tournament/tournament";
+import { partyDeadline, picking, turnPlayer } from "../../shared/party/party";
 import { CLIENT_CONFIG } from "../config";
 
 /**
@@ -29,6 +30,14 @@ export function useTimeoutClaims(
           })
           .map((m) => ({ matchId: m.id, deadline: turnDeadline(t, m) - clockOffsetMs }))
       : [];
+  // A game everyone plays together: whoever's turn it is claims, or everyone if they're away; while everyone picks at
+  // once, everyone claims. Its turn number names the claim.
+  const party = room?.phase === "playing" ? room.party : null;
+  const turnId = party ? turnPlayer(party) : null;
+  if (party && myId !== null && (picking(party) || turnId !== null)) {
+    const away = turnId !== null && !room!.players.find((p) => p.id === turnId)?.connected;
+    if (picking(party) || turnId === myId || away) claims.push({ matchId: party.game.moves, deadline: partyDeadline(party) - clockOffsetMs });
+  }
   const key = claims.map((c) => `${c.matchId}@${c.deadline}`).join(",");
 
   useEffect(() => {

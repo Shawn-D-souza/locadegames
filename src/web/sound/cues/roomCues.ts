@@ -7,7 +7,7 @@ export interface RoomCue {
   variant?: number;
 }
 
-const gameStamp = (room: RoomView) => room.tournament?.startedAt ?? room.arena?.startedAt ?? null;
+const gameStamp = (room: RoomView) => room.tournament?.startedAt ?? room.arena?.startedAt ?? room.party?.startedAt ?? null;
 
 const byId = (players: readonly PlayerView[]) => new Map(players.map((p) => [p.id, p]));
 

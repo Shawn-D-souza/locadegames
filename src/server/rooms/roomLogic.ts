@@ -1,5 +1,5 @@
 import type { Arena, ArenaResult } from "../../shared/arena/types";
-import { getGame, isTournamentGame, type ArenaGameId, type GameId } from "../../shared/games/catalog";
+import { getGame, isPartyGame, isTournamentGame, type ArenaGameId, type GameId } from "../../shared/games/catalog";
 import { arenaRadiusFor } from "../../shared/games/territory/arena";
 import { TERRITORY_CONFIG } from "../../shared/games/territory/config";
 import type { RoomError } from "../../shared/protocol/errors";
@@ -10,6 +10,8 @@ import type { PlayerId } from "../../shared/rooms/types";
 import type { Seat } from "../../shared/games/types";
 import { claimTimeout, finishLiveMatch, playMove, removePlayer, scoreLiveMatch, startTournament } from "../../shared/tournament/tournament";
 import type { Tournament } from "../../shared/tournament/types";
+import { claimPartyTimeout, partyView, playPartyMove, quitParty, startParty, stillInParty, type PartyUpdate } from "../../shared/party/party";
+import type { Party } from "../../shared/party/types";
 import type { PlayerRecord, RoomRecord } from "./roomRecord";
 
 /**
@@ -43,6 +45,7 @@ export function createRoomRecord(code: string, now: number): RoomRecord {
     nextJoinOrder: 0,
     tournament: null,
     arena: null,
+    party: null,
   };
 }
 
@@ -118,6 +121,14 @@ function withTournament(record: RoomRecord, tournament: Tournament): RoomRecord 
   return { ...record, players, phase: "finished", tournament };
 }
 
+/** Applies a change to the game everyone plays together; when it ends, the winner gets a trophy (everyone quit: back to the room). */
+function withParty(record: RoomRecord, party: Party): RoomRecord {
+  if (!party.finished) return { ...record, party };
+  if (party.championIds.length === 0) return { ...record, phase: "lobby", party: null };
+  const players = record.players.map((p) => (party.championIds.includes(p.id) ? { ...p, trophies: p.trophies + 1 } : p));
+  return { ...record, players, phase: "finished", party };
+}
+
 /** A point in a live 1v1 match (a real-time tournament game): the room keeps the score. */
 export function scoreLive(record: RoomRecord, matchId: number, score: readonly [number, number], now: number): RoomRecord {
   if (record.phase !== "playing" || !record.tournament) return record;
@@ -156,6 +167,10 @@ function leaveRoom(record: RoomRecord, id: PlayerId, now: number): RoomRecord {
   if (next.phase === "playing" && next.tournament) {
     next = withTournament(next, removePlayer(next.tournament, id, now));
   }
+  if (next.phase === "playing" && next.party) {
+    const quit = quitParty(next.party, id, now);
+    if (quit.ok) next = withParty(next, quit.party);
+  }
   return next;
 }
 
@@ -164,11 +179,17 @@ function startGame(record: RoomRecord, gameId: GameId, now: number, coinSeed: nu
   const entrants = record.players.filter((p) => p.connected);
   if (entrants.length < getGame(gameId).minPlayers) return { ok: false, error: "NOT_ENOUGH_PLAYERS" };
   const players = record.players.map((p) => ({ ...p, suggestion: null }));
+  if (isPartyGame(gameId)) {
+    const party = startParty(gameId, entrants.map(({ id, name, firsts }) => ({ id, name, firsts: firsts ?? 0 })), now, coinSeed);
+    const first = party.entrants[0]!.id;
+    const counted = players.map((p) => (p.id === first ? { ...p, firsts: (p.firsts ?? 0) + 1 } : p));
+    return { ok: true, record: { ...record, players: counted, phase: "playing", tournament: null, arena: null, party } };
+  }
   if (!isTournamentGame(gameId)) {
-    return { ok: true, record: { ...record, players, phase: "playing", tournament: null, arena: newArena(gameId, entrants, now) } };
+    return { ok: true, record: { ...record, players, phase: "playing", tournament: null, arena: newArena(gameId, entrants, now), party: null } };
   }
   const tournament = startTournament(gameId, entrants, now, coinSeed);
-  return { ok: true, record: { ...record, players, phase: "playing", tournament, arena: null } };
+  return { ok: true, record: { ...record, players, phase: "playing", tournament, arena: null, party: null } };
 }
 
 /** Everyone in the room plays one match; start positions follow join order. */
@@ -187,7 +208,7 @@ function newArena(gameId: ArenaGameId, entrants: PlayerRecord[], now: number): A
   };
 }
 
-/** `coinSeed`: a fresh random 32-bit integer; only used when a tournament starts (who starts each match). */
+/** `coinSeed`: a fresh random 32-bit integer: who starts (a tournament, a party game's turn order), a party game's timed-out picks. */
 export function applyClientMessage(
   record: RoomRecord,
   id: PlayerId,
@@ -214,6 +235,14 @@ export function applyClientMessage(
     }
     case "move":
     case "timeout": {
+      if (record.party) {
+        if (record.phase !== "playing") return { ok: false, error: "WRONG_PHASE" };
+        const update: PartyUpdate =
+          msg.type === "move" ? playPartyMove(record.party, id, msg.move, now) : claimPartyTimeout(record.party, msg.matchId, now, coinSeed);
+        if (!update.ok) return update;
+        next = withParty(record, update.party);
+        break;
+      }
       if (record.phase !== "playing" || !record.tournament) return { ok: false, error: "WRONG_PHASE" };
       const update =
         msg.type === "move"
@@ -224,6 +253,13 @@ export function applyClientMessage(
       break;
     }
     case "quit": {
+      if (record.party) {
+        if (record.phase !== "playing" || !stillInParty(record.party, id)) return { ok: false, error: "NOT_IN_MATCH" };
+        const update = quitParty(record.party, id, now);
+        if (!update.ok) return update;
+        next = withParty(record, update.party);
+        break;
+      }
       // A real-time match takes the quitter out on its next step (the live state is not in the record).
       if (record.arena) {
         if (!inLiveArena(record, id)) return { ok: false, error: "NOT_IN_MATCH" };
@@ -239,7 +275,7 @@ export function applyClientMessage(
     case "backToRoom":
       if (!isHost) return { ok: false, error: "NOT_HOST" };
       if (record.phase !== "finished") return { ok: false, error: "WRONG_PHASE" };
-      next = { ...record, phase: "lobby", tournament: null, arena: null };
+      next = { ...record, phase: "lobby", tournament: null, arena: null, party: null };
       break;
     case "leave":
       next = leaveRoom(record, id, now);
@@ -262,6 +298,8 @@ export function toRoomView(record: RoomRecord, now: number): RoomView {
     })),
     tournament: record.tournament,
     arena: record.arena,
+    // A party game's picks stay secret until everyone has picked.
+    party: record.party ? partyView(record.party) : null,
     serverNow: now,
   };
 }

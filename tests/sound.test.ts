@@ -149,7 +149,7 @@ describe("pitch", () => {
 });
 
 const player = (id: number, over: Partial<PlayerView> = {}): PlayerView => ({ id, name: `P${id}`, connected: true, trophies: 0, suggestion: null, ...over });
-const room = (over: Partial<RoomView> = {}): RoomView => ({ code: "100000", phase: "lobby", hostId: 0, players: [player(0), player(1)], tournament: null, arena: null, serverNow: 0, ...over });
+const room = (over: Partial<RoomView> = {}): RoomView => ({ code: "100000", phase: "lobby", hostId: 0, players: [player(0), player(1)], tournament: null, arena: null, party: null, serverNow: 0, ...over });
 const sounds = (before: RoomView | null, after: RoomView, me = 0) => roomChangeCues(before, after, me).map((c) => c.sound);
 
 describe("room sounds", () => {

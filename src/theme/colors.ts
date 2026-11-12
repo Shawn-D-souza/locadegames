@@ -45,6 +45,11 @@ export const colors = {
   water: "#2F5FD8",
   waterCrest: "#9DB6F5",
 
+  /** Dots Clash: the plain page under the board while it's someone else's turn (your own turn washes it in your color). */
+  boardPage: "#E3E1F3",
+  /** Dots Clash: the faint edge of an empty tile, so white tiles read on the plain page (owner direction: just a little). */
+  tileEdge: "#C9C6E6",
+
   online: "#78C840",
   waiting: "#FFC02E",
   offline: "#8A94A6",

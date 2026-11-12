@@ -72,6 +72,18 @@
   --animate-rays:
     rays-in var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) both,
     rays-turn var(--duration-rays) linear var(--celebrate-at) infinite;
+  /*
+   * Dots Clash. A cell bursting: its dots fly out to the four neighbours (`--fly-x` / `--fly-y`: a tile and the gap each
+   * way) and a ring flashes out of it, both over a wave's time (`--wave-ms`, the same for every wave). A game that
+   * ends thumps as the last chain settles.
+   */
+  /* Dots Clash: a wave's dots fly from where they sat to the next tiles, then the tiles they land on settle. */
+  --animate-dot-fly: dot-fly var(--fly-ms) var(--ease-flight) both;
+  --animate-burst-ring: burst-ring var(--fly-ms) var(--ease-out) both;
+  --animate-dot-land: dot-land var(--duration-slow) var(--ease-spring);
+  --animate-board-thump: thump var(--duration-fast) var(--ease-out);
+  /* Dots Clash: whose turn it is hops in the players' row above the board. */
+  --animate-turn-hop: turn-hop var(--duration-hop) var(--ease-out) infinite alternate;
 
   @keyframes pop-in {
     from {
@@ -307,6 +319,41 @@
   @keyframes rays-turn {
     to {
       rotate: 360deg;
+    }
+  }
+
+  @keyframes dot-fly {
+    from {
+      translate: var(--from-x) var(--from-y);
+    }
+    50% {
+      scale: var(--transform-flight-scale);
+    }
+    to {
+      translate: var(--to-x) var(--to-y);
+    }
+  }
+
+  @keyframes dot-land {
+    from {
+      scale: var(--transform-land-from-scale);
+    }
+  }
+
+  @keyframes burst-ring {
+    from {
+      scale: var(--transform-pop-from-scale);
+      opacity: 1;
+    }
+    to {
+      scale: var(--transform-stamp-from-scale);
+      opacity: 0;
+    }
+  }
+
+  @keyframes turn-hop {
+    to {
+      translate: 0 var(--transform-turn-hop-height);
     }
   }
 }

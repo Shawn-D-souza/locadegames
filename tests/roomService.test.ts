@@ -9,6 +9,7 @@ import { TERRITORY_CONFIG } from "../src/shared/games/territory/config";
 import { decodeServerMessage, encodeClientMessage } from "../src/shared/games/territory/wire";
 import { BUTTON_RIGHT, HEADCRASH_CONFIG } from "../src/shared/games/headcrash/config";
 import { PHASE } from "../src/shared/games/headcrash/types";
+import { HIDDEN_PICK } from "../src/shared/games/dotsclash/rules";
 import { decodeServerMessage as decodeDuelMessage, encodeClientMessage as encodeDuelMessage, type HeadCrashClientMessage } from "../src/shared/games/headcrash/wire";
 import { TOURNAMENT_CONFIG } from "../src/shared/tournament/config";
 import { FakeTicker } from "./support/fakeTicker";
@@ -450,6 +451,61 @@ describe("RoomService", () => {
       const resumed = snapshots(host).slice(before).at(-1)!;
       expect(resumed.state).toMatchObject({ score, round: score[0]! + score[1]!, phase: PHASE.countdown });
       expect(lastRoom(host)!.phase).toBe("playing");
+    });
+  });
+
+  describe("a game everyone plays together (Dots Clash)", () => {
+    const party = () => store.get(CODE)!.party!;
+    const conn = (conns: FakeConnection[], id: number) => conns.find((c) => c.playerId === id)!;
+
+    it("puts everyone on one board, secret picks then turns, and refuses moves out of turn", () => {
+      const conns = [join("Host"), join("Ana"), join("Ben")];
+      send(conns[0]!, { type: "start", gameId: "dotsclash" });
+      const p = party();
+      expect(lastRoom(conns[1]!)!.party!.entrants).toHaveLength(3);
+      expect(p.game.size).toBe(7);
+      const [first, second, third] = p.entrants.map((e) => conn(conns, e.id));
+      // Everyone picks at once: the second may go before the first, and nobody's phone learns where.
+      send(second!, { type: "move", move: 24 });
+      send(second!, { type: "move", move: 5 });
+      expect(second!.received.at(-1)).toEqual({ type: "error", error: "NOT_YOUR_TURN" });
+      send(first!, { type: "move", move: 0 });
+      const seen = lastRoom(third!)!.party!.game;
+      expect(seen.picks).toEqual([HIDDEN_PICK, HIDDEN_PICK, null]);
+      expect(seen.owners.every((owner) => owner === null)).toBe(true);
+      send(third!, { type: "move", move: 40 });
+      expect(party().game.phase).toBe("play");
+      expect(lastRoom(third!)!.party!.game.owners[24]).toBe(1);
+      send(second!, { type: "move", move: 24 });
+      expect(second!.received.at(-1)).toEqual({ type: "error", error: "NOT_YOUR_TURN" });
+      send(first!, { type: "move", move: 0 });
+      expect(party().game.moves).toBe(2);
+      // Whoever went first this time goes later next time.
+      expect(store.get(CODE)!.players.find((pl) => pl.id === first!.playerId)!.firsts).toBe(1);
+    });
+
+    it("plays a timed-out turn only after the deadline", () => {
+      const conns = [join("Host"), join("Ana")];
+      send(conns[0]!, { type: "start", gameId: "dotsclash" });
+      send(conns[1]!, { type: "timeout", matchId: 0 });
+      expect(party().game.moves).toBe(0);
+      now += 30_000;
+      send(conns[1]!, { type: "timeout", matchId: 0 });
+      expect(party().game.moves).toBe(1);
+    });
+
+    it("greys a quitter out and crowns the last one standing", () => {
+      const conns = [join("Host"), join("Ana")];
+      send(conns[0]!, { type: "start", gameId: "dotsclash" });
+      const [first, second] = party().entrants.map((e) => conn(conns, e.id));
+      send(first!, { type: "move", move: 0 });
+      send(second!, { type: "quit" });
+      const room = lastRoom(first!)!;
+      expect(room.phase).toBe("finished");
+      expect(room.party!.championIds).toEqual([first!.playerId]);
+      expect(room.players.find((pl) => pl.id === first!.playerId)!.trophies).toBe(1);
+      send(conns[0]!, { type: "backToRoom" });
+      expect(lastRoom(first!)!.party).toBeNull();
     });
   });
 });

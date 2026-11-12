@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { GameId } from "../../shared/games/catalog";
+import { DotsClashArt } from "./dotsclash/DotsClashArt";
 import { HeadCrashArt } from "./headcrash/HeadCrashArt";
 import { TerritoryArt } from "./territory/TerritoryArt";
 import { TicTacToeArt } from "./tictactoe/TicTacToeArt";
@@ -16,4 +17,5 @@ export const GAME_LOOKS: Record<GameId, GameLook> = {
   ultimate: { Art: UltimateArt },
   headcrash: { Art: HeadCrashArt },
   territory: { Art: TerritoryArt },
+  dotsclash: { Art: DotsClashArt },
 };
