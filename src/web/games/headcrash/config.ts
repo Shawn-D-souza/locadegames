@@ -136,5 +136,38 @@ export const HEADCRASH_CLIENT_CONFIG = {
     impactCooldownMs: 140,
     /** Moments older than this are not played (the tab was away). */
     momentMaxAgeMs: 500,
+    /**
+     * The lift's winch (a loop, while it moves): as loud as the lift is fast (full at its fastest, mid-trip), at this
+     * playback rate going up and coming down; sent every `updateMs` as a ramp, stopped after `idleStopMs` silent.
+     */
+    lift: { upRate: 1.1, downRate: 0.9, updateMs: 50, idleStopMs: 400 },
+    /**
+     * Your car's motor (a loop, from the countdown until a head is hit), as a small engine: its revs (the loop's
+     * playback rate: pitch and pace) and its throttle (0 … 1) move toward where they should be at these rates a
+     * second, never jumping, so it climbs as you accelerate and a wheel leaving the ground for a moment doesn't jolt it.
+     *  - Revs: `idle` with no button, standing still; with speed they climb to `topRate` at the drive's top speed; a
+     *    held button adds `launch` (less and less toward top speed: the revs run ahead of the car as it sets off); in
+     *    the air a held button revs it free to `maxRate`.
+     *  - Throttle: a button held. It opens the tone (muffled at `closedHz` off it, rough and open at `openHz` on it)
+     *    and adds `loadVolume` of the volume; the revs add the rest above `idle.volume`.
+     * It is sent to the speakers every `updateMs` as a ramp to the next value, so it moves smoothly; when a head is hit
+     * it fades out in `cutMs` and stops after `idleStopMs`.
+     */
+    motor: {
+      idle: { volume: 0.4, rate: 0.7 },
+      topRate: 1.7,
+      maxRate: 1.95,
+      launch: 0.35,
+      rpmRise: 2,
+      rpmFall: 2.4,
+      loadRise: 8,
+      loadFall: 4,
+      loadVolume: 0.35,
+      closedHz: 900,
+      openHz: 4_000,
+      updateMs: 50,
+      cutMs: 120,
+      idleStopMs: 400,
+    },
   },
 } as const;

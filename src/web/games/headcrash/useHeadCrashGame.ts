@@ -114,6 +114,7 @@ export function useHeadCrashGame(canvasRef: RefObject<HTMLCanvasElement | null>,
       observer.disconnect();
       unsubscribe();
       input?.dispose();
+      audio.stop();
       client.stop();
       clientRef.current = null;
       inputRef.current = null;

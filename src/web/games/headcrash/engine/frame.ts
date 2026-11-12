@@ -46,6 +46,12 @@ export type MomentView =
   | { kind: "hit"; hit: RoundHit; scorer: Seat | null; at: number }
   /** A car came down on its wheels after `airTicks` steps in the air, this hard (speed change, m/s). */
   | { kind: "land"; seat: Seat; impact: number; airTicks: number; at: number }
+  /** A car's body (not its wheels) hit the arena this hard: a wall, the roof, a lift's side (speed change, m/s). */
+  | { kind: "knock"; seat: Seat; impact: number; at: number }
+  /** A bounce pad threw a car up. */
+  | { kind: "pad"; seat: Seat; at: number }
+  /** A car went into a fan's rising air. */
+  | { kind: "fan"; seat: Seat; at: number }
   /** The cars knocked into each other. */
   | { kind: "bump"; impact: number; at: number };
 

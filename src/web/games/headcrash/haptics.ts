@@ -6,6 +6,8 @@ import { defineHaptics } from "../../haptics/definition";
  */
 export const HEADCRASH_HAPTICS = defineHaptics({
   headCrashLanding: { about: "Your car lands on its wheels.", pulses: [{ at: 0, level: "light" }] },
+  headCrashKnock: { about: "Your car's body hits the rock (a wall, the roof).", pulses: [{ at: 0, level: "light" }] },
+  headCrashPadThrow: { about: "A bounce pad throws your car up.", pulses: [{ at: 0, level: "medium" }] },
   headCrashCarBump: { about: "The cars knock into each other.", pulses: [{ at: 0, level: "medium" }] },
   headCrashYouScored: { about: "Your point: a hard hit and its echo, with the burst.", pulses: [{ at: 0, level: "heavy" }, { at: 100, level: "medium" }] },
   headCrashYouWereHit: {

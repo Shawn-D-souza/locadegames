@@ -342,16 +342,23 @@ export function wheelSink(car: Pick<Car, "x" | "y" | "angle">, layout: Layout, m
   return sink;
 }
 
-/** Which cars have a wheel on the arena after the last step (for drawing and sounds; not part of the state). */
+/** What happened to each car in the last step (for drawing and sounds; not part of the state). */
 export interface StepReport {
+  /** A wheel is on the arena. */
   grounded: [boolean, boolean];
   /** The hardest hit each car took this step (speed change, m/s), and whether the cars touched each other. */
   impact: [number, number];
   carsTouched: boolean;
+  /** The hardest hit each car's body (not a wheel) took from the arena: a wall, the roof, a lift's side (speed change, m/s). */
+  knock: [number, number];
+  /** A bounce pad threw the car this step. */
+  padThrow: [boolean, boolean];
+  /** The car's middle is in a fan's air. */
+  inFan: [boolean, boolean];
 }
 
 /** The fan a point is in, if any. */
-function fanAt(layout: Layout, x: number, y: number): Fan | null {
+export function fanAt(layout: Layout, x: number, y: number): Fan | null {
   for (const f of layout.fans) if (x >= f.minX && x <= f.maxX && y >= f.minY && y <= f.maxY) return f;
   return null;
 }
@@ -507,13 +514,18 @@ export function stepCars(cars: [Car, Car], buttons: readonly [number, number], l
   if (report) {
     report.grounded[0] = driveContacts[0]! > 0;
     report.grounded[1] = driveContacts[1]! > 0;
-    report.impact[0] = 0;
-    report.impact[1] = 0;
+    report.impact[0] = report.impact[1] = 0;
+    report.knock[0] = report.knock[1] = 0;
     report.carsTouched = false;
+    for (let ci = 0; ci < 2; ci++) {
+      report.padThrow[ci] = onPad[ci]!;
+      report.inFan[ci] = fanAt(layout, cars[ci]!.x, cars[ci]!.y) !== null;
+    }
     for (let i = 0; i < contactCount; i++) {
       const c = contacts[i]!;
       const hit = c.normal * INV_MASS;
       report.impact[c.a] = Math.max(report.impact[c.a]!, hit);
+      if (c.b < 0 && !c.wheel) report.knock[c.a] = Math.max(report.knock[c.a]!, hit);
       if (c.b >= 0) {
         report.impact[c.b] = Math.max(report.impact[c.b]!, hit);
         if (c.normal > 0) report.carsTouched = true;

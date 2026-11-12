@@ -83,10 +83,18 @@ function tone(track: Float32Array, sampleRate: number) {
   return highShelf(highpass(track, sampleRate, LOW_CUT_HZ), sampleRate, AIR_SHELF_HZ, AIR_SHELF_DB);
 }
 
-/** Shared tone and level (no room, no tail cut, for loops). */
-export function finishLoop(left: Float32Array, right: Float32Array, sampleRate: number, targetDb: number): [Float32Array, Float32Array] {
-  const l = tone(left, sampleRate);
-  const r = tone(right, sampleRate);
+/** The tone as if the loop had already been playing: filtered twice round, keeping the second time round. */
+function toneRound(track: Float32Array, sampleRate: number): Float32Array {
+  const twice = new Float32Array(track.length * 2);
+  twice.set(track);
+  twice.set(track, track.length);
+  return tone(twice, sampleRate).slice(track.length);
+}
+
+/** Shared tone and level (no room, no tail cut, for loops). `deep`: a loop whose filters must meet its seam already going (see `deepLoop`). */
+export function finishLoop(left: Float32Array, right: Float32Array, sampleRate: number, targetDb: number, deep = false): [Float32Array, Float32Array] {
+  const l = deep ? toneRound(left, sampleRate) : tone(left, sampleRate);
+  const r = deep ? toneRound(right, sampleRate) : tone(right, sampleRate);
   const gain = dbToGain(targetDb - phoneLoudnessDb(l, r, sampleRate));
   for (let i = 0; i < l.length; i++) {
     l[i]! *= gain;

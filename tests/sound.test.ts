@@ -17,10 +17,12 @@ import { COUNTDOWN_NOTES, TIMER_TAKES } from "../src/web/sound/library/playingSo
 import { hz, PLAYER_NOTES, scaleStep } from "../src/web/sound/pitch";
 import { SOUND_NAMES, soundDefinition, SOUNDS, type SoundName } from "../src/web/sound/soundBook";
 import { DEFAULT_VOLUME, parseVolume, VOLUME_STEP, volumeGain } from "../src/web/sound/volume";
+import { seededRandom } from "../src/shared/games/headcrash/random";
 import { CELEBRATION_TIMING } from "../src/web/utils/celebrationTiming";
 import { TERRITORY_CLIENT_CONFIG } from "../src/web/games/territory/config";
 import { HEADCRASH_CLIENT_CONFIG } from "../src/web/games/headcrash/config";
-import { bumpVolume, headCrashEndingSteps, hitSound, landingTake } from "../src/web/games/headcrash/headCrashCues";
+import { bumpVolume, headCrashEndingSteps, hitSound, idleMotor, impactTake, landingTake, liftHum, motorSound, motorTargetRpm, stepMotor, type MotorInput, type MotorState } from "../src/web/games/headcrash/headCrashCues";
+import { HEADCRASH_CONFIG } from "../src/shared/games/headcrash/config";
 
 
 /** The first and, if it differs, the last take: the extremes of a sound with many. */
@@ -374,6 +376,72 @@ describe("Head Crash cues", () => {
     expect(bumpVolume(minImpact - 0.1)).toBe(0);
     expect(bumpVolume(minImpact)).toBe(0.5);
     expect(bumpVolume(hardImpact)).toBe(1);
+  });
+
+  it("your car's body knocking the rock sounds like a landing does: only real knocks, harder ones louder", () => {
+    expect(impactTake(minImpact - 0.1)).toBeNull();
+    expect(impactTake(minImpact)).toEqual({ variant: 0, volume: 0.55 });
+    expect(impactTake(hardImpact * 2)).toEqual({ variant: 1, volume: 1 });
+  });
+
+  describe("your motor", () => {
+    const { motor } = HEADCRASH_CLIENT_CONFIG.sound;
+    const top = HEADCRASH_CONFIG.drive.maxSpeed;
+    const FRAME = 1 / 60;
+    /** Runs the motor frame by frame through `inputs`, one per frame. */
+    const run = (inputs: readonly MotorInput[], from: MotorState = idleMotor()) => {
+      const states = [from];
+      for (const input of inputs) states.push(stepMotor(states.at(-1)!, input, FRAME));
+      return states;
+    };
+
+    it("never jumps: from frame to frame its pitch, volume and tone move only a little, however the buttons and wheels change", () => {
+      const random = seededRandom(9);
+      const inputs = Array.from({ length: 1_200 }, (_, i) => ({ held: random() < 0.5, speed: random() * top, grounded: i % 3 !== 0 }));
+      const sounds = run(inputs).map(motorSound);
+      for (let i = 1; i < sounds.length; i++) {
+        expect(Math.abs(sounds[i]!.rate - sounds[i - 1]!.rate)).toBeLessThanOrEqual(Math.max(motor.rpmRise, motor.rpmFall) * FRAME + 1e-9);
+        expect(Math.abs(sounds[i]!.volume - sounds[i - 1]!.volume)).toBeLessThan(0.1);
+        expect(Math.abs(Math.log(sounds[i]!.cutoffHz / sounds[i - 1]!.cutoffHz))).toBeLessThan(0.25);
+      }
+    });
+
+    it("ticks over muffled with no button; setting off, the throttle opens at once and the revs climb as the car speeds up", () => {
+      expect(motorSound(idleMotor())).toEqual({ volume: motor.idle.volume, rate: motor.idle.rate, cutoffHz: motor.closedHz });
+      // A car accelerating to top speed over about half a second, then holding it.
+      const speeds = Array.from({ length: 90 }, (_, i) => Math.min(top, (top * i) / 30));
+      const states = run(speeds.map((speed) => ({ held: true, speed, grounded: true })));
+      const sounds = states.map(motorSound);
+      for (let i = 1; i < sounds.length; i++) expect(sounds[i]!.rate).toBeGreaterThanOrEqual(sounds[i - 1]!.rate - 1e-9);
+      expect(sounds[10]!.cutoffHz).toBeGreaterThan(motor.openHz * 0.9);
+      expect(sounds.at(-1)!.rate).toBeCloseTo(motor.topRate, 5);
+      // Letting go at speed: the tone closes, and the revs come down with the car.
+      const coast = run([{ held: false, speed: top, grounded: true }], states.at(-1)!).map(motorSound).at(-1)!;
+      expect(coast.cutoffHz).toBeLessThan(sounds.at(-1)!.cutoffHz);
+      expect(motorSound(run(Array(120).fill({ held: false, speed: 0, grounded: true }), states.at(-1)!).at(-1)!).rate).toBeCloseTo(motor.idle.rate, 5);
+    });
+
+    it("revs free in the air with a button held, falls back without; a wheel leaving the ground for a moment barely moves it", () => {
+      expect(motorTargetRpm({ held: true, speed: 0, grounded: false })).toBe(motor.maxRate);
+      expect(motorTargetRpm({ held: false, speed: top, grounded: false })).toBe(motor.idle.rate);
+      expect(motorTargetRpm({ held: true, speed: 0, grounded: true })).toBeCloseTo(motor.idle.rate + motor.launch, 9);
+      expect(motorTargetRpm({ held: true, speed: top * 2, grounded: true })).toBeCloseTo(motor.topRate, 9);
+      const cruising = run(Array(120).fill({ held: true, speed: top / 2, grounded: true })).at(-1)!;
+      const bounced = run([{ held: true, speed: top / 2, grounded: false }, { held: true, speed: top / 2, grounded: false }], cruising).at(-1)!;
+      expect(Math.abs(bounced.rpm - cruising.rpm)).toBeLessThan(0.08);
+    });
+  });
+
+  it("the lift's winch is heard only while it moves: swelling and fading with its speed, never jumping, higher going up", () => {
+    const { tickRate, gadgets } = HEADCRASH_CONFIG;
+    const { lift } = HEADCRASH_CLIENT_CONFIG.sound;
+    const wait = gadgets.liftWait * tickRate;
+    const move = gadgets.liftMove * tickRate;
+    expect(liftHum(0).volume).toBe(0);
+    expect(liftHum(wait / 2).volume).toBe(0);
+    expect(liftHum(wait + move / 2)).toEqual({ volume: expect.closeTo(1, 6), rate: lift.upRate });
+    expect(liftHum(2 * wait + move + move / 2)).toEqual({ volume: expect.closeTo(1, 6), rate: lift.downRate });
+    for (let tick = 1; tick <= 2 * (wait + move); tick++) expect(Math.abs(liftHum(tick).volume - liftHum(tick - 1).volume)).toBeLessThan(0.05);
   });
 
   it("the result sounds as the tag stamps on", () => {

@@ -36,6 +36,12 @@ export interface SoundDefinition {
   cooldownMs?: number;
   /** A loop of this many seconds instead of a one-shot (render at least `LOOP_CROSSFADE` longer than this). */
   loopSeconds?: number;
+  /**
+   * A loop with a lot of weight just above the shared low cut (a motor): its finishing filters are run once round
+   * the loop before the real pass, so they meet its seam already going. Without it they start from silence on the
+   * loop's first sample and it clicks once a loop.
+   */
+  deepLoop?: boolean;
   render(mix: Mix, variant: number): void;
 }
 
@@ -73,7 +79,7 @@ export function renderSound(name: string, definition: SoundDefinition, variant: 
     const [left, right] = mix.bounce(0);
     const length = Math.round(definition.loopSeconds * sampleRate);
     const fade = Math.round(LOOP_CROSSFADE * sampleRate);
-    return finishLoop(closeLoop(left, length, fade), closeLoop(right, length, fade), sampleRate, target);
+    return finishLoop(closeLoop(left, length, fade), closeLoop(right, length, fade), sampleRate, target, definition.deepLoop);
   }
   const [left, right] = mix.bounce(roomTail(definition.room));
   if (definition.room > 0) {

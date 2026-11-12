@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BUTTON_LEFT, BUTTON_RIGHT, HEADCRASH_CONFIG } from "../src/shared/games/headcrash/config";
 import { layoutFor, mapLayout, restSink, rideHeight } from "../src/shared/games/headcrash/layout";
 import { MAPS } from "../src/shared/games/headcrash/maps";
-import { CAR_DISCS, findHit, headOf, stepCars, WALL_DEPTH, wheelSink } from "../src/shared/games/headcrash/physics";
+import { CAR_DISCS, findHit, headOf, stepCars, WALL_DEPTH, wheelSink, type StepReport } from "../src/shared/games/headcrash/physics";
 import { seededRandom } from "../src/shared/games/headcrash/random";
 import { cloneHeadCrash, createHeadCrash, layoutOf, outcomeOf, scorerOf, stepHeadCrash, waterLevel, waterOf } from "../src/shared/games/headcrash/simulation";
 import { HIT_CAUSE, PHASE, type Car, type HeadCrashState, type Layout, type Motion } from "../src/shared/games/headcrash/types";
@@ -287,6 +287,33 @@ describe("Head Crash driving", () => {
       drive(layout, carAt(0, rideHeight()), 0, C.gadgets.liftWait + C.gadgets.liftMove + 0.5, (c) => (highest = Math.max(highest, c.y)));
       expect(highest).toBeGreaterThan(5);
     });
+  });
+
+  it("reports what the sounds need: a pad's throw, a fan's air, and the body (not the wheels) knocking the rock", () => {
+    const report: StepReport = { grounded: [false, false], impact: [0, 0], carsTouched: false, knock: [0, 0], padThrow: [false, false], inFan: [false, false] };
+    /** Car 1 alone for `seconds`; returns whether `seen` held after any step. */
+    const watch = (layout: Layout, start: Car, button: number, seconds: number, seen: () => boolean) => {
+      const parked = { ...layout.spawns[0], y: 60 };
+      const cars: [Car, Car] = [{ ...parked }, { ...start }];
+      let any = false;
+      for (let i = 0; i < seconds * C.tickRate; i++) {
+        stepCars(cars, [0, button], layout, DT, report, { playTicks: i + 1 });
+        cars[0] = { ...parked };
+        any ||= seen();
+      }
+      return any;
+    };
+    const trampoline = mapLayout("trampoline");
+    expect(watch(trampoline, trampoline.spawns[1], BUTTON_LEFT, 2.5, () => report.padThrow[1])).toBe(true);
+    const fan = mapLayout("fan");
+    expect(watch(fan, carAt(0, rideHeight()), 0, 0.5, () => report.inFan[1])).toBe(true);
+    const { layout: bowl } = plainArena();
+    expect(watch(bowl, carAt(-8, rideHeight()), 0, 1, () => report.padThrow[1] || report.inFan[1])).toBe(false);
+    // Driving and landing on its wheels is never a knock; falling on its back is.
+    let hardest = 0;
+    watch(bowl, { ...carAt(-8, 3), vy: -6 }, BUTTON_RIGHT, 1, () => ((hardest = Math.max(hardest, report.knock[1])), false));
+    expect(hardest).toBe(0);
+    expect(watch(bowl, { ...carAt(-8, 3, Math.PI), vy: -6 }, 0, 1, () => report.knock[1] > 3)).toBe(true);
   });
 
   it("never flips itself over on the flat, however its buttons are mashed", () => {

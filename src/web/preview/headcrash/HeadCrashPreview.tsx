@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { BUTTON_LEFT, BUTTON_RIGHT, HEADCRASH_CONFIG } from "../../../shared/games/headcrash/config";
 import { layoutFor } from "../../../shared/games/headcrash/layout";
 import { MAPS } from "../../../shared/games/headcrash/maps";
-import type { StepReport } from "../../../shared/games/headcrash/physics";
 import { countdownTicksFor, createHeadCrash, layoutOf, motionOf, scorerOf, stepHeadCrash, waterOf } from "../../../shared/games/headcrash/simulation";
 import { PHASE, type HeadCrashState } from "../../../shared/games/headcrash/types";
-import type { FrameView, HitView } from "../../games/headcrash/engine/frame";
+import type { FrameView, HitView, MomentView } from "../../games/headcrash/engine/frame";
+import { emptyReport, StepMoments } from "../../games/headcrash/engine/stepMoments";
+import { HeadCrashAudio } from "../../games/headcrash/headCrashAudio";
 import { HeadCrashRenderer } from "../../games/headcrash/render/headCrashRenderer";
+import { prepareGameSounds } from "../../services/soundPlayer";
 import { loadTuning } from "./tuning";
 import { TuningPanel } from "./TuningPanel";
 
@@ -43,7 +45,7 @@ function nextRoundOn(seed: number, round: number, name: string): number {
 /**
  * Dev-only page (`?preview=headcrash`): the game on one keyboard, with no server and no netcode (red drives
  * with A / D, blue with the arrows; on a phone, holding the left or right half of the screen drives red), to judge
- * the driving, the maps and the look. The tuner on the left changes the driving's numbers as it plays. The map picker keeps every round on one map (or every map, shuffled, as in a real match). RESTART ROUND plays the same
+ * the driving, the maps, the look and the sounds (heard as red's driver). The tuner on the left changes the driving's numbers as it plays. The map picker keeps every round on one map (or every map, shuffled, as in a real match). RESTART ROUND plays the same
  * map again; SKIP ROUND moves to the next map (every map comes once, in the match's order; the bar names it); NEW
  * MATCH starts over in another order.
  */
@@ -68,10 +70,16 @@ export function HeadCrashPreview() {
     }
   };
 
+  useEffect(() => prepareGameSounds("headcrash"), []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const renderer = new HeadCrashRenderer(canvas, { players: [0, 1], mySeat: null });
+    // Heard as red's driver: red's motor, landings and pads, and a hit as red's point or red's head.
+    const audio = new HeadCrashAudio(0);
+    const stepMoments = new StepMoments();
+    let moments: MomentView[] = [];
     /** A round on another map than the picked one moves on to the next round on it (a shorter countdown, the score kept). */
     const keepToMap = (s: HeadCrashState): HeadCrashState => {
       const name = pinned.current;
@@ -82,7 +90,7 @@ export function HeadCrashPreview() {
     };
     let state = keepToMap(createHeadCrash(seed));
     const held: [number, number] = [0, 0];
-    const report: StepReport = { grounded: [true, true], impact: [0, 0], carsTouched: false };
+    const report = emptyReport();
     let hit: HitView | null = null;
     let roundShownAt = performance.now();
     let shownRound = state.round;
@@ -132,10 +140,17 @@ export function HeadCrashPreview() {
       }
       for (; owed >= tickMs; owed -= tickMs) {
         if (state.phase === PHASE.over) state = createHeadCrash(seed, state.round + 1);
+        const before = state.phase;
         stepHeadCrash(state, held, report);
+        if (before === PHASE.play) stepMoments.note(report, now, moments);
+        else stepMoments.rest();
+        if (before === PHASE.countdown && state.phase === PHASE.play) moments.push({ kind: "go", at: now });
         state = keepToMap(state);
       }
-      if (state.hit && hit?.round !== state.round) hit = { ...state.hit, round: state.round, shownAt: now };
+      if (state.hit && hit?.round !== state.round) {
+        hit = { ...state.hit, round: state.round, shownAt: now };
+        moments.push({ kind: "hit", hit: state.hit, scorer: scorerOf(state.hit.victims), at: now });
+      }
       if (state.round !== shownRound) {
         shownRound = state.round;
         roundShownAt = now;
@@ -155,6 +170,8 @@ export function HeadCrashPreview() {
         roundShownAt,
       };
       renderer.draw(frame, now);
+      audio.update(frame, moments, now);
+      moments = [];
       const scorer = state.hit ? scorerOf(state.hit.victims) : null;
       setInfo(`${frame.layout.name} · round ${roundsPlayed} · ${state.score[0]} – ${state.score[1]}${state.hit ? (scorer === null ? " · both heads" : scorer === 0 ? " · red scores" : " · blue scores") : ""}`);
       raf = requestAnimationFrame(loop);
@@ -162,6 +179,7 @@ export function HeadCrashPreview() {
     raf = requestAnimationFrame(loop);
     return () => {
       cancelAnimationFrame(raf);
+      audio.stop();
       observer.disconnect();
       window.removeEventListener("keydown", keyDown);
       window.removeEventListener("keyup", keyUp);

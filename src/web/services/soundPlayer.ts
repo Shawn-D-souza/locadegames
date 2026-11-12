@@ -376,6 +376,9 @@ export function startSoundLoop(name: SoundName): LoopHandle {
 
 export const isSoundOn = () => soundOn;
 
+/** Whether this loop handle plays nothing (it was asked for while sound was off, audio asleep, or its file not in yet), so it should be asked for again. */
+export const isSilentLoop = (handle: LoopHandle) => handle === NO_HANDLE;
+
 export function setSoundOn(on: boolean) {
   soundOn = on;
   saveSoundOn(on);

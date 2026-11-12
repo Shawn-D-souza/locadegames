@@ -9,6 +9,7 @@ import type { Bytes } from "../../../../shared/protocol/bytes";
 import { ServerClock } from "../../../netcode/serverClock";
 import { HEADCRASH_CLIENT_CONFIG } from "../config";
 import type { CarView, FrameView, HitView, HudView, MomentView } from "./frame";
+import { emptyReport, StepMoments } from "./stepMoments";
 
 const NET = HEADCRASH_CLIENT_CONFIG.net;
 const { tickMs, water } = HEADCRASH_CONFIG;
@@ -82,9 +83,8 @@ export class HeadCrashClient {
   /** The match as played ahead here, and both cars one step before it (frames are drawn between the two). */
   private predicted: HeadCrashState | null = null;
   private readonly before: [Pose, Pose] = [noPose(), noPose()];
-  private readonly report: StepReport = { grounded: [false, false], impact: [0, 0], carsTouched: false };
-  private readonly grounded: [boolean, boolean] = [true, true];
-  private readonly airTicks: [number, number] = [0, 0];
+  private readonly report: StepReport = emptyReport();
+  private readonly stepMoments = new StepMoments();
   /** The newest step whose landings and bumps were reported (replays of older steps stay quiet). */
   private notedTick = -1;
   /** What is still being blended out per car after a correction. */
@@ -262,7 +262,7 @@ export class HeadCrashClient {
         angle: pose.angle + offset.angle,
         vx: car.vx,
         vy: car.vy,
-        grounded: this.grounded[seat],
+        grounded: this.stepMoments.grounded[seat],
         buttons: this.predicted!.buttons[seat],
       };
     });
@@ -282,21 +282,10 @@ export class HeadCrashClient {
       if (state.round !== round) for (const seat of SEATS) copyPose(this.before[seat], state.cars[seat]);
       if (note && tick > this.notedTick) {
         this.notedTick = tick;
-        if (playing) this.noteStep(now);
-        else for (const seat of SEATS) this.airTicks[seat] = 0;
+        if (playing) this.stepMoments.note(this.report, now, this.moments);
+        else this.stepMoments.rest();
       }
     }
-  }
-
-  /** Landings and bumps of a step just played for the first time. */
-  private noteStep(now: number) {
-    const { grounded, impact, carsTouched } = this.report;
-    for (const seat of SEATS) {
-      if (grounded[seat] && !this.grounded[seat]) this.moments.push({ kind: "land", seat, impact: impact[seat], airTicks: this.airTicks[seat], at: now });
-      this.grounded[seat] = grounded[seat];
-      this.airTicks[seat] = grounded[seat] ? 0 : this.airTicks[seat] + 1;
-    }
-    if (carsTouched) this.moments.push({ kind: "bump", impact: Math.max(impact[0], impact[1]), at: now });
   }
 
   /** What `seat` holds on step `tick`: its last known change by then, else what it held before. */

@@ -47,6 +47,8 @@ export default async function headcrash(session) {
       mine = await where();
     }
     if (mine.cars[mine.seat] - before[mine.seat] < 1) throw new Error(`the car didn't drive: ${before[mine.seat]} → ${mine.cars[mine.seat]}`);
+    // Your own car's motor is heard (each phone runs its own).
+    await heard(host, "headCrashMotorLoop");
     // The other phone draws it a moment later (the trip over the network), so it gets a little longer.
     const seen = async () => {
       const theirs = await guest.evaluate(() => window.headcrash.frame(performance.now()).cars.map((c) => c.x));
@@ -87,6 +89,7 @@ export default async function headcrash(session) {
     await wait(700);
     if ((await stats(late)).snapshots - first.snapshots < 10) throw new Error("the watcher isn't getting the match");
     if ((await late.getByRole("button", { name: "Drive left" }).count()) > 0) throw new Error("a watcher has drive buttons");
+    if ((await late.evaluate(() => window.soundLog ?? [])).includes("headCrashMotorLoop")) throw new Error("a watcher hears a motor");
     watchedFrom = total(await hud(host));
   });
   await session.step("the match is played to its end; each phone gets its own ending", async () => {
