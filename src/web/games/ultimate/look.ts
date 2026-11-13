@@ -8,6 +8,10 @@ import { ultimateMoveSteps } from "./ultimateCues";
 /** Ultimate Tic-tac-toe on the match screen: the big board, its marks, and its small boards being won. */
 export const ULTIMATE_LOOK: MatchLook<UltimateState> = {
   Board: UltimateBoard,
+  pieces: true,
+  cards: "full",
+  toMove: (game) => (game.winner !== null || game.isDraw ? [] : [game.turn]),
+  winningLine: (game) => game.winningLine,
   layout: "largeBoard",
   movesPlayed: (game) => CELL_COUNT - game.cells.filter((cell) => cell === null).length,
   moveSteps: ultimateMoveSteps,

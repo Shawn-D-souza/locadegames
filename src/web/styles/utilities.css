@@ -62,3 +62,25 @@
   font-size: min(var(--type-title-size), var(--fluid-title-fit));
   line-height: var(--type-title-line-height);
 }
+
+/* Sea Battle: a tile floating on the water, lit from above: lighter at its top, a soft lip along its bottom. */
+@utility sea-tile {
+  background: linear-gradient(var(--color-sea-tile-light), var(--color-sea-tile));
+  box-shadow: inset 0 calc(-1 * var(--sea-tile-lip)) 0 var(--color-sea-lip);
+}
+
+/* Sea Battle: a hit's tile, burnt dark (it gives nothing away about which way the ship lies), lit from above like the others. */
+@utility sea-burnt {
+  background: linear-gradient(var(--color-char-deck), var(--color-char));
+  box-shadow: inset 0 calc(-1 * var(--sea-tile-lip)) 0 var(--color-black);
+}
+
+/* Sea Battle: one puff of smoke, soft all the way out (no edge). */
+@utility sea-smoke {
+  background: radial-gradient(closest-side, var(--color-smoke), color-mix(in srgb, var(--color-smoke) 45%, transparent) 55%, transparent);
+}
+
+/* Sea Battle: a blast's flash: white-hot in the middle, through gold, to nothing. */
+@utility sea-flash {
+  background: radial-gradient(closest-side, var(--color-white), var(--color-gold-light) 30%, color-mix(in srgb, var(--color-gold) 60%, transparent) 60%, transparent);
+}

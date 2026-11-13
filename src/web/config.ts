@@ -41,4 +41,9 @@ export const CLIENT_CONFIG = {
   },
   /** A finished match stays on screen this long (celebration included), then moves on by itself; a tap skips it. */
   resultShowMs: 4_000,
+  /**
+   * The longest a match's ending waits for its board to show the move that ended it (Sea Battle's last ball: its
+   * cannon turning and the flight take 0.8 s); past this it starts anyway, so an ending never hangs.
+   */
+  lastMoveWaitMs: 1_500,
 } as const;

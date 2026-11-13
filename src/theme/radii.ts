@@ -44,4 +44,6 @@ export const opacity = {
   closedBoard: 0.35,
   /** Where the other player must play (Ultimate Tic-tac-toe): shown steadily, lighter than your own blinking one. */
   targetWaiting: 0.55,
+  /** Sea Battle: a puff of smoke at its thickest (quiet: it only looks good). */
+  smoke: 0.6,
 } as const;

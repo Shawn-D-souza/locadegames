@@ -42,7 +42,7 @@ export function useMatchSounds({ matchKey, game, look, ending, leaver, yourTurn,
       const steps = look.moveSteps(seen.game, game, viewer);
       if (steps.length) playSoundSequence(steps.map((step) => ({ ...step, volume: (step.volume ?? 1) * volume })));
       // Your own mark was felt when you tapped; watchers feel none of them.
-      if (steps.length && !mine && !watching) playHaptic(look.opponentMoved);
+      if (steps.length && !mine && !watching && look.opponentMoved) playHaptic(look.opponentMoved);
     }
     lastSeen.current = { matchKey, moves: movesPlayed, yourTurn, game };
     // The board's latest state is read when the move count or match changes.
@@ -65,7 +65,7 @@ export function useMatchSounds({ matchKey, game, look, ending, leaver, yourTurn,
     const handle = playSoundSequence(
       matchEndingSteps(ending, {
         lastMove: mark && { sound: mark.sound, variant: mark.variant, volume: ending === "lose" ? OPPONENT_VOLUME : ending === "watch" ? WATCHING_VOLUME : 1 },
-        line: !quit && endingGame.current.winningLine !== null,
+        line: !quit && look.winningLine(endingGame.current) !== null,
       }),
     );
     return () => handle.stop();

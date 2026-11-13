@@ -22,6 +22,16 @@ export const screenHeights = {
   sideways: 540,
 } as const;
 
+/**
+ * Sea Battle's tiles, as a share of their board's width (`cqw`, so a board drawn small keeps its look): the water
+ * between the tiles (and round them), a tile's corners, and its lip.
+ */
+export const seaTiles = {
+  gap: 1.3,
+  radius: 2.2,
+  lip: 0.9,
+} as const;
+
 /** Named sizes; Tailwind classes use the names (`min-h-tap`, `max-w-content`, `size-mark-badge`). */
 export const layout = {
   /** Smallest tap target. */
@@ -54,6 +64,16 @@ export const layout = {
   boardReserve: 72,
   /** Widest that board gets in landscape, where a laptop has the room. */
   boardWide: 720,
+  /**
+   * Sea Battle, placing: the board fits the screen's height less these (the chips row, the status line, the dock and
+   * the buttons under it, margins) in portrait, and in landscape (the dock stands beside it there); the column beside
+   * it on a sideways phone. (Firing, the boards size themselves to the room left: `stageGeometry.ts`.)
+   */
+  seaReservePlacing: 346,
+  seaReserveWide: 152,
+  seaSide: 200,
+  /** Placing on a laptop or tablet: that column is wider, for the dock's two roomy rows. */
+  seaSidePlacing: 320,
   /** Dots Clash in portrait: the board also fits the screen's height, less this (the players' row and the turn banner above it, the corner ✕ and margins). */
   partyReserve: 270,
   /** Dots Clash's big boards (8×8 and up) in landscape: the column beside the board for the players' row and the banner. */

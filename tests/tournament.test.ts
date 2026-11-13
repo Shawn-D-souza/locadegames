@@ -154,8 +154,8 @@ describe("tournament", () => {
   it("plays the auto move only once the turn timer has run out", () => {
     let t = startTournament(GAME, seeds(2), 0, SEED);
     const matchId = currentRound(t).matches[0]!.id;
-    expect(claimTimeout(t, matchId, TICTACTOE_CONFIG.turnTimeMs - 1)).toEqual({ ok: false, error: "TOO_EARLY" });
-    const update = claimTimeout(t, matchId, TICTACTOE_CONFIG.turnTimeMs);
+    expect(claimTimeout(t, matchId, TICTACTOE_CONFIG.turnTimeMs - 1, 0)).toEqual({ ok: false, error: "TOO_EARLY" });
+    const update = claimTimeout(t, matchId, TICTACTOE_CONFIG.turnTimeMs, 0);
     if (!update.ok) throw new Error(update.error);
     t = update.tournament;
     expect((findActiveMatch(t, 0)!.game as TicTacToeState).board.filter((c) => c !== null)).toHaveLength(1);
@@ -178,7 +178,7 @@ describe("tournament", () => {
         expect(match.game).toEqual({ score: [0, 0] });
         expect(turnDeadline(t, match)).toBe(Infinity);
         expect(playMove(t, match.players[0], 0, 2_000)).toEqual({ ok: false, error: "INVALID_MOVE" });
-        expect(claimTimeout(t, match.id, 9_999_999)).toEqual({ ok: false, error: "NOT_IN_MATCH" });
+        expect(claimTimeout(t, match.id, 9_999_999, 0)).toEqual({ ok: false, error: "NOT_IN_MATCH" });
       }
     });
 

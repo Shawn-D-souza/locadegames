@@ -386,6 +386,56 @@ try {
   await shoot(dotsOrder[2], "48-dotsclash-place");
   await wait(4500);
   await shoot(dotsOrder[0], "49-dotsclash-results");
+
+  // Sea Battle: two players placing at once (one ready and waiting), then firing (both phones: each shot's ball flies before its result shows), then the ending.
+  const seaHost = await page();
+  await seaHost.goto(BASE);
+  await seaHost.getByRole("button", { name: /create room/i }).click();
+  await wait(1500);
+  const seaGuest = await page();
+  await seaGuest.goto(BASE + "?room=" + new URL(seaHost.url()).searchParams.get("room"));
+  await seaGuest.getByRole("button", { name: /join room/i }).click();
+  await wait(1000);
+  await seaHost.getByRole("button", { name: /^sea battle/i }).click();
+  await wait(1500);
+  await shoot(seaHost, "50-seabattle-placing");
+  await seaHost.getByRole("button", { name: "SHUFFLE", exact: true }).click();
+  await seaHost.getByRole("button", { name: "READY!", exact: true }).click();
+  await wait(500);
+  await shoot(seaHost, "51-seabattle-waiting");
+  await seaGuest.getByRole("button", { name: "SHUFFLE", exact: true }).click();
+  await seaGuest.getByRole("button", { name: "READY!", exact: true }).click();
+  await wait(1000);
+  const seaPlayers = [seaHost, seaGuest];
+  const seaTarget = (p) => p.getByRole("group", { name: /^(?!your).*waters$/i });
+  const seaEnded = async () => (await Promise.all(seaPlayers.map((p) => p.getByText(/you win!|you lost|draw!/i).isVisible()))).some(Boolean);
+  // Whoever's turn it is fires at every 5th cell they still may, so the shots spread over the board.
+  const seaFire = async (shots) => {
+    for (let i = 0; i < shots && !(await seaEnded()); i++) {
+      const shooter = await Promise.any(
+        seaPlayers.map(async (p) => (await seaTarget(p).getByRole("button").and(p.locator(":enabled")).first().waitFor({ timeout: 5000 }), p)),
+      ).catch(() => null);
+      if (!shooter) break;
+      const cells = seaTarget(shooter).getByRole("button").and(shooter.locator(":enabled"));
+      await cells.nth((i * 5) % (await cells.count())).click();
+      await wait(250);
+    }
+  };
+  await seaFire(30);
+  await wait(800);
+  // Whoever may fire now.
+  const seaMover = await Promise.any(
+    seaPlayers.map(async (p) => (await seaTarget(p).getByRole("button").and(p.locator(":enabled")).first().waitFor({ timeout: 5000 }), p)),
+  );
+  const seaWaiting = seaPlayers.find((p) => p !== seaMover);
+  // The boards have traded places by now; give the shooter's cannon its moment to come in.
+  await wait(700);
+  await shoot(seaMover, "52-seabattle-your-turn");
+  await shoot(seaWaiting, "53-seabattle-their-turn");
+  await seaFire(200);
+  await wait(1500);
+  await shoot(seaHost, "54-seabattle-ended-host");
+  await shoot(seaGuest, "55-seabattle-ended-guest");
 } finally {
   await browser.close();
   await vite.close();

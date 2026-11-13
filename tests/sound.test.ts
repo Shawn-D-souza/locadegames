@@ -33,6 +33,9 @@ const takesToCheck = (name: SoundName) => {
 
 const rms = (track: Float32Array) => Math.sqrt(track.reduce((sum, x) => sum + x * x, 0) / track.length);
 
+/** A test that renders every sound in one go takes longer as sounds are added (and while other tests share the CPU). */
+const EVERY_SOUND_TIMEOUT_MS = 30_000;
+
 describe("every sound", () => {
   for (const name of SOUND_NAMES) {
     const definition = soundDefinition(name);
@@ -100,7 +103,7 @@ describe("every sound", () => {
       if (definition.loopSeconds !== undefined) continue;
       if (definition.level === "tap") expect(seconds, name).toBeLessThan(1.1);
     }
-  });
+  }, EVERY_SOUND_TIMEOUT_MS);
 
   it("nothing is clearly louder than winning, even on headphones, where a short low hit can edge past the trumpets", () => {
     const fullRange = (name: SoundName) => {
@@ -112,7 +115,7 @@ describe("every sound", () => {
     for (const name of SOUND_NAMES) {
       if (soundDefinition(name).level !== "celebration") expect(fullRange(name), name).toBeLessThan(win + HEADPHONE_ALLOWANCE_DB);
     }
-  });
+  }, EVERY_SOUND_TIMEOUT_MS);
 
   it("renders the same every time", () => {
     const [first] = renderSound("matchLossSting", soundDefinition("matchLossSting"), 0);

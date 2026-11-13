@@ -1,5 +1,6 @@
 import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { HEADCRASH_CONFIG } from "./headcrash/config";
+import { SEABATTLE_CONFIG } from "./seabattle/config";
 import { TERRITORY_CONFIG } from "./territory/config";
 import { TICTACTOE_CONFIG } from "./tictactoe/config";
 import { ULTIMATE_CONFIG } from "./ultimate/config";
@@ -56,6 +57,14 @@ export const GAMES = [
     format: "tournament",
     play: "turns",
     turnTimeMs: ULTIMATE_CONFIG.turnTimeMs,
+  },
+  {
+    id: "seabattle",
+    name: "Sea Battle",
+    minPlayers: 2,
+    format: "tournament",
+    play: "turns",
+    turnTimeMs: SEABATTLE_CONFIG.turnTimeMs,
   },
   {
     id: "headcrash",

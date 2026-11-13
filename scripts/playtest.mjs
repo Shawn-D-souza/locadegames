@@ -7,13 +7,14 @@ import { chromium } from "playwright";
 import { createServer } from "vite";
 import dotsclash from "./playtest/dotsclash.mjs";
 import headcrash from "./playtest/headcrash.mjs";
+import seabattle from "./playtest/seabattle.mjs";
 import { Session } from "./playtest/session.mjs";
 import territory from "./playtest/territory.mjs";
 import tictactoe from "./playtest/tictactoe.mjs";
 import ultimate from "./playtest/ultimate.mjs";
 
 /** One flow per game; a new game adds its file here. */
-const GAMES = { tictactoe, ultimate, headcrash, territory, dotsclash };
+const GAMES = { tictactoe, ultimate, seabattle, headcrash, territory, dotsclash };
 const SERVER = "http://localhost:8787";
 const PORT = 5198;
 

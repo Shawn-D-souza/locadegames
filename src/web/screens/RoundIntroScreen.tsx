@@ -19,12 +19,14 @@ interface RoundIntroScreenProps {
   myId: PlayerId;
   /** Local time the round's matches all begin. */
   startsAt: number;
-  /** A real-time game: it counts its own 3, 2, 1 in the arena (here it only says to get ready) and has no X / O pieces (the cards show avatars). */
+  /** A real-time game: it counts its own 3, 2, 1 in the arena (here it only says to get ready). */
   live: boolean;
+  /** The game's players have X / O pieces; otherwise (a real-time game, Sea Battle) the cards show avatars. */
+  pieces: boolean;
 }
 
 /** The break between rounds: round title, who you play (or that you sit out), a countdown to the shared start (or GET READY! before a real-time game's own countdown), and the points. */
-export function RoundIntroScreen({ room, tournament, myId, startsAt, live }: RoundIntroScreenProps) {
+export function RoundIntroScreen({ room, tournament, myId, startsAt, live, pieces }: RoundIntroScreenProps) {
   const now = useNow(CLIENT_CONFIG.timerTickMs);
   const seconds = Math.max(1, Math.ceil((startsAt - now) / 1000));
   useCountdownSounds(live ? 0 : seconds);
@@ -34,7 +36,7 @@ export function RoundIntroScreen({ room, tournament, myId, startsAt, live }: Rou
   const card = (id: PlayerId, seat: 0 | 1) => (
     <SeatCard
       player={{ id, name: entrantName(tournament, id), connected: room.players.find((p) => p.id === id)?.connected ?? false }}
-      seat={live ? undefined : seat}
+      seat={pieces ? seat : undefined}
       isYou={id === myId}
       active={false}
     />

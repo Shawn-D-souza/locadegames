@@ -1,5 +1,6 @@
 import type { TurnGameId } from "../../shared/games/catalog";
 import type { GameState } from "../../shared/games/registry";
+import { SEABATTLE_LOOK } from "./seabattle/look";
 import { TICTACTOE_LOOK } from "./tictactoe/look";
 import { ULTIMATE_LOOK } from "./ultimate/look";
 import type { MatchLook } from "./matchLook";
@@ -11,4 +12,5 @@ const anyState = <State extends GameState>(look: MatchLook<State>) => look as un
 export const MATCH_LOOKS: Record<TurnGameId, MatchLook<GameState>> = {
   tictactoe: anyState(TICTACTOE_LOOK),
   ultimate: anyState(ULTIMATE_LOOK),
+  seabattle: anyState(SEABATTLE_LOOK),
 };

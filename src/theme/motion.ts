@@ -25,6 +25,17 @@ export const durations = {
   countUp: 500,
   /** One hop of the loading dots (joining a room). */
   dotHop: 400,
+  /**
+   * Sea Battle: the other's cannon swinging onto the cell before it fires (yours follows your finger), a cannonball's
+   * flight, how long its splash or blast shows before the boards trade places (after a miss), and the boards trading
+   * places and sizes.
+   */
+  cannonTurn: 240,
+  shotFlight: 560,
+  shotSettle: 650,
+  boardSwap: 520,
+  /** Sea Battle: one puff of smoke drifting off a hit or a wreck. */
+  smoke: 3_600,
 } as const;
 
 export const easings = {
@@ -32,6 +43,9 @@ export const easings = {
   out: "cubic-bezier(0.22, 1, 0.36, 1)",
   /** Dots Clash: a dot flying to the next tile, launching quickly and easing into its landing. */
   flight: "cubic-bezier(0.4, 0, 0.2, 1)",
+  /** Sea Battle: a cannonball thrown up, slowing to the top of its arc, then falling faster and faster. */
+  rise: "cubic-bezier(0.3, 0.6, 0.6, 1)",
+  fall: "cubic-bezier(0.45, 0, 0.75, 0.45)",
 } as const;
 
 export const transforms = {
@@ -69,4 +83,17 @@ export const transforms = {
   flightScale: 1.35,
   /** Dots Clash: a tile's dots settle from this size when a dot lands on it (no fade, so nothing flickers). */
   landFromScale: 1.3,
+  /** Sea Battle: a cannonball grows this much at the top of its arc (seen from above), and how far a cannon kicks back as it fires (a share of its size). */
+  shotArcScale: 1.5,
+  recoil: "9%",
+  /**
+   * Sea Battle: how high a cannonball rises on screen at the top of its arc (a share of its own size), how small its
+   * shadow on the water gets then, and how a cannon squashes as it fires (then swells a little and settles).
+   */
+  shotLift: "-260%",
+  shotShadowScale: 0.55,
+  kickScale: 0.88,
+  /** Sea Battle: how far a puff of smoke drifts off its wreck (a share of its own size: up and a little to the side). */
+  smokeDriftX: "40%",
+  smokeDriftY: "-170%",
 } as const;

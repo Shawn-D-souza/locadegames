@@ -197,7 +197,7 @@ export function DotsClashScreen({ party, myId, clockOffsetMs, send, onQuit, onLe
   return (
     <ScreenLayout centered wide header={header} wash={wash} onTap={tone !== null ? onContinue : undefined}>
       {stillIn && (
-        <div className="fixed top-4 left-4">
+        <div className="fixed top-4 left-4 z-raised">
           <IconButton icon="close" label="Quit game" onClick={onQuit} />
         </div>
       )}

@@ -1,7 +1,7 @@
 import { colors } from "./colors";
 import { durations, easings, transforms } from "./motion";
 import { lips, opacity, radii, strokes } from "./radii";
-import { layout, spacing } from "./spacing";
+import { layout, seaTiles, spacing } from "./spacing";
 import { fluidType, fonts, fontWeights, typeScale } from "./typography";
 
 function kebab(value: string): string {
@@ -17,6 +17,7 @@ export function buildCssVariables(): Record<string, string> {
   for (const [name, value] of Object.entries(colors)) vars[`--color-${kebab(name)}`] = value;
   for (const [name, value] of Object.entries(spacing)) vars[`--space-${name}`] = px(value);
   for (const [name, value] of Object.entries(layout)) vars[`--layout-${kebab(name)}`] = px(value);
+  for (const [name, value] of Object.entries(seaTiles)) vars[`--sea-tile-${kebab(name)}`] = `${value}cqw`;
   for (const [name, value] of Object.entries(radii)) vars[`--radius-${kebab(name)}`] = px(value);
   for (const [name, value] of Object.entries(strokes)) vars[`--stroke-${kebab(name)}`] = px(value);
   for (const [name, value] of Object.entries(lips)) vars[`--lip-${name}`] = px(value);

@@ -6,6 +6,10 @@ import { lastMarkSound } from "./sounds";
 /** Tic-tac-toe on the match screen: its board, and one mark sound per move. */
 export const TICTACTOE_LOOK: MatchLook<TicTacToeState> = {
   Board: TicTacToeBoard,
+  pieces: true,
+  cards: "full",
+  toMove: (game) => (game.winner !== null || game.isDraw ? [] : [game.turn]),
+  winningLine: (game) => game.winningLine,
   layout: "board",
   movesPlayed: (game) => game.board.filter((cell) => cell !== null).length,
   moveSteps: (_previous, game) => {

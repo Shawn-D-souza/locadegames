@@ -8,7 +8,7 @@ import { ROOM_CONFIG } from "../../shared/rooms/config";
 import { sanitizePlayerName } from "../../shared/rooms/playerName";
 import type { PlayerId } from "../../shared/rooms/types";
 import type { Seat } from "../../shared/games/types";
-import { claimTimeout, finishLiveMatch, playMove, removePlayer, scoreLiveMatch, startTournament } from "../../shared/tournament/tournament";
+import { claimTimeout, finishLiveMatch, hasSecrets, playMove, removePlayer, scoreLiveMatch, startTournament, tournamentView } from "../../shared/tournament/tournament";
 import type { Tournament } from "../../shared/tournament/types";
 import { claimPartyTimeout, partyView, playPartyMove, quitParty, startParty, stillInParty, type PartyUpdate } from "../../shared/party/party";
 import type { Party } from "../../shared/party/types";
@@ -208,7 +208,7 @@ function newArena(gameId: ArenaGameId, entrants: PlayerRecord[], now: number): A
   };
 }
 
-/** `coinSeed`: a fresh random 32-bit integer: who starts (a tournament, a party game's turn order), a party game's timed-out picks. */
+/** `coinSeed`: a fresh random 32-bit integer: who starts (a tournament, a party game's turn order), a party game's timed-out picks, Sea Battle's fleets placed for a player whose time ran out. */
 export function applyClientMessage(
   record: RoomRecord,
   id: PlayerId,
@@ -247,7 +247,7 @@ export function applyClientMessage(
       const update =
         msg.type === "move"
           ? playMove(record.tournament, id, msg.move, now)
-          : claimTimeout(record.tournament, msg.matchId, now);
+          : claimTimeout(record.tournament, msg.matchId, now, coinSeed);
       if (!update.ok) return update;
       next = withTournament(record, update.tournament);
       break;
@@ -284,7 +284,13 @@ export function applyClientMessage(
   return { ok: true, record: touch(next, now) };
 }
 
-export function toRoomView(record: RoomRecord, now: number): RoomView {
+/** Whether players must each get their own view of the room (a game with secrets: Sea Battle's fleets while a match is played). */
+export function viewsDiffer(record: RoomRecord): boolean {
+  return record.phase === "playing" && !!record.tournament && hasSecrets(record.tournament);
+}
+
+/** The room as `viewer` may see it (null: anyone, with every secret hidden). */
+export function toRoomView(record: RoomRecord, now: number, viewer: PlayerId | null = null): RoomView {
   return {
     code: record.code,
     phase: record.phase,
@@ -296,7 +302,8 @@ export function toRoomView(record: RoomRecord, now: number): RoomView {
       trophies,
       suggestion,
     })),
-    tournament: record.tournament,
+    // A game's secrets (Sea Battle's fleets) go only to whoever they belong to.
+    tournament: record.tournament && tournamentView(record.tournament, viewer),
     arena: record.arena,
     // A party game's picks stay secret until everyone has picked.
     party: record.party ? partyView(record.party) : null,

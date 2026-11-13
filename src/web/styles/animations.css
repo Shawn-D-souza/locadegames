@@ -85,6 +85,27 @@
   /* Dots Clash: whose turn it is hops in the players' row above the board. */
   --animate-turn-hop: turn-hop var(--duration-hop) var(--ease-out) infinite alternate;
 
+  /*
+   * Sea Battle. A shot: the shooter's cannon comes in once the boards have traded places. As it fires (`--shot-delay`:
+   * once it has swung onto the cell) it squashes and swells, its barrel kicks back, its muzzle flashes and puffs smoke,
+   * and the ball flies (`--from-x` … `--to-y`): rising on screen and growing to the top of its arc, then dropping,
+   * over its shadow on the water. Where it lands a ring goes out with drops or embers (`--dx` / `--dy`) and a puff.
+   */
+  --animate-cannon-in: pop-in var(--duration-slow) var(--ease-spring) var(--duration-board-swap) both;
+  --animate-recoil: recoil var(--duration-slow) var(--ease-out) var(--shot-delay) both;
+  --animate-cannon-kick: cannon-kick var(--duration-celebrate) var(--ease-out) var(--shot-delay) both;
+  --animate-muzzle-smoke: smoke-drift calc(var(--duration-smoke) / 3) var(--ease-out) var(--shot-delay) both;
+  --animate-shot-shadow: shot-shadow var(--duration-shot-flight) linear var(--shot-delay) both;
+  --animate-muzzle-flash: muzzle-flash var(--duration-normal) var(--ease-out) var(--shot-delay) both;
+  --animate-shot-fly: shot-fly var(--duration-shot-flight) linear var(--shot-delay) both;
+  --animate-shot-arc: shot-arc var(--duration-shot-flight) linear var(--shot-delay) both;
+  --animate-impact-ring: burst-ring var(--duration-celebrate) var(--ease-out) both;
+  --animate-impact-puff: smoke-drift var(--duration-smoke) var(--ease-out) both;
+  --animate-spray: spray var(--duration-celebrate) var(--ease-out) both;
+  /* Sea Battle: a ship that sinks slams down burnt; hits and wrecks smoke a little (`--smoke-delay` per puff, `--smoke-phase` per wisp). */
+  --animate-wreck-in: claim var(--duration-celebrate) var(--ease-spring) both;
+  --animate-smoke: smoke-drift var(--duration-smoke) linear calc(var(--smoke-delay) + var(--smoke-phase, 0ms)) infinite;
+
   @keyframes pop-in {
     from {
       transform: scale(var(--transform-pop-from-scale));
@@ -136,10 +157,8 @@
     }
   }
 
+  /* From the board's own color (white, or Sea Battle's water). */
   @keyframes board-fill {
-    from {
-      background-color: var(--color-white);
-    }
     to {
       background-color: var(--player);
     }
@@ -354,6 +373,110 @@
   @keyframes turn-hop {
     to {
       translate: 0 var(--transform-turn-hop-height);
+    }
+  }
+
+  @keyframes recoil {
+    15% {
+      translate: 0 var(--transform-recoil);
+    }
+  }
+
+  /* Hidden until the shot (it waits with the cannon), then a flash that spreads and fades. */
+  @keyframes muzzle-flash {
+    from {
+      scale: var(--transform-pop-from-scale);
+      opacity: 0;
+    }
+    1% {
+      opacity: 1;
+    }
+    to {
+      scale: var(--transform-celebrate-scale);
+      opacity: 0;
+    }
+  }
+
+  /* Hidden in the muzzle until it fires. */
+  @keyframes shot-fly {
+    from {
+      translate: var(--from-x) var(--from-y);
+      opacity: 0;
+    }
+    6% {
+      opacity: 1;
+    }
+    to {
+      translate: var(--to-x) var(--to-y);
+    }
+  }
+
+  /* A throw: quick up, slowing to the top, then falling faster (each half eased its own way). */
+  @keyframes shot-arc {
+    from {
+      translate: 0 0;
+      scale: var(--transform-pop-from-scale);
+      animation-timing-function: var(--ease-rise);
+    }
+    50% {
+      translate: 0 var(--transform-shot-lift);
+      scale: var(--transform-shot-arc-scale);
+      animation-timing-function: var(--ease-fall);
+    }
+    to {
+      translate: 0 0;
+      scale: 1;
+    }
+  }
+
+  /* The ball's shadow on the water: smaller and fainter while it's high. */
+  @keyframes shot-shadow {
+    from {
+      translate: var(--from-x) var(--from-y);
+      opacity: 0;
+    }
+    10% {
+      opacity: var(--opacity-closed-board);
+    }
+    50% {
+      scale: var(--transform-shot-shadow-scale);
+    }
+    to {
+      translate: var(--to-x) var(--to-y);
+      opacity: var(--opacity-closed-board);
+    }
+  }
+
+  @keyframes cannon-kick {
+    15% {
+      scale: var(--transform-kick-scale);
+    }
+    45% {
+      scale: var(--transform-win-scale);
+    }
+  }
+
+  @keyframes spray {
+    to {
+      translate: var(--dx) var(--dy);
+      scale: var(--transform-pop-from-scale);
+      opacity: 0;
+    }
+  }
+
+  @keyframes smoke-drift {
+    from {
+      translate: 0 0;
+      scale: var(--transform-pop-from-scale);
+      opacity: 0;
+    }
+    20% {
+      opacity: var(--opacity-smoke);
+    }
+    to {
+      translate: var(--transform-smoke-drift-x) var(--transform-smoke-drift-y);
+      scale: var(--transform-stamp-from-scale);
+      opacity: 0;
     }
   }
 }

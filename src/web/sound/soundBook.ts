@@ -1,6 +1,7 @@
 import type { GameId } from "../../shared/games/catalog";
 import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
 import { HEADCRASH_SOUNDS } from "../games/headcrash/sounds";
+import { SEABATTLE_SOUNDS } from "../games/seabattle/sounds";
 import { TERRITORY_SOUNDS } from "../games/territory/sounds";
 import { TICTACTOE_SOUNDS } from "../games/tictactoe/sounds";
 import { ULTIMATE_SOUNDS } from "../games/ultimate/sounds";
@@ -14,6 +15,7 @@ import { ROOM_SOUNDS } from "./library/roomSounds";
 export const GAME_SOUNDS = {
   tictactoe: TICTACTOE_SOUNDS,
   ultimate: ULTIMATE_SOUNDS,
+  seabattle: SEABATTLE_SOUNDS,
   headcrash: HEADCRASH_SOUNDS,
   territory: TERRITORY_SOUNDS,
   dotsclash: DOTSCLASH_SOUNDS,
@@ -31,6 +33,7 @@ export const SOUNDS = {
   ...PLATFORM_SOUNDS,
   ...TICTACTOE_SOUNDS,
   ...ULTIMATE_SOUNDS,
+  ...SEABATTLE_SOUNDS,
   ...HEADCRASH_SOUNDS,
   ...TERRITORY_SOUNDS,
   ...DOTSCLASH_SOUNDS,

@@ -50,6 +50,24 @@ export const colors = {
   /** Dots Clash: the faint edge of an empty tile, so white tiles read on the plain page (owner direction: just a little). */
   tileEdge: "#C9C6E6",
 
+  /**
+   * Sea Battle: a board is water (light, so every player's ships read on it) with pale tiles floating on it, lit from
+   * above (lighter at the top, a soft lip at the bottom); a miss sinks its tile, the water showing with a ripple.
+   */
+  sea: "#93D2EE",
+  seaTile: "#E9F0F8",
+  seaTileLight: "#FAFCFF",
+  seaLip: "#C3D3E8",
+  /** Sea Battle: what's burnt: a hit's tile, a sunk ship's hull, its deck and its fittings; the cannonballs. */
+  char: "#2A2657",
+  charDeck: "#3E3976",
+  charPart: "#625D98",
+  /** Sea Battle: a cannon's iron barrel (a neutral grey) and the inside wall of its muzzle (the bore itself is black). */
+  iron: "#565867",
+  ironDark: "#33353F",
+  /** Sea Battle: smoke off a hit or a wreck, at its thickest (it fades out round its edge). */
+  smoke: "#7D7A99",
+
   online: "#78C840",
   waiting: "#FFC02E",
   offline: "#8A94A6",

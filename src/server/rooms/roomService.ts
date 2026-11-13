@@ -18,6 +18,7 @@ import {
   joinRoom,
   scoreLive,
   toRoomView,
+  viewsDiffer,
   type JoinRequest,
 } from "./roomLogic";
 import type { RoomRecord } from "./roomRecord";
@@ -151,7 +152,13 @@ export class RoomService {
       return;
     }
     this.store.put(record);
-    this.transport.broadcast(record.code, { type: "room", room: toRoomView(record, this.now()) });
+    const now = this.now();
+    if (viewsDiffer(record)) {
+      // Secrets in play (Sea Battle's fleets): each player gets the room as they may see it (a player with no socket gets nothing).
+      for (const player of record.players) this.transport.sendTo(record.code, player.id, { type: "room", room: toRoomView(record, now, player.id) });
+    } else {
+      this.transport.broadcast(record.code, { type: "room", room: toRoomView(record, now) });
+    }
     // Live 1v1 matches follow the record: a new round starts its matches, a quit or the end stops them.
     this.duels.reconcile(record.code, record.phase === "playing" ? record.tournament : null);
   }

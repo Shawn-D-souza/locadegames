@@ -19,6 +19,7 @@ import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
 import { DotsClashScreen } from "../games/dotsclash/DotsClashScreen";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
+import { MATCH_LOOKS } from "../games/matchLooks";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { arenaName } from "../utils/arenaText";
 import { partyName } from "../utils/partyText";
@@ -281,7 +282,16 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
       // Same for a match you were watching: its ending shows before anything else.
       content = matchScreen(watched, { onContinue: close });
     } else if (beforeRoundStart) {
-      content = <RoundIntroScreen room={room} tournament={t} myId={playerId} startsAt={roundStart} live={ownCountdown} />;
+      content = (
+        <RoundIntroScreen
+          room={room}
+          tournament={t}
+          myId={playerId}
+          startsAt={roundStart}
+          live={ownCountdown}
+          pieces={!isLiveGame(t.gameId) && MATCH_LOOKS[t.gameId].pieces}
+        />
+      );
     } else if (mine && !refersTo(dismissed, t, mine)) {
       content = matchScreen(mine, {
         onContinue: !isLive(mine) ? () => setDismissed({ startedAt: t.startedAt, matchId: mine.id }) : undefined,

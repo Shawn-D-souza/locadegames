@@ -1,5 +1,5 @@
-import { getTurnGame, isLiveGame, type TournamentGameId } from "../games/catalog";
-import { MATCH_GAMES } from "../games/registry";
+import { getTurnGame, isLiveGame, type TournamentGameId, type TurnGameId } from "../games/catalog";
+import { MATCH_GAMES, type GameState } from "../games/registry";
 import type { MoveError, Seat } from "../games/types";
 import type { PlayerId } from "../rooms/types";
 import { TOURNAMENT_CONFIG } from "./config";
@@ -29,9 +29,11 @@ export function isLiveMatch(match: Match): match is LiveMatch {
   return "score" in match.game;
 }
 
-/** When the current turn runs out (never, in a real-time game: it has no turns). */
+/** When the current turn runs out (never, in a real-time game: it has no turns). A game may time a turn its own way (Sea Battle's placing). */
 export function turnDeadline(t: Tournament, match: Match): number {
-  return isLiveGame(t.gameId) ? Infinity : match.turnStartedAt + getTurnGame(t.gameId).turnTimeMs;
+  if (isLiveGame(t.gameId) || isLiveMatch(match)) return Infinity;
+  const own = MATCH_GAMES[t.gameId].turnTimeMs?.(match.game);
+  return match.turnStartedAt + (own ?? getTurnGame(t.gameId).turnTimeMs);
 }
 
 /** Enough rounds for a clear leader: 2 players → 1, 3–4 → 2, 5–8 → 3. */
@@ -167,14 +169,20 @@ function replaceMatch(t: Tournament, match: Match): Tournament {
 function play(t: Tournament, match: Match, seat: Seat, move: unknown, now: number): TournamentUpdate {
   // A real-time match has no moves: it is played live and reported with `finishLiveMatch`.
   if (isLiveGame(t.gameId) || isLiveMatch(match)) return { ok: false, error: "INVALID_MOVE" };
-  const rules = MATCH_GAMES[t.gameId];
-  const result = rules.applyMove(match.game, seat, move);
+  const result = MATCH_GAMES[t.gameId].applyMove(match.game, seat, move);
   if (!result.ok) return { ok: false, error: result.error };
-  const outcome = rules.outcome(result.state);
-  let played: TurnMatch = { ...match, game: result.state, turnStartedAt: now };
+  return { ok: true, tournament: settle(t, match, result.state, now) };
+}
+
+/** A turn-based match moved on to `game`: a new turn starts its clock (unless the game keeps it), and a win or draw ends it. */
+function settle(t: Tournament, match: TurnMatch, game: GameState, now: number): Tournament {
+  const rules = MATCH_GAMES[t.gameId as TurnGameId];
+  const outcome = rules.outcome(game);
+  const turnStartedAt = rules.keepsClock?.(match.game, game) ? match.turnStartedAt : now;
+  let played: TurnMatch = { ...match, game, turnStartedAt };
   if (outcome.kind === "win") played = { ...played, result: "win", winner: match.players[outcome.seat] };
   if (outcome.kind === "draw") played = { ...played, result: "draw" };
-  return { ok: true, tournament: advance(replaceMatch(t, played), now) };
+  return advance(replaceMatch(t, played), now);
 }
 
 export function playMove(t: Tournament, playerId: PlayerId, rawMove: unknown, now: number): TournamentUpdate {
@@ -188,13 +196,17 @@ export function playMove(t: Tournament, playerId: PlayerId, rawMove: unknown, no
   return play(t, match, match.players.indexOf(playerId) as Seat, move, now);
 }
 
-/** Anyone in the room may report an expired turn; the server checks its own clock and plays the auto move. */
-export function claimTimeout(t: Tournament, matchId: number, now: number): TournamentUpdate {
+/**
+ * Anyone in the room may report an expired turn; the server checks its own clock and plays the auto move (or whatever
+ * the game does when time runs out). `seed`: a fresh random number from the server, for a game that needs one there.
+ */
+export function claimTimeout(t: Tournament, matchId: number, now: number, seed: number): TournamentUpdate {
   const match = t.finished ? undefined : currentRound(t).matches.find((m) => m.id === matchId && isLive(m));
   if (!match) return { ok: false, error: "NOT_IN_MATCH" };
   if (isLiveGame(t.gameId) || isLiveMatch(match)) return { ok: false, error: "NOT_IN_MATCH" };
   if (now < turnDeadline(t, match)) return { ok: false, error: "TOO_EARLY" };
   const rules = MATCH_GAMES[t.gameId];
+  if (rules.expire) return { ok: true, tournament: settle(t, match, rules.expire(match.game, seed), now) };
   return play(t, match, rules.turn(match.game), rules.autoMove(match.game), now);
 }
 
@@ -227,6 +239,24 @@ export function removePlayer(t: Tournament, playerId: PlayerId, now: number): To
     next = replaceMatch(next, { ...match, result: "forfeit", winner: match.players.find((id) => id !== playerId)! });
   }
   return advance(next, now);
+}
+
+/** Whether a phone may see only part of this game's live matches (Sea Battle's fleets): then each gets its own view. */
+export function hasSecrets(t: Tournament): boolean {
+  return !isLiveGame(t.gameId) && MATCH_GAMES[t.gameId].viewFor !== undefined;
+}
+
+/** The tournament as `viewer` may see it: in each match still being played, what the game lets them see (their own seat's secrets only). */
+export function tournamentView(t: Tournament, viewer: PlayerId | null): Tournament {
+  if (isLiveGame(t.gameId)) return t;
+  const viewFor = MATCH_GAMES[t.gameId].viewFor;
+  if (!viewFor) return t;
+  const hide = (match: Match): Match => {
+    if (!isLive(match) || isLiveMatch(match)) return match;
+    const seat = viewer === null ? -1 : match.players.indexOf(viewer);
+    return { ...match, game: viewFor(match.game, seat === -1 ? null : (seat as Seat)) };
+  };
+  return { ...t, rounds: t.rounds.map((round) => ({ ...round, matches: round.matches.map(hide) })) };
 }
 
 /** Players still in by points (level points share a place), then those who left. */
