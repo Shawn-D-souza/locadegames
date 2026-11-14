@@ -105,6 +105,24 @@ describe("RoomService", () => {
     expect(host.received.at(-1)).toEqual({ type: "error", error: "NOT_ENOUGH_PLAYERS" });
   });
 
+  it("won't start a game with a cap (Pool: 4) with more in the room, and plays a shot sent over the wire", () => {
+    const players = [join("Host"), join("B"), join("C"), join("D"), join("E")];
+    send(players[0]!, { type: "start", gameId: "pool" });
+    expect(players[0]!.received.at(-1)).toEqual({ type: "error", error: "TOO_MANY_PLAYERS" });
+    send(players[4]!, { type: "leave" });
+    send(players[0]!, { type: "start", gameId: "pool" });
+    const party = store.get(CODE)!.party as Party<"pool">;
+    const breaker = players.find((p) => p.playerId === party.entrants[0]!.id)!;
+    send(breaker, { type: "move", move: { dx: 1, dy: 0, power: 1, table: [] } });
+    const after = store.get(CODE)!.party as Party<"pool">;
+    expect({ entrants: party.entrants.length, moves: after.game.moves, broken: after.game.broken, turnStartsAfterShot: after.turnStartedAt > now }).toEqual({
+      entrants: 4,
+      moves: 1,
+      broken: true,
+      turnStartsAfterShot: true,
+    });
+  });
+
   it("plays a 2-player room as a single final and awards a trophy", () => {
     const host = join("Host");
     const guest = join("Guest");

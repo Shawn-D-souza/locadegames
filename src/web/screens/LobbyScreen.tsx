@@ -10,6 +10,7 @@ import { ScreenLayout } from "../components/ScreenLayout";
 import { SectionCard } from "../components/SectionCard";
 import { GAME_LOOKS } from "../games/gameLooks";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
+import { loadPool } from "../games/pool/loadPool";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { playSound } from "../services/soundPlayer";
 
@@ -25,10 +26,11 @@ export function LobbyScreen({ room, myId, send, onLeave }: LobbyScreenProps) {
   const isHost = room.hostId === myId;
   const me = room.players.find((p) => p.id === myId);
   const online = room.players.filter((p) => p.connected).length;
-  // Fetch the real-time games' code while friends gather, so they start without a wait.
+  // Fetch the real-time games' code (and Pool's table) while friends gather, so they start without a wait.
   useEffect(() => {
     void loadTerritory();
     void loadHeadCrash();
+    void loadPool();
   }, []);
 
   const pick = (gameId: GameId) => {
@@ -67,13 +69,14 @@ export function LobbyScreen({ room, myId, send, onLeave }: LobbyScreenProps) {
         <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(min(var(--layout-game-tile),40%),1fr))] gap-4">
           {GAMES.map((game) => {
             const tooFew = online < game.minPlayers;
+            const tooMany = "maxPlayers" in game && online > game.maxPlayers;
             return (
               <GameTile
                 key={game.id}
                 game={game}
                 look={GAME_LOOKS[game.id]}
-                disabled={isHost && tooFew}
-                needs={tooFew ? `NEEDS ${game.minPlayers}+` : undefined}
+                disabled={isHost && (tooFew || tooMany)}
+                needs={tooFew ? `NEEDS ${game.minPlayers}+` : tooMany ? `MAX ${game.maxPlayers}` : undefined}
                 // Your own vote first, so it always shows before "+n".
                 suggesters={room.players.filter((p) => p.suggestion === game.id).sort((a, b) => Number(b.id === myId) - Number(a.id === myId))}
                 selected={me?.suggestion === game.id}

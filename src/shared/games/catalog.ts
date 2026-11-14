@@ -1,6 +1,7 @@
 import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { HEADCRASH_CONFIG } from "./headcrash/config";
 import { LUDO_CONFIG } from "./ludo/config";
+import { POOL_CONFIG } from "./pool/config";
 import { SEABATTLE_CONFIG } from "./seabattle/config";
 import { SNAKESLADDERS_CONFIG } from "./snakesladders/config";
 import { TERRITORY_CONFIG } from "./territory/config";
@@ -12,6 +13,8 @@ interface BaseGameInfo {
   name: string;
   /** Fewest players in the room needed to start it. */
   minPlayers: number;
+  /** Most players it takes, when fewer than a full room (Pool: 4); the host can't start it with more in the room. */
+  maxPlayers?: number;
 }
 
 /** A 1v1 turn-based game: with more players in the room it becomes a Swiss-style tournament (points, no knockouts). */
@@ -101,6 +104,14 @@ export const GAMES = [
     minPlayers: LUDO_CONFIG.minPlayers,
     format: "party",
     turnTimeMs: LUDO_CONFIG.turnTimeMs,
+  },
+  {
+    id: "pool",
+    name: "Pool",
+    minPlayers: POOL_CONFIG.minPlayers,
+    maxPlayers: POOL_CONFIG.maxPlayers,
+    format: "party",
+    turnTimeMs: POOL_CONFIG.turnTimeMs,
   },
 ] as const satisfies readonly GameInfo[];
 

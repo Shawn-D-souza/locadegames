@@ -13,6 +13,7 @@ import dotsclash from "./playtest/dotsclash.mjs";
 import snakesladders from "./playtest/snakesladders.mjs";
 import headcrash from "./playtest/headcrash.mjs";
 import ludo from "./playtest/ludo.mjs";
+import pool from "./playtest/pool.mjs";
 import seabattle from "./playtest/seabattle.mjs";
 import { Session } from "./playtest/session.mjs";
 import territory from "./playtest/territory.mjs";
@@ -20,7 +21,7 @@ import tictactoe from "./playtest/tictactoe.mjs";
 import ultimate from "./playtest/ultimate.mjs";
 
 /** One flow per game; a new game adds its file here. The longest come first, so they start at once. */
-const GAMES = { headcrash, seabattle, territory, ludo, snakesladders, dotsclash, ultimate, tictactoe };
+const GAMES = { headcrash, seabattle, territory, ludo, pool, snakesladders, dotsclash, ultimate, tictactoe };
 const SERVER = "http://localhost:8787";
 const PORT = 5198;
 /**

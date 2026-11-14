@@ -3,6 +3,7 @@ import { DICE_SOUNDS } from "../games/dice/sounds";
 import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
 import { HEADCRASH_SOUNDS } from "../games/headcrash/sounds";
 import { LUDO_SOUNDS } from "../games/ludo/sounds";
+import { POOL_SOUNDS } from "../games/pool/sounds";
 import { SEABATTLE_SOUNDS } from "../games/seabattle/sounds";
 import { SNAKESLADDERS_SOUNDS } from "../games/snakesladders/sounds";
 import { TERRITORY_SOUNDS } from "../games/territory/sounds";
@@ -27,6 +28,7 @@ export const GAME_SOUNDS = {
   dotsclash: DOTSCLASH_SOUNDS,
   snakesladders: { ...SNAKESLADDERS_SOUNDS, ...DICE_SOUNDS },
   ludo: { ...LUDO_SOUNDS, ...DICE_SOUNDS },
+  pool: POOL_SOUNDS,
 } as const satisfies Record<GameId, Record<string, SoundDefinition>>;
 
 /** Sounds every visit needs, in the order they get made in the background: what's needed soonest first, the big endings last. */
@@ -47,6 +49,7 @@ export const SOUNDS = {
   ...DOTSCLASH_SOUNDS,
   ...SNAKESLADDERS_SOUNDS,
   ...LUDO_SOUNDS,
+  ...POOL_SOUNDS,
   ...DICE_SOUNDS,
 };
 

@@ -91,6 +91,11 @@ export const layout = {
   snakesReserve: 300,
   /** Ludo in portrait: the same (the players' row above the board, the die and the turn bar under it, the corner ✕ and margins). */
   ludoReserve: 300,
+  /**
+   * Pool in portrait: the area above the table (the players' row beside the corner ✕, the line saying whose shot it is
+   * under it, or the ending's result), always this tall whatever it shows (owner direction: the table never changes size).
+   */
+  poolTop: 124,
   /** Dots Clash's big boards (8×8 and up) in landscape: the column beside the board for the players' row and the banner. */
   partySide: 240,
   /** White disc holding a player's X or O on their match card. */

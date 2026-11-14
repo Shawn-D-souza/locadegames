@@ -84,3 +84,8 @@
 @utility sea-flash {
   background: radial-gradient(closest-side, var(--color-white), var(--color-gold-light) 30%, color-mix(in srgb, var(--color-gold) 60%, transparent) 60%, transparent);
 }
+
+/* No "copy / look up" bubble on a long press (iPhones): a game screen held with a finger (Pool's long press). */
+@utility no-callout {
+  -webkit-touch-callout: none;
+}

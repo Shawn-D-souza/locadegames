@@ -177,7 +177,10 @@ function leaveRoom(record: RoomRecord, id: PlayerId, now: number): RoomRecord {
 function startGame(record: RoomRecord, gameId: GameId, now: number, coinSeed: number): RoomUpdate {
   // Only connected players enter; anyone away joins the next one.
   const entrants = record.players.filter((p) => p.connected);
-  if (entrants.length < getGame(gameId).minPlayers) return { ok: false, error: "NOT_ENOUGH_PLAYERS" };
+  const game = getGame(gameId);
+  if (entrants.length < game.minPlayers) return { ok: false, error: "NOT_ENOUGH_PLAYERS" };
+  // A game with a cap (Pool: 4) can't start with more in the room (owner decision: nobody is left out to watch).
+  if (game.maxPlayers !== undefined && entrants.length > game.maxPlayers) return { ok: false, error: "TOO_MANY_PLAYERS" };
   const players = record.players.map((p) => ({ ...p, suggestion: null }));
   if (isPartyGame(gameId)) {
     const party = startParty(gameId, entrants.map(({ id, name, firsts }) => ({ id, name, firsts: firsts ?? 0 })), now, coinSeed);
@@ -210,7 +213,7 @@ function newArena(gameId: ArenaGameId, entrants: PlayerRecord[], now: number): A
 
 /** How a host runs its rooms. */
 export interface RoomOptions {
-  /** A dev server only (never in production): playtests may choose a Snakes & Ladders die, so they reach their moments. */
+  /** A dev server only (never in production): playtests may choose a die (Snakes & Ladders, Ludo) or place Pool's balls before a shot, so they reach their moments. */
   loadedDice?: boolean;
 }
 

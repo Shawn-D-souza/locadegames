@@ -11,6 +11,8 @@ export interface StripPlayer {
   quit: boolean;
   /** Finished, in this place (Snakes & Ladders: home 1st, 2nd …): shown on their tile. */
   place?: number | null;
+  /** How many pieces they have left (Pool: balls on the table), shown on their tile; 0 shows a small ink ball (Pool: on the black). */
+  count?: number | null;
 }
 
 interface TurnStripProps {
@@ -24,6 +26,9 @@ interface TurnStripProps {
   /** tile: rounded squares, like Dots Clash's tiles · disc: round, like Snakes & Ladders' pieces. */
   shape?: "tile" | "disc";
 }
+
+/** For screen readers: how many pieces a player has left. */
+const countText = (count: number | null | undefined) => (count === undefined || count === null ? "" : count === 0 ? ", none left" : `, ${count} left`);
 
 const SHAPE_CLASSES = { tile: "rounded-[22%]", disc: "rounded-pill border-thin border-ink" } as const;
 
@@ -43,7 +48,7 @@ export function TurnStrip({ players, activeIds, myId, wrap = false, shape = "til
             key={player.id}
             className={clsx("flex flex-col items-center gap-2", wrap && "landscape:basis-1/4")}
             style={player.quit ? quitStyle() : playerStyle(player.id)}
-            aria-label={`${player.name}${player.id === myId ? " (you)" : ""}${now ? ", playing now" : player.place ? `, finished ${player.place}` : player.out ? ", out" : ""}`}
+            aria-label={`${player.name}${player.id === myId ? " (you)" : ""}${now ? ", playing now" : player.place ? `, finished ${player.place}` : player.out ? ", out" : ""}${countText(player.count)}`}
             aria-current={now ? "step" : undefined}
           >
             <span
@@ -54,7 +59,7 @@ export function TurnStrip({ players, activeIds, myId, wrap = false, shape = "til
                 player.out && "scale-(--transform-pop-from-scale) opacity-disconnected",
               )}
             >
-              {player.place ?? null}
+              {player.place ?? (player.count === 0 ? <span className="size-2 rounded-pill bg-ink" /> : (player.count ?? null))}
             </span>
             <span className={clsx("font-display text-caption font-black text-ink", player.id !== myId && "invisible")} aria-hidden="true">
               YOU

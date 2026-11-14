@@ -22,6 +22,7 @@ import { LudoScreen } from "../games/ludo/LudoScreen";
 import { SnakesLaddersScreen } from "../games/snakesladders/SnakesLaddersScreen";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
 import { MATCH_LOOKS } from "../games/matchLooks";
+import { loadPool } from "../games/pool/loadPool";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { arenaName } from "../utils/arenaText";
 import { partyName } from "../utils/partyText";
@@ -43,6 +44,7 @@ interface RoomScreenProps {
 
 const TerritoryScreen = lazy(() => loadTerritory().then((m) => ({ default: m.TerritoryScreen })));
 const HeadCrashScreen = lazy(() => loadHeadCrash().then((m) => ({ default: m.HeadCrashScreen })));
+const PoolScreen = lazy(() => loadPool().then((m) => ({ default: m.PoolScreen })));
 
 /** A match within a specific tournament (match ids restart each tournament). */
 type MatchRef = { startedAt: number; matchId: number };
@@ -63,6 +65,7 @@ const PARTY_QUIT_COST: Record<PartyGameId, string> = {
   dotsclash: "You'll be out of this game. Your dots turn grey.",
   snakesladders: "You'll be out of this game.",
   ludo: "You'll be out of this game. Your pawns leave the board.",
+  pool: "You'll be out of this game. Your balls leave the table.",
 };
 
 /** What quitting costs: one game with 2 players, the whole tournament with more. */
@@ -191,8 +194,12 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
           <DotsClashScreen party={p} {...on} />
         ) : p.gameId === "snakesladders" ? (
           <SnakesLaddersScreen party={p} {...on} />
-        ) : (
+        ) : p.gameId === "ludo" ? (
           <LudoScreen party={p} {...on} />
+        ) : (
+          <Suspense fallback={<JoiningScreen code={code} onBack={requestLeave} />}>
+            <PoolScreen party={p} {...on} />
+          </Suspense>
         );
     } else if (leftResults !== p.startedAt) {
       content = (

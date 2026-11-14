@@ -44,10 +44,11 @@ export interface PartyPlace {
 
 /**
  * What the room needs from a turn-based game everyone plays together on one board (the party format: Dots Clash,
- * Snakes & Ladders). Pure functions only, so client and server agree. Seats are in turn order.
+ * Snakes & Ladders, Ludo, Pool). Pure functions only, so client and server agree. Seats are in turn order.
  */
 export interface PartyGame<State, Move> {
-  create(players: number): State;
+  /** `seed`: the server's random number for this game (Pool's rack order). */
+  create(players: number, seed: number): State;
   /** Validates an untrusted move from the wire; null if malformed. `loadedDice`: a dev server lets playtests choose dice. */
   parseMove(raw: unknown, loadedDice: boolean): Move | null;
   /** `seed`: a fresh random number from the server for anything left to chance (a die), never known ahead. */

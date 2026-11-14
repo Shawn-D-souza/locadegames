@@ -84,6 +84,17 @@ export const colors = {
   ludoBoard: "#ECEAF8",
   ludoStar: "#FFE04A",
 
+  /**
+   * Pool: bright blue cloth (owner direction: the indigo table was too dark; green would clash with the green player's
+   * balls), a warm wood rail (the cushions too: owner direction, no darker band), deep pockets; the black ball (a
+   * shade off the pockets, so it shows going in) and the cue's pale maple shaft.
+   */
+  poolCloth: "#3B86D8",
+  poolRail: "#9A6840",
+  poolPocket: "#17143A",
+  poolBlack: "#221E4A",
+  poolCueShaft: "#F3E4C4",
+
   online: "#78C840",
   waiting: "#FFC02E",
   offline: "#8A94A6",

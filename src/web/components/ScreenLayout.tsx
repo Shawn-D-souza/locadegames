@@ -9,8 +9,8 @@ interface ScreenLayoutProps {
   wash?: CSSProperties;
   /** A tap anywhere on the screen (skipping a finished match's wait). */
   onTap?: () => void;
-  /** A wider content column (a board of small boards beside the seat cards in landscape). */
-  wide?: boolean;
+  /** A wider content column (a board of small boards beside the seat cards in landscape), or the whole screen's width (Pool's table). */
+  wide?: boolean | "full";
   children: ReactNode;
 }
 
@@ -24,7 +24,7 @@ export function ScreenLayout({ header, footer, centered, wash, onTap, wide = fal
     >
       {header}
       <main
-        className={clsx("mx-auto flex w-full flex-1 flex-col items-center gap-6 p-gutter", wide ? "max-w-content-wide" : "max-w-content", centered && "justify-center")}
+        className={clsx("mx-auto flex w-full flex-1 flex-col items-center gap-6 p-gutter", wide === "full" ? "max-w-none" : wide ? "max-w-content-wide" : "max-w-content", centered && "justify-center")}
       >
         {children}
       </main>

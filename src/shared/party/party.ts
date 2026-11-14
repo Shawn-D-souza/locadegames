@@ -1,5 +1,6 @@
 import { getPartyGame, type PartyGameId } from "../games/catalog";
 import type { MoveError } from "../games/types";
+import { mixSeed } from "../random";
 import type { PlayerId } from "../rooms/types";
 import { partyRules, type PartyState } from "./games";
 import type { Party, PartyEntrant } from "./types";
@@ -39,7 +40,7 @@ export function startParty<G extends PartyGameId>(gameId: G, players: readonly P
     gameId,
     startedAt: now,
     entrants,
-    game: partyRules(gameId).create(entrants.length),
+    game: partyRules(gameId).create(entrants.length, mixSeed(coinSeed >>> 0, entrants.length)),
     turnStartedAt: now,
     finished: false,
     results: [],

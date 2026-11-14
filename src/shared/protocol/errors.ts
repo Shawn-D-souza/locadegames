@@ -6,6 +6,7 @@ export type RoomError =
   | "BAD_NAME"
   | "NOT_HOST"
   | "NOT_ENOUGH_PLAYERS"
+  | "TOO_MANY_PLAYERS"
   | "NOT_IN_MATCH"
   | "TOO_EARLY"
   | "WRONG_PHASE";

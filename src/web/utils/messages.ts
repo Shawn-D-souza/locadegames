@@ -11,6 +11,7 @@ const ROOM_ERRORS: Record<RoomError, string> = {
   BAD_NAME: "Pick a name first!",
   NOT_HOST: "Only the host can do that.",
   NOT_ENOUGH_PLAYERS: "Need more players for that game!",
+  TOO_MANY_PLAYERS: "Too many players for that game!",
   NOT_IN_MATCH: "You're not in that match.",
   TOO_EARLY: "Still time left!",
   WRONG_PHASE: "Can't do that right now.",
