@@ -10,6 +10,7 @@ import { availableParallelism } from "node:os";
 import { chromium } from "playwright";
 import { createServer } from "vite";
 import dotsclash from "./playtest/dotsclash.mjs";
+import snakesladders from "./playtest/snakesladders.mjs";
 import headcrash from "./playtest/headcrash.mjs";
 import seabattle from "./playtest/seabattle.mjs";
 import { Session } from "./playtest/session.mjs";
@@ -18,7 +19,7 @@ import tictactoe from "./playtest/tictactoe.mjs";
 import ultimate from "./playtest/ultimate.mjs";
 
 /** One flow per game; a new game adds its file here. The longest come first, so they start at once. */
-const GAMES = { headcrash, seabattle, territory, dotsclash, ultimate, tictactoe };
+const GAMES = { headcrash, seabattle, territory, snakesladders, dotsclash, ultimate, tictactoe };
 const SERVER = "http://localhost:8787";
 const PORT = 5198;
 /**

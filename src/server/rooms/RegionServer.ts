@@ -36,7 +36,10 @@ export class RegionServer extends DurableObject<Env> {
     super(ctx, env);
     // Keepalive pings are answered without waking the object or counting as requests.
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(ROOM_CONFIG.pingMessage, ROOM_CONFIG.pongMessage));
-    this.rooms = new RoomService(new SqliteRoomStore(ctx.storage.sql), new HibernationTransport(ctx), Date.now, new IntervalTicker());
+    this.rooms = new RoomService(new SqliteRoomStore(ctx.storage.sql), new HibernationTransport(ctx), Date.now, new IntervalTicker(), {
+      // Only `npm run dev:server` sets it (playtests choose dice); production never does.
+      loadedDice: env.LOADED_DICE === "1",
+    });
   }
 
   /** RPC from the matchmaking Worker. */

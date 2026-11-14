@@ -208,13 +208,23 @@ function newArena(gameId: ArenaGameId, entrants: PlayerRecord[], now: number): A
   };
 }
 
-/** `coinSeed`: a fresh random 32-bit integer: who starts (a tournament, a party game's turn order), a party game's timed-out picks, Sea Battle's fleets placed for a player whose time ran out. */
+/** How a host runs its rooms. */
+export interface RoomOptions {
+  /** A dev server only (never in production): playtests may choose a Snakes & Ladders die, so they reach their moments. */
+  loadedDice?: boolean;
+}
+
+/**
+ * `coinSeed`: a fresh random 32-bit integer: who starts (a tournament, a party game's turn order), a party game's
+ * timed-out picks or its dice, Sea Battle's fleets placed for a player whose time ran out.
+ */
 export function applyClientMessage(
   record: RoomRecord,
   id: PlayerId,
   msg: ClientMessage,
   now: number,
   coinSeed: number,
+  options: RoomOptions = {},
 ): RoomUpdate {
   const isHost = record.hostId === id;
   const picking = record.phase === "lobby" || record.phase === "finished";
@@ -238,7 +248,9 @@ export function applyClientMessage(
       if (record.party) {
         if (record.phase !== "playing") return { ok: false, error: "WRONG_PHASE" };
         const update: PartyUpdate =
-          msg.type === "move" ? playPartyMove(record.party, id, msg.move, now) : claimPartyTimeout(record.party, msg.matchId, now, coinSeed);
+          msg.type === "move"
+            ? playPartyMove(record.party, id, msg.move, now, coinSeed, options.loadedDice)
+            : claimPartyTimeout(record.party, msg.matchId, now, coinSeed);
         if (!update.ok) return update;
         next = withParty(record, update.party);
         break;
@@ -305,7 +317,7 @@ export function toRoomView(record: RoomRecord, now: number, viewer: PlayerId | n
     // A game's secrets (Sea Battle's fleets) go only to whoever they belong to.
     tournament: record.tournament && tournamentView(record.tournament, viewer),
     arena: record.arena,
-    // A party game's picks stay secret until everyone has picked.
+    // A party game's secrets (Dots Clash's picks) stay hidden until everyone has picked.
     party: record.party ? partyView(record.party) : null,
     serverNow: now,
   };

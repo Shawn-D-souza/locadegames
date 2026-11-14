@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
-import { Icon } from "../../components/Icon";
-import { playerStyle } from "../../utils/playerStyle";
+import { Icon } from "./Icon";
+import { playerStyle } from "../utils/playerStyle";
 
 /** yours: your pick or turn · theirs: someone else's turn · waiting: for the others' picks · win / lose / watch: how the game ended for you. */
 export type BannerTone = "yours" | "theirs" | "waiting" | "win" | "lose" | "watch";

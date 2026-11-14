@@ -20,6 +20,7 @@ import {
   toRoomView,
   viewsDiffer,
   type JoinRequest,
+  type RoomOptions,
 } from "./roomLogic";
 import type { RoomRecord } from "./roomRecord";
 import { TickerHub } from "./tickerHub";
@@ -40,6 +41,7 @@ export class RoomService {
     private readonly transport: RoomTransport,
     private readonly now: () => number,
     ticker: Ticker,
+    private readonly options: RoomOptions = {},
   ) {
     // The two kinds of real-time match share the host's one timer.
     const hub = new TickerHub(ticker);
@@ -97,7 +99,7 @@ export class RoomService {
       this.transport.sendTo(code, playerId, { type: "error", error: "BAD_MESSAGE" });
       return;
     }
-    const update = applyClientMessage(record, playerId, msg, this.now(), randomSeed());
+    const update = applyClientMessage(record, playerId, msg, this.now(), randomSeed(), this.options);
     if (!update.ok) {
       // Timeout claims race with moves and fast clocks; the client retries, so stay quiet.
       if (msg.type !== "timeout") this.transport.sendTo(code, playerId, { type: "error", error: update.error });

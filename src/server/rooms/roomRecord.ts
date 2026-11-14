@@ -15,7 +15,7 @@ export interface PlayerRecord {
   joinOrder: number;
   trophies: number;
   suggestion: GameId | null;
-  /** Games everyone plays together (Dots Clash) this player went first in, so the turn order is fair over the session. Missing in rooms made before it existed. */
+  /** Games everyone plays together (Dots Clash, Snakes & Ladders: one count for all of them) this player went first in, so the turn order is fair over the session. Missing in rooms made before it existed. */
   firsts?: number;
 }
 

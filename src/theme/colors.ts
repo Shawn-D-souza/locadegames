@@ -68,6 +68,15 @@ export const colors = {
   /** Sea Battle: smoke off a hit or a wreck, at its thickest (it fades out round its edge). */
   smoke: "#7D7A99",
 
+  /**
+   * Snakes & Ladders: every other square of the board (the rest are white), and its snakes: indigo (never a player
+   * color), so the players' pieces stand out on them, speckled in ink over a pale belly. Ladders are
+   * white, outlined in ink.
+   */
+  snakesSquare: "#ECEAF8",
+  snake: "#4E479F",
+  snakeBelly: "#D6D2F6",
+
   online: "#78C840",
   waiting: "#FFC02E",
   offline: "#8A94A6",

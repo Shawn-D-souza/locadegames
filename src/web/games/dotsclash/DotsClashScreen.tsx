@@ -19,8 +19,8 @@ import { ordinal } from "../../utils/arenaText";
 import { partyName, possessive } from "../../utils/partyText";
 import { playerStyle, quitStyle } from "../../utils/playerStyle";
 import { DotsBoard } from "./DotsBoard";
-import { TurnBanner } from "./TurnBanner";
-import { TurnStrip } from "./TurnStrip";
+import { TurnBanner } from "../../components/TurnBanner";
+import { TurnStrip } from "../../components/TurnStrip";
 import { useChainPlayback, type BoardMoment } from "./useChainPlayback";
 import { useDotsClashSounds } from "./useDotsClashSounds";
 
@@ -51,7 +51,7 @@ const LAYOUT_CLASSES = {
 const PLAIN_PAGE = { "--player-wash": "var(--color-board-page)" } as CSSProperties;
 
 interface DotsClashScreenProps {
-  party: Party;
+  party: Party<"dotsclash">;
   myId: PlayerId;
   clockOffsetMs: number;
   send(message: ClientMessage): void;
@@ -64,7 +64,7 @@ interface DotsClashScreenProps {
 }
 
 /** Who went out in the latest exit, as a short notice ("BEN IS OUT!", "ANA & BEN ARE OUT!"): with up to 8 players there's no list on screen to show it. */
-function exitNotice(party: Party, myId: PlayerId): string | null {
+function exitNotice(party: Party<"dotsclash">, myId: PlayerId): string | null {
   const { game } = party;
   if (game.exits === 0) return null;
   const gone = party.entrants.filter((e, seat) => game.outAt[seat] === game.exits && e.id !== myId);

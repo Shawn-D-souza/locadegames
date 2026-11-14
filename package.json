@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev:web": "vite",
-    "dev:server": "wrangler dev",
+    "dev:server": "wrangler dev --var LOADED_DICE:1",
     "build": "vite build",
     "preview:web": "vite preview",
     "typecheck": "tsc -b",

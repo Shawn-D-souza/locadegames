@@ -17,7 +17,7 @@ Needs Node.js 22 or newer.
 ```bash
 npm install
 cp .dev.vars.example .dev.vars   # local Worker settings (already gitignored)
-npm run dev:server               # Worker + Durable Object on http://localhost:8787
+npm run dev:server               # Worker + Durable Object on http://localhost:8787 (with loaded dice for playtests)
 npm run dev:web                  # web client on http://localhost:5173 (second terminal)
 ```
 

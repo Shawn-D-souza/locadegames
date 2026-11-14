@@ -224,8 +224,8 @@ describe("dots clash party", () => {
   it("plays moves, refuses outsiders, and claims expired picks or turns only after the deadline", () => {
     const party = startParty("dotsclash", players.slice(0, 2), 1000, 1);
     const first = party.entrants[0]!.id;
-    expect(playPartyMove(party, 7, 0, 1000)).toEqual({ ok: false, error: "NOT_IN_MATCH" });
-    const moved = playPartyMove(party, first, 3, 2000);
+    expect(playPartyMove(party, 7, 0, 1000, 0)).toEqual({ ok: false, error: "NOT_IN_MATCH" });
+    const moved = playPartyMove(party, first, 3, 2000, 0);
     if (!moved.ok) throw new Error(moved.error);
     // One pick changes nothing for the others: the picks' clock runs on.
     expect(moved.party.turnStartedAt).toBe(1000);
@@ -266,7 +266,7 @@ describe("dots clash party", () => {
     const [a, b] = p.entrants.map((e) => e.id);
     // Picks side by side, then a fills to 3 and bursts into b's cell: a chain of two waves.
     for (const [id, cell] of [[a, 0], [b, 1], [a, 0], [b, 1], [a, 0], [b, 1], [a, 0]] as const) {
-      const update = playPartyMove(p, id!, cell, 5_000);
+      const update = playPartyMove(p, id!, cell, 5_000, 0);
       if (!update.ok) throw new Error(update.error);
       p = update.party;
     }

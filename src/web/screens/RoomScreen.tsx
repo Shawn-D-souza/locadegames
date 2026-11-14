@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { isLiveGame } from "../../shared/games/catalog";
+import { isLiveGame, type PartyGameId } from "../../shared/games/catalog";
 import { CLOSE_CODES } from "../../shared/protocol/errors";
 import type { PlayerId } from "../../shared/rooms/types";
 import { currentRound, isLive, isLiveMatch, standings } from "../../shared/tournament/tournament";
@@ -18,6 +18,7 @@ import { useBefore } from "../hooks/useBefore";
 import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
 import { DotsClashScreen } from "../games/dotsclash/DotsClashScreen";
+import { SnakesLaddersScreen } from "../games/snakesladders/SnakesLaddersScreen";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
 import { MATCH_LOOKS } from "../games/matchLooks";
 import { loadTerritory } from "../games/territory/loadTerritory";
@@ -57,7 +58,10 @@ function myMatch(t: Tournament, myId: PlayerId): Match | undefined {
 const ARENA_QUIT_COST = "You'll be out of this match.";
 
 /** What quitting a game everyone plays together costs. */
-const PARTY_QUIT_COST = "You'll be out of this game. Your dots turn grey.";
+const PARTY_QUIT_COST: Record<PartyGameId, string> = {
+  dotsclash: "You'll be out of this game. Your dots turn grey.",
+  snakesladders: "You'll be out of this game.",
+};
 
 /** What quitting costs: one game with 2 players, the whole tournament with more. */
 const quitCost = (t: Tournament) => (t.entrants.length > 2 ? "You'll be out of the tournament." : "You'll lose this game.");
@@ -179,17 +183,8 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
     const p = room.party;
     // A finished game stays on screen for its ending (if you saw it live), then the results, then the room.
     if (!p.finished || (partySeenLive === p.startedAt && partyEndSeen !== p.startedAt)) {
-      content = (
-        <DotsClashScreen
-          party={p}
-          myId={playerId}
-          clockOffsetMs={clockOffsetMs}
-          send={send}
-          onQuit={askPartyQuit}
-          onLeave={requestLeave}
-          onContinue={() => setPartyEndSeen(p.startedAt)}
-        />
-      );
+      const on = { myId: playerId, clockOffsetMs, send, onQuit: askPartyQuit, onLeave: requestLeave, onContinue: () => setPartyEndSeen(p.startedAt) };
+      content = p.gameId === "dotsclash" ? <DotsClashScreen party={p} {...on} /> : <SnakesLaddersScreen party={p} {...on} />;
     } else if (leftResults !== p.startedAt) {
       content = (
         <ResultsScreen
@@ -387,7 +382,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
             </div>
           }
         >
-          <p className="text-center">{PARTY_QUIT_COST}</p>
+          <p className="text-center">{liveParty && PARTY_QUIT_COST[liveParty.gameId]}</p>
         </Modal>
       )}
       {confirmLeave && (running || inLiveArena || inLiveParty) && (
@@ -405,7 +400,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
             </div>
           }
         >
-          <p className="text-center">{running ? quitCost(running) : inLiveParty ? PARTY_QUIT_COST : ARENA_QUIT_COST}</p>
+          <p className="text-center">{running ? quitCost(running) : inLiveParty ? PARTY_QUIT_COST[liveParty.gameId] : ARENA_QUIT_COST}</p>
         </Modal>
       )}
       {status === "lost" && (

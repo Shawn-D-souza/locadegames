@@ -32,6 +32,17 @@ export const seaTiles = {
   lip: 0.9,
 } as const;
 
+/**
+ * Snakes & Ladders' board, as a share of its width (`cqw`, so a board drawn small keeps its look): the square numbers'
+ * type (never past the caption size, on a big screen) and how far they sit from the square's corner, and a pawn's
+ * width (a little smaller when several share a square).
+ */
+export const snakesBoard = {
+  number: 2.8,
+  numberInset: 0.9,
+  piece: 6.3,
+} as const;
+
 /** Named sizes; Tailwind classes use the names (`min-h-tap`, `max-w-content`, `size-mark-badge`). */
 export const layout = {
   /** Smallest tap target. */
@@ -76,6 +87,8 @@ export const layout = {
   seaSidePlacing: 320,
   /** Dots Clash in portrait: the board also fits the screen's height, less this (the players' row and the turn banner above it, the corner ✕ and margins). */
   partyReserve: 270,
+  /** Snakes & Ladders in portrait: the board fits the screen's height, less this (the players' row above it, the die and the turn bar under it, the corner ✕ and margins). */
+  snakesReserve: 300,
   /** Dots Clash's big boards (8×8 and up) in landscape: the column beside the board for the players' row and the banner. */
   partySide: 240,
   /** White disc holding a player's X or O on their match card. */

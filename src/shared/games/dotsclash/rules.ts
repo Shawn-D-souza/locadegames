@@ -1,4 +1,4 @@
-import type { MoveError, MoveResult } from "../types";
+import type { MoveError, MoveResult, PartyPlace } from "../types";
 import { neighbours } from "./board";
 import { boardSizeFor, DOTSCLASH_CONFIG } from "./config";
 import type { DotsClashState, DotsSeat } from "./types";
@@ -230,15 +230,8 @@ export function quitSeat(state: DotsClashState, seat: DotsSeat): DotsClashState 
   return state.phase === "pick" ? settlePicks(next) : state.turn === seat ? passTurn(next) : next;
 }
 
-export interface DotsPlace {
-  seat: DotsSeat;
-  /** 1 = winner. Players out on the same move share a place. */
-  place: number;
-  quit: boolean;
-}
-
 /** The final order: the last player standing, then everyone by how long they lasted (later out ranks higher). */
-export function finalPlaces(state: DotsClashState): DotsPlace[] {
+export function finalPlaces(state: DotsClashState): PartyPlace[] {
   const lasted = (seat: DotsSeat) => state.outAt[seat] ?? Infinity;
   const seats = state.quit.map((_, seat) => seat).sort((a, b) => lasted(b) - lasted(a) || a - b);
   return seats.map((seat) => ({

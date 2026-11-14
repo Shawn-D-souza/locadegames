@@ -1,6 +1,7 @@
 import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { HEADCRASH_CONFIG } from "./headcrash/config";
 import { SEABATTLE_CONFIG } from "./seabattle/config";
+import { SNAKESLADDERS_CONFIG } from "./snakesladders/config";
 import { TERRITORY_CONFIG } from "./territory/config";
 import { TICTACTOE_CONFIG } from "./tictactoe/config";
 import { ULTIMATE_CONFIG } from "./ultimate/config";
@@ -85,6 +86,13 @@ export const GAMES = [
     minPlayers: DOTSCLASH_CONFIG.minPlayers,
     format: "party",
     turnTimeMs: DOTSCLASH_CONFIG.turnTimeMs,
+  },
+  {
+    id: "snakesladders",
+    name: "Snakes & Ladders",
+    minPlayers: SNAKESLADDERS_CONFIG.minPlayers,
+    format: "party",
+    turnTimeMs: SNAKESLADDERS_CONFIG.turnTimeMs,
   },
 ] as const satisfies readonly GameInfo[];
 

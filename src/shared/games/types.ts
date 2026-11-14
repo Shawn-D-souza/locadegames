@@ -32,3 +32,44 @@ export interface MatchGame<State, Move> {
   /** What `viewer` (a seat, or null for anyone else) may see of a match still being played, when some of it is secret. */
   viewFor?(state: State, viewer: Seat | null): State;
 }
+
+/** A seat's place when a game everyone plays together ends. */
+export interface PartyPlace {
+  /** 0 … players - 1, in turn order. */
+  seat: number;
+  /** 1 = winner. Players out on the same move may share a place. */
+  place: number;
+  quit: boolean;
+}
+
+/**
+ * What the room needs from a turn-based game everyone plays together on one board (the party format: Dots Clash,
+ * Snakes & Ladders). Pure functions only, so client and server agree. Seats are in turn order.
+ */
+export interface PartyGame<State, Move> {
+  create(players: number): State;
+  /** Validates an untrusted move from the wire; null if malformed. `loadedDice`: a dev server lets playtests choose dice. */
+  parseMove(raw: unknown, loadedDice: boolean): Move | null;
+  /** `seed`: a fresh random number from the server for anything left to chance (a die), never known ahead. */
+  applyMove(state: State, seat: number, move: Move, seed: number): MoveResult<State>;
+  /** Whose turn it is, or null while everyone acts at once (Dots Clash's secret picks) and once over. */
+  turn(state: State): number | null;
+  /** Everyone acts at once (Dots Clash's secret picks): everyone claims the timeout. */
+  allAtOnce(state: State): boolean;
+  /** Tells one turn (or round of picks) from the next; a timeout claim names it. */
+  moves(state: State): number;
+  /** The turn (or picks) ran out: what the server plays. `seed`: a fresh random number. */
+  expire(state: State, seed: number): MoveResult<State>;
+  /** Still playing: not out, finished or quit (may quit). */
+  isIn(state: State, seat: number): boolean;
+  /** `seat` quit (✕ or left the room). */
+  quitSeat(state: State, seat: number): State;
+  over(state: State): boolean;
+  /** Who gets the room trophy once over (none if everyone quit). */
+  winners(state: State): number[];
+  finalPlaces(state: State): PartyPlace[];
+  /** How long the latest move takes to play out on screen: the next turn's clock starts after it. */
+  playOutMs(state: State): number;
+  /** The game as every phone may see it (Dots Clash: the secret picks hidden). */
+  view(state: State): State;
+}

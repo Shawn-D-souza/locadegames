@@ -10,6 +10,7 @@ import { decodeServerMessage, encodeClientMessage } from "../src/shared/games/te
 import { BUTTON_RIGHT, HEADCRASH_CONFIG } from "../src/shared/games/headcrash/config";
 import { PHASE } from "../src/shared/games/headcrash/types";
 import { HIDDEN_PICK } from "../src/shared/games/dotsclash/rules";
+import type { Party } from "../src/shared/party/types";
 import { decodeServerMessage as decodeDuelMessage, encodeClientMessage as encodeDuelMessage, type HeadCrashClientMessage } from "../src/shared/games/headcrash/wire";
 import { TOURNAMENT_CONFIG } from "../src/shared/tournament/config";
 import { FakeTicker } from "./support/fakeTicker";
@@ -455,7 +456,7 @@ describe("RoomService", () => {
   });
 
   describe("a game everyone plays together (Dots Clash)", () => {
-    const party = () => store.get(CODE)!.party!;
+    const party = () => store.get(CODE)!.party! as Party<"dotsclash">;
     const conn = (conns: FakeConnection[], id: number) => conns.find((c) => c.playerId === id)!;
 
     it("puts everyone on one board, secret picks then turns, and refuses moves out of turn", () => {
@@ -470,12 +471,12 @@ describe("RoomService", () => {
       send(second!, { type: "move", move: 5 });
       expect(second!.received.at(-1)).toEqual({ type: "error", error: "NOT_YOUR_TURN" });
       send(first!, { type: "move", move: 0 });
-      const seen = lastRoom(third!)!.party!.game;
+      const seen = (lastRoom(third!)!.party as Party<"dotsclash">).game;
       expect(seen.picks).toEqual([HIDDEN_PICK, HIDDEN_PICK, null]);
       expect(seen.owners.every((owner) => owner === null)).toBe(true);
       send(third!, { type: "move", move: 40 });
       expect(party().game.phase).toBe("play");
-      expect(lastRoom(third!)!.party!.game.owners[24]).toBe(1);
+      expect((lastRoom(third!)!.party as Party<"dotsclash">).game.owners[24]).toBe(1);
       send(second!, { type: "move", move: 24 });
       expect(second!.received.at(-1)).toEqual({ type: "error", error: "NOT_YOUR_TURN" });
       send(first!, { type: "move", move: 0 });
