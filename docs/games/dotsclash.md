@@ -107,6 +107,7 @@ Owner direction 2026-11-12, from reference pictures (as a direction, not to copy
 | `src/web/components/PartyRankingTable.tsx`, `src/web/utils/partyText.ts` | The results' ranking for a party game; names, `ANA'S` |
 | `tests/dotsclash.test.ts` | Board sizes, wrapping, secret picks (hidden, revealed together, clashes pick again, auto picks, a quit while picking), bursts across edges, waves, knockouts and shared places, chains that can't settle, auto moves, quitters, fair turn order, timeouts, results |
 | `scripts/playtest/dotsclash.mjs` | Playtest: secret picks out of turn order (checked hidden on another phone), the reveal, a chain knocking a player out, a quit, each phone's ending, results, back to the room |
+| `scripts/screenshots/dotsclash.mjs` | Screenshots: picking starts, your turn, another's turn, knocked out, quit popup, the winner's ending, another's place, results |
 
 ## Ideas for later
 

@@ -8,4 +8,4 @@ dist/
 .DS_Store
 
 # npm run screenshots output (local reference, replaced on every run)
-screenshots/
+/screenshots/

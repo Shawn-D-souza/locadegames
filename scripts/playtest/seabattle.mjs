@@ -16,7 +16,7 @@ async function cellCenter(page, name) {
 }
 
 /** Drags the first ship of `length` still in the dock, by its first cell, onto cell `name`. */
-async function dock(page, length, name) {
+export async function dock(page, length, name) {
   const ship = page.getByRole("button", { name: `Ship of ${length}: drag onto the board` }).first();
   const box = await ship.boundingBox();
   await page.mouse.move(box.x + box.width / length / 2, box.y + box.height / 2);

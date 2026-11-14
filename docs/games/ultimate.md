@@ -81,6 +81,7 @@ Like tic-tac-toe per move: each move is one WebSocket message (DO requests bill 
 | `src/web/games/ultimate/haptics.ts` | Its feels: `ultimateMarkPlaced`, `ultimateOpponentMoved`, `ultimateBoardClaimed` |
 | `tests/ultimate.test.ts` | Rules (sending, closed boards, full boards, wins, draws, errors, auto moves, 60 whole games stay legal), mark takes, move cues |
 | `scripts/playtest/ultimate.mjs` | Playtest: 2 players; a 17-move game where each side wins a small board and X wins the diagonal; each phone's result, sounds and haptics, the results, back to the room |
+| `scripts/screenshots/ultimate.mjs` | Screenshots: mid-game, a small board won by each side, on the phone sent to one small board |
 
 ## Ideas for later
 

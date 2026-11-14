@@ -43,6 +43,7 @@ What you feel and when (on the shared levels; see DESIGN.md, Haptics), and what 
 | `src/web/games/<game>/sounds.ts` | Its sounds, named for what they're for (add them to `GAME_SOUNDS` and `SOUNDS` in `src/web/sound/soundBook.ts`) |
 | `src/web/games/<game>/haptics.ts` | Its feels, named for what they're for (add them to `HAPTICS` in `src/web/haptics/hapticBook.ts`, and a row in `soundHaptics.ts` per sound that's felt) |
 | `scripts/playtest/<game>.mjs` | Playtest: its big moments end to end (add it to `GAMES` in `scripts/playtest.mjs`) |
+| `scripts/screenshots/<game>.mjs` | Screenshots: only this game's own screens, one photo per look (add it to `PARTS` in `scripts/screenshots.mjs`) |
 
 ## Ideas for later
 

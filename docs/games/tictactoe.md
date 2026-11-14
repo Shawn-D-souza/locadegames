@@ -50,3 +50,4 @@ Format: **tournament** (Swiss-style, 1v1 matches; see the tournament rules in [`
 | `src/web/games/tictactoe/haptics.ts` | Its feels: `ticTacToeMarkPlaced`, `ticTacToeOpponentMoved` |
 | `tests/tictactoe.test.ts` | Rules: moves, wins, draws, errors |
 | `scripts/playtest/tictactoe.mjs` | Playtest: 2 players; start, a match to a win, each phone's result, sounds and haptics, the results, back to the room |
+| `scripts/screenshots/tictactoe.mjs` | Screenshots: a match being played, and the win, loss and draw endings (from `?preview=celebrations`); the tournament around it is the platform's |

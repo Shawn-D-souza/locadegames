@@ -48,8 +48,8 @@ export default defineConfig(
     languageOptions: { globals: globals.node },
   },
   {
-    // Playtests also hand code to the browser page (`page.evaluate`), which uses `window`.
-    files: ["scripts/playtest/**/*.mjs"],
+    // Playtests and screenshots also hand code to the browser page (`page.evaluate`), which uses `window`.
+    files: ["scripts/playtest/**/*.mjs", "scripts/screenshots/**/*.mjs"],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 );

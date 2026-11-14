@@ -142,7 +142,7 @@ Everything is read from the game loop by `TerritoryAudio`, on what the client kn
 | `tests/territoryNetcode.test.ts` | Replica rebuilds the server state exactly, gap detection, prediction lands on the server's spot (steering and head-on blocking), predicted capture equals the server's |
 | `src/web/preview/territory/` | Dev-only `?preview=territory`: `TerritoryPreview` (WIN / LOSE / WATCH / KILL, replay), `TerritoryStage` (one moment on the real renderer and HUD pieces), `territoryScene.ts` (a scripted 3-player match made with the shared simulation, as a frame and a finished arena) |
 | `scripts/playtest/territory.mjs` | Playtest: 3 players; countdown, a loop becoming land, a cut (stamp, notice, out card), a quit, the winner's ending, the results |
-| `scripts/screenshots.mjs` | Shots 25–33: countdown, trail, captured, quit popup, out, watching, ended, results |
+| `scripts/screenshots/territory.mjs` | Screenshots: countdown, trail, the loop become land, a cut (the cutter's notice, the out card), watching, quit popup, the ending, results (heads steered through `window.territory`) |
 
 ## Ideas for later
 
