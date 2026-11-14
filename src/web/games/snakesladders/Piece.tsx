@@ -1,7 +1,7 @@
 import { clsx } from "clsx";
 import type { CSSProperties } from "react";
 import type { Point } from "./geometry";
-import { Pawn } from "./Pawn";
+import { Pawn } from "../../components/Pawn";
 
 interface PieceProps {
   /** Where its middle is, in board units (the board is 100 across). */

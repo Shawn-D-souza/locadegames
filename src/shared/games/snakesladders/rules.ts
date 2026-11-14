@@ -1,3 +1,4 @@
+import { loadedDie } from "../dice";
 import type { MoveError, MoveResult, PartyPlace } from "../types";
 import { jumpFrom } from "./board";
 import { SNAKESLADDERS_CONFIG } from "./config";
@@ -42,11 +43,6 @@ export function isIn(state: SnakesLaddersState, seat: SnakesSeat): boolean {
   return !hasFinished(state, seat) && !hasQuit(state, seat);
 }
 
-/** A die from the server's random number: 1–6. */
-export function dieFrom(seed: number): number {
-  return 1 + ((seed >>> 0) % 6);
-}
-
 /** A roll as the wire carries it: `"roll"`; or, only on a dev server with loaded dice (playtests), `{ die }`. */
 export interface RollMove {
   /** The die asked for (loaded dice), or null for the server's own random roll. */
@@ -56,9 +52,8 @@ export interface RollMove {
 /** Validates an untrusted move from the wire. `loadedDice`: a dev server that lets playtests choose the die. */
 export function parseMove(raw: unknown, loadedDice = false): RollMove | null {
   if (raw === "roll") return { die: null };
-  if (!loadedDice || typeof raw !== "object" || raw === null || !("die" in raw)) return null;
-  const die = raw.die;
-  return typeof die === "number" && Number.isInteger(die) && die >= 1 && die <= 6 ? { die } : null;
+  const die = loadedDie(raw, loadedDice);
+  return die === null ? null : { die };
 }
 
 /** What a die does for a piece on `from` in a turn that began on `turnFrom` with `sixes` 6s rolled before it. */

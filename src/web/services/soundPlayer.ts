@@ -86,8 +86,8 @@ let waiting: { urls: string[]; run: () => void; askedAt: number }[] = [];
 
 const fileOf = (name: SoundName, take: number) => SOUND_FILES[name].urls[take]!;
 const takesOf = (name: SoundName) => SOUND_FILES[name].urls.length;
-const PLATFORM_FILES = Object.values(SOUND_FILES).flatMap((entry) => (entry.game ? [] : entry.urls));
-const gameFiles = (game: GameId) => Object.values(SOUND_FILES).flatMap((entry) => (entry.game === game ? entry.urls : []));
+const PLATFORM_FILES = Object.values(SOUND_FILES).flatMap((entry) => (entry.games ? [] : entry.urls));
+const gameFiles = (game: GameId) => Object.values(SOUND_FILES).flatMap((entry) => (entry.games?.includes(game) ? entry.urls : []));
 
 /**
  * The way out to the speaker: quiet sounds pass untouched; when several overlap, the peaks get rounded off instead

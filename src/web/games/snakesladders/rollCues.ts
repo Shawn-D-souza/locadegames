@@ -3,7 +3,7 @@ import type { SnakesRoll } from "../../../shared/games/snakesladders/types";
 import type { HapticStep } from "../../haptics/definition";
 import type { HapticName } from "../../haptics/hapticBook";
 import type { SoundStep } from "../../sound/soundBook";
-import { DIE_HITS } from "./dieMotion";
+import { DIE_HITS } from "../dice/dieMotion";
 
 /** Someone else's roll sits back a little; watching, more. */
 const OTHERS_VOLUME = 0.8;
@@ -27,12 +27,12 @@ export function rollCues(roll: SnakesRoll, roller: Roller, playerId: number): { 
   const dieLands = DIE_HITS.at(-1)!.at * dieMs;
   const moves = dieMs + settleMs;
   const volume = roller === "mine" ? 1 : roller === "theirs" ? OTHERS_VOLUME : WATCHING_VOLUME;
-  const sounds: SoundStep[] = [{ sound: "snakesLaddersDieRoll", at: 0, volume }];
-  const haptics: HapticStep<HapticName>[] = [{ haptic: "snakesLaddersDieLands", at: dieLands }];
+  const sounds: SoundStep[] = [{ sound: "dieRoll", at: 0, volume }];
+  const haptics: HapticStep<HapticName>[] = [{ haptic: "dieLands", at: dieLands }];
   const hopsEnd = moves + (roll.landed - roll.from) * hopMs;
   if (roll.again) {
-    sounds.push({ sound: "snakesLaddersSix", at: dieLands + SIX_AFTER_MS, volume });
-    haptics.push({ haptic: "snakesLaddersSix", at: dieLands + SIX_AFTER_MS });
+    sounds.push({ sound: "dieSix", at: dieLands + SIX_AFTER_MS, volume });
+    haptics.push({ haptic: "dieSix", at: dieLands + SIX_AFTER_MS });
   }
   for (let hop = 0; hop < roll.landed - roll.from; hop++) {
     sounds.push({ sound: "snakesLaddersHop", at: moves + (hop + HOP_LANDS) * hopMs, variant: Math.min(hop, 5), volume });

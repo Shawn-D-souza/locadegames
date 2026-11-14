@@ -1,4 +1,4 @@
-import { SNAKESLADDERS_CONFIG } from "../../../shared/games/snakesladders/config";
+import { DICE_CONFIG } from "../../../shared/games/dice";
 
 /**
  * How the die comes to rest, shared by its picture and its sound so every clack lands on a landing. Like a real die
@@ -22,7 +22,7 @@ export const DIE_FLIPS = DIE_HITS.reduce((sum, hit) => sum + hit.quarters, 0);
 
 /** Where the die is `ms` into its roll: how high (share of its size), how far it still has to turn (degrees), and how many faces it has flicked through. */
 export function dieAt(ms: number): { lift: number; turn: number; flips: number } {
-  const p = Math.min(1, ms / SNAKESLADDERS_CONFIG.dieMs);
+  const p = Math.min(1, ms / DICE_CONFIG.dieMs);
   let hit = 0;
   while (hit + 1 < DIE_HITS.length && DIE_HITS[hit + 1]!.at <= p) hit++;
   const from = DIE_HITS[hit]!;

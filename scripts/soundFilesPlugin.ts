@@ -66,8 +66,9 @@ function checkHeader(bytes: Uint8Array, SOUND_SAMPLE_RATE: number) {
   if (!mpeg1Layer3 || !at32kHz) throw new Error(`Sound files: the MP3 encoder didn't keep ${SOUND_SAMPLE_RATE} Hz; raise SOUND_FILE.bitrateKbps.`);
 }
 
-function gameOf({ GAME_SOUNDS }: Source, name: SoundName): string | undefined {
-  return Object.entries(GAME_SOUNDS).find(([, sounds]) => name in sounds)?.[0];
+/** The games a sound belongs to (a shared die's: more than one); none for the platform's. */
+function gamesOf({ GAME_SOUNDS }: Source, name: SoundName): string[] {
+  return Object.entries(GAME_SOUNDS).flatMap(([game, sounds]) => (name in sounds ? [game] : []));
 }
 
 async function makeFiles(root: string): Promise<SoundFile[]> {
@@ -81,7 +82,7 @@ async function makeFiles(root: string): Promise<SoundFile[]> {
       const bytes = encodeMp3(source, ...renderSound(name, definition, take));
       const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 8);
       const entry = soundDefinition(name);
-      const game = gameOf(source, name);
+      const games = gamesOf(source, name);
       files.push({
         name,
         path: `sounds/${name}${takes > 1 ? `-${take}` : ""}-${hash}.mp3`,
@@ -89,7 +90,7 @@ async function makeFiles(root: string): Promise<SoundFile[]> {
         about: {
           ...(entry.cooldownMs !== undefined && { cooldownMs: entry.cooldownMs }),
           ...(entry.loopSeconds !== undefined && { loopSeconds: entry.loopSeconds }),
-          ...(game && { game }),
+          ...(games.length > 0 && { games }),
         },
       });
     }

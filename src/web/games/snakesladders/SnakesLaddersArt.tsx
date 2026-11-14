@@ -3,7 +3,7 @@ import { strokes } from "../../../theme";
 import { playerStyle } from "../../utils/playerStyle";
 import { Ladder, Snake } from "./BoardArt";
 import { spineBetween, SQUARE } from "./geometry";
-import { Pawn } from "./Pawn";
+import { Pawn } from "../../components/Pawn";
 
 /**
  * The game tile: a 3 × 3 corner of the board, everything at the board's own scale, so each thing sits in its

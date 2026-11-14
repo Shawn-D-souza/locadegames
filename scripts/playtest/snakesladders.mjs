@@ -51,19 +51,19 @@ export default async function snakesladders(session) {
     await roll(order[0], 3);
     for (const page of players) await standsOn(page, names[0], 23);
     await rollButton(order[1]).waitFor();
-    await heard(order[0], "snakesLaddersDieRoll", "snakesLaddersHop", "snakesLaddersLadder");
-    await felt(order[0], "snakesLaddersDieLands", "snakesLaddersLadder");
+    await heard(order[0], "dieRoll", "snakesLaddersHop", "snakesLaddersLadder");
+    await felt(order[0], "dieLands", "snakesLaddersLadder");
     await heard(order[2], "snakesLaddersLadder");
   });
   await session.step("a 6 rolls again; three 6s in a row put the piece back off the board", async () => {
     await roll(order[1], 6);
     await sees(order[1], /roll again!/i);
-    await heard(order[1], "snakesLaddersSix");
+    await heard(order[1], "dieSix");
     await roll(order[1], 6);
     await roll(order[1], 6);
     await sees(order[1], /three 6s! back you go/i);
     await order[0].getByRole("img", { name: new RegExp(`${names[1]}: not on the board yet`) }).waitFor({ timeout: 8_000 });
-    await felt(order[1], "snakesLaddersSix", "snakesLaddersThreeSixes");
+    await felt(order[1], "dieSix", "snakesLaddersThreeSixes");
   });
   await session.step("a 2 onto the snake at 24 slides the piece down to 8", async () => {
     for (const die of [6, 6, 4]) await roll(order[2], die); // 16

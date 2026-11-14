@@ -37,8 +37,8 @@ The classic race up a 10 × 10 board: roll the die, climb the ladders, slide dow
 ## How it works
 
 - **Format `party`**, like Dots Clash: the room keeps a `Party` with the game's whole state (`SnakesLaddersState`), one JSON message per roll (`"roll"`), no server timers (whoever's turn it is claims a timeout once it runs out, everyone does if they're away), and the room sleeps between rolls. The game plugs into the party format through `PartyGame` (`game.ts`; registered in `PARTY_GAMES`).
-- **Dice:** the server rolls each die from a fresh random number (`crypto.getRandomValues`, the `seed` every move and timeout gets), never from anything a phone could know ahead. The rules are pure given the die (`applyMove(state, seat, die)`), so they are tested exactly.
-- **Loaded dice, development only:** `npm run dev:server` sets `LOADED_DICE=1`, and then a move may name its die (`{ die: 6 }`), so playtests reach a ladder, a snake or the finish at once. In development the client sends one only if a playtest lined it up (`window.loadedDice`); production builds always send `"roll"`, and the production server (no `LOADED_DICE`) refuses anything else.
+- **Dice:** the shared die (`src/shared/games/dice.ts`, also Ludo's): the server rolls each die from a fresh random number (`crypto.getRandomValues`, the `seed` every move and timeout gets), never from anything a phone could know ahead. The rules are pure given the die (`applyMove(state, seat, die)`), so they are tested exactly.
+- **Loaded dice, development only:** `npm run dev:server` sets `LOADED_DICE=1`, and then a move may name its die (`{ die: 6 }`), so playtests reach a ladder, a snake or the finish at once. In development the client sends one only if a playtest lined it up (`window.loadedDice`, `src/web/games/dice/loadedDice.ts`); production builds always send `"roll"`, and the production server (no `LOADED_DICE`) refuses anything else.
 - **State:** each seat's square (0 off the board, 100 home), whose turn, the roll count (`moves`: a timeout names it), 6s in a row this turn and the square it began on, who got home in what order, who quit in what order, and the last roll (`SnakesRoll`: the die, from, where counting ended, where it rests, what kind: move, ladder, snake, stuck, three 6s; whether it rolls again; whether it got home).
 - **Client:** every phone plays each roll out from the moment it arrives (`useRollPlayback`, frame by frame), the moving piece placed by `pieceAt(roll, ms)` from the same geometry the board is drawn with (it slides down exactly the snake you see). Until a roll has played out, the turn stays with whoever rolled and what it did (who got home, the ending) waits. A jump (reconnecting) just shows the board.
 
@@ -65,9 +65,9 @@ Built from the shared language: ink on paper, players as colors, one coral actio
 
 `src/web/games/snakesladders/sounds.ts`, a board game on a desk (my calls; the platform's sounds as they are):
 
-- **The die** (anyone's roll; owner direction 2026-11-14: like a real die, and matching the game and the platform; even knocks, a glassy clack, a drum-like thud and thin "plastic spoon" clicks weren't liked, and a die made from real physics didn't match the game): from the toy box, a small wooden toy die tumbling on the same hollow board the pawns hop on. A crisp wooden clack (`woodTap`, untuned and quickly damped, so it never rings) with the board's knock under it on every landing you see (the throw's corner and face, then each tumble over an edge), the same clack every time, only softer, then two tiny ones as it rocks to rest (`snakesLaddersDieRoll`, 3 takes). The small, crisp wooden die is the owner's pick (2026-11-14) of three tried on a preview page (a chunkier die, and one with a note as its face shows, were the others).
+- **The die** (anyone's roll; the shared one, `dice/sounds.ts`, also Ludo's; owner direction 2026-11-14: like a real die, and matching the game and the platform; even knocks, a glassy clack, a drum-like thud and thin "plastic spoon" clicks weren't liked, and a die made from real physics didn't match the game): from the toy box, a small wooden toy die tumbling on the same hollow board the pawns hop on. A crisp wooden clack (`woodTap`, untuned and quickly damped, so it never rings) with the board's knock under it on every landing you see (the throw's corner and face, then each tumble over an edge), the same clack every time, only softer, then two tiny ones as it rocks to rest (`dieRoll`, 3 takes). The small, crisp wooden die is the owner's pick (2026-11-14) of three tried on a preview page (a chunkier die, and one with a note as its face shows, were the others).
 - **Each hop** (owner direction: wooden, to match the die): the pawn's wooden knock as it lands, tuned a step up the scale each square of the roll, with the hollow board soft under it (`snakesLaddersHop`).
-- **A 6:** two bright tines, the second higher: roll again (`snakesLaddersSix`).
+- **A 6:** two bright tines, the second higher: roll again (`dieSix`, the shared die's).
 - **A ladder:** a quick run of mallets up the scale, one per rung (`snakesLaddersLadder`). **A snake:** mallets falling down the scale, quicker as it goes, then a low bubbly plop at the tail (`snakesLaddersSnake`).
 - **Too big a roll:** two dull, low knocks (`snakesLaddersStuck`). **Three 6s:** a heavy blow, two notes falling away (`snakesLaddersThreeSixes`).
 - **Home:** a quick run up to the player's own note with a ring above it (`snakesLaddersHome`, take = their color).
@@ -78,7 +78,7 @@ Built from the shared language: ink on paper, players as colors, one coral actio
 
 `src/web/games/snakesladders/haptics.ts`. Only **your own roll** is felt (others' rolls and every hop are not: nothing constant):
 
-- **Your die comes to rest:** `medium`. **A 6:** two `light`.
+- **Your die comes to rest:** `medium`. **A 6:** two `light` (the shared die's: `dieLands`, `dieSix`).
 - **Your ladder:** `light` then `medium`. **Your snake:** `heavy`, then a late `light`. **Your three 6s:** the same.
 - **You get home:** `light`, `medium`, `heavy`.
 - **Your roll comes round:** `light` (not again after a 6: that one is felt with the 6).
@@ -91,18 +91,17 @@ Built from the shared language: ink on paper, players as colors, one coral actio
 | `src/shared/games/snakesladders/config.ts` | Numbers above, `rollMs` (how long a roll plays out) |
 | `src/shared/games/snakesladders/types.ts` | `SnakesLaddersState`, `SnakesRoll`, `RollKind`, `SnakesSeat` |
 | `src/shared/games/snakesladders/board.ts` | The board: `LADDERS`, `SNAKES`, `jumpFrom`, `squareCell` (a square's column and row) |
-| `src/shared/games/snakesladders/rules.ts` | Pure rules: `createGame`, `applyMove` (a die), `rollFrom` (what a die does), `dieFrom` (the server's number → 1–6), `parseMove` (`"roll"`, or `{ die }` on a dev server), `quitSeat`, `finalPlaces`, `isIn`, `hasQuit`, `hasFinished` |
+| `src/shared/games/snakesladders/rules.ts` | Pure rules: `createGame`, `applyMove` (a die), `rollFrom` (what a die does), `parseMove` (`"roll"`, or `{ die }` on a dev server), `quitSeat`, `finalPlaces`, `isIn`, `hasQuit`, `hasFinished` |
 | `src/shared/games/snakesladders/game.ts` | Plugged into the party format (`PartyGame`): the die from the server's number, a timeout rolls |
 | `src/web/games/snakesladders/SnakesLaddersScreen.tsx` | The game screen: players' row, board, roll bar, notices, ✕, ending |
-| `src/web/games/snakesladders/SnakesBoard.tsx`, `BoardArt.tsx`, `Piece.tsx`, `Pawn.tsx` | The board (squares, numbers (never past the caption size), crowned 100, pawns huddling per square), its ladders and snakes (SVG, drawn once), a piece on the board (squashing onto its base as it lands), the pawn itself (also in the tile art) |
+| `src/web/games/snakesladders/SnakesBoard.tsx`, `BoardArt.tsx`, `Piece.tsx` | The board (squares, numbers (never past the caption size), crowned 100, pawns huddling per square), its ladders and snakes (SVG, drawn once), a piece on the board (squashing onto its base as it lands; the pawn itself is the shared `components/Pawn.tsx`, also in the tile art) |
 | `src/web/games/snakesladders/geometry.ts` | Board units: square centers, a snake's swaying spine, body (slim neck, long tail), a ladder's rails and rungs, where a rolled piece is at any moment and how squashed (`pieceAt`), pieces sharing a square |
 | `src/web/games/snakesladders/snakeSkin.ts` | The snakes' speckled skin (`snakeSkin`: the belly and the specks, in board units) |
-| `src/web/games/snakesladders/RollBar.tsx`, `Die.tsx`, `dieMotion.ts` | Under the board: the die and ROLL! or whose turn; the die (tumbling to rest, then the face rolled); how it lands and tumbles (`DIE_HITS`, `dieAt`, `DIE_FLIPS`: shared by the picture and the sound) |
 | `src/web/games/snakesladders/useRollPlayback.ts` | Plays each roll out frame by frame from when it arrives |
 | `src/web/games/snakesladders/rollCues.ts`, `useSnakesLaddersSounds.ts` | Which sound and feel plays when in a roll (pure); playing them, your turn, the last seconds, the ending |
-| `src/web/games/snakesladders/loadedDice.ts` | Development only: the die a playtest lined up (`window.loadedDice`) |
 | `src/web/games/snakesladders/SnakesLaddersArt.tsx` | Tile art |
-| `src/web/games/snakesladders/sounds.ts` | Its sounds (in `GAME_SOUNDS` and `SOUNDS`, `soundBook.ts`) |
+| `src/web/games/snakesladders/sounds.ts` | Its sounds (in `GAME_SOUNDS` with the shared die's, and `SOUNDS`, `soundBook.ts`) |
+| `src/shared/games/dice.ts`, `src/web/games/dice/` | The die, shared with Ludo: its timings and the server's roll (`DICE_CONFIG`, `dieFrom`, `loadedDie`); the roll bar under the board (`RollBar.tsx`), the die (`Die.tsx`), how it lands and tumbles (`dieMotion.ts`: `DIE_HITS`, shared by the picture and the sound), loaded dice for playtests (`loadedDice.ts`), its sounds and feels (`sounds.ts`, `haptics.ts`) |
 | `src/web/games/snakesladders/haptics.ts` | Its feels (in `HAPTICS`, `hapticBook.ts`; none in `soundHaptics.ts`: only your own roll is felt, from `rollCues`) |
 | `tests/snakesladders.test.ts` | The board (winding, no snake or ladder ending where another starts), first roll on, ladders, snakes, sharing a square, the exact finish, rolling again, three 6s, playing on to all but one, quits and places, parsing (loaded dice only on a dev server), roll timings, the party (server dice, clock after a roll, timeout rolls, champion and ranking), cue timings |
 | `scripts/playtest/snakesladders.mjs` | Playtest (loaded dice): a ladder, rolling again, three 6s, a snake, too big a roll, the first home while the game goes on, a quit ending it, each phone's ending, results, back to the room |

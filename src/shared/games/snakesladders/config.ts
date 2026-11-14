@@ -1,3 +1,4 @@
+import { DICE_CONFIG } from "../dice";
 import type { SnakesRoll } from "./types";
 
 /** Gameplay numbers for Snakes & Ladders. */
@@ -16,8 +17,7 @@ export const SNAKESLADDERS_CONFIG = {
    * a beat with its face showing, then the piece hops square by square, then climbs a ladder or slides down a snake.
    * The next roll's clock starts once it has played out, so nobody's time goes on watching it.
    */
-  dieMs: 1_050,
-  settleMs: 320,
+  ...DICE_CONFIG,
   hopMs: 290,
   climbMs: 1_150,
   slideMs: 1_600,

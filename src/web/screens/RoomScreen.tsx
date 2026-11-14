@@ -18,6 +18,7 @@ import { useBefore } from "../hooks/useBefore";
 import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
 import { DotsClashScreen } from "../games/dotsclash/DotsClashScreen";
+import { LudoScreen } from "../games/ludo/LudoScreen";
 import { SnakesLaddersScreen } from "../games/snakesladders/SnakesLaddersScreen";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
 import { MATCH_LOOKS } from "../games/matchLooks";
@@ -61,6 +62,7 @@ const ARENA_QUIT_COST = "You'll be out of this match.";
 const PARTY_QUIT_COST: Record<PartyGameId, string> = {
   dotsclash: "You'll be out of this game. Your dots turn grey.",
   snakesladders: "You'll be out of this game.",
+  ludo: "You'll be out of this game. Your pawns leave the board.",
 };
 
 /** What quitting costs: one game with 2 players, the whole tournament with more. */
@@ -184,7 +186,14 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
     // A finished game stays on screen for its ending (if you saw it live), then the results, then the room.
     if (!p.finished || (partySeenLive === p.startedAt && partyEndSeen !== p.startedAt)) {
       const on = { myId: playerId, clockOffsetMs, send, onQuit: askPartyQuit, onLeave: requestLeave, onContinue: () => setPartyEndSeen(p.startedAt) };
-      content = p.gameId === "dotsclash" ? <DotsClashScreen party={p} {...on} /> : <SnakesLaddersScreen party={p} {...on} />;
+      content =
+        p.gameId === "dotsclash" ? (
+          <DotsClashScreen party={p} {...on} />
+        ) : p.gameId === "snakesladders" ? (
+          <SnakesLaddersScreen party={p} {...on} />
+        ) : (
+          <LudoScreen party={p} {...on} />
+        );
     } else if (leftResults !== p.startedAt) {
       content = (
         <ResultsScreen

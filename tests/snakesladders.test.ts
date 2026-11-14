@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { LADDERS, SNAKES, jumpFrom, squareCell } from "../src/shared/games/snakesladders/board";
 import { SNAKESLADDERS_CONFIG, rollMs } from "../src/shared/games/snakesladders/config";
-import { applyMove, createGame, dieFrom, finalPlaces, isIn, parseMove, quitSeat } from "../src/shared/games/snakesladders/rules";
+import { dieFrom } from "../src/shared/games/dice";
+import { applyMove, createGame, finalPlaces, isIn, parseMove, quitSeat } from "../src/shared/games/snakesladders/rules";
 import type { SnakesLaddersState } from "../src/shared/games/snakesladders/types";
 import { claimPartyTimeout, partyDeadline, playPartyMove, quitParty, startParty } from "../src/shared/party/party";
 import { rollCues } from "../src/web/games/snakesladders/rollCues";
@@ -218,13 +219,13 @@ describe("snakes & ladders cues", () => {
       home: rollCues(home, "watching", 2).sounds.at(-1),
     }).toEqual({
       sounds: [
-        ["snakesLaddersDieRoll", 0],
+        ["dieRoll", 0],
         ["snakesLaddersHop", dieMs + 0.78 * hopMs],
         ["snakesLaddersHop", dieMs + 1.78 * hopMs],
         ["snakesLaddersHop", dieMs + 2.78 * hopMs],
         ["snakesLaddersLadder", dieMs + 3 * hopMs],
       ],
-      felt: ["snakesLaddersDieLands", "snakesLaddersLadder"],
+      felt: ["dieLands", "snakesLaddersLadder"],
       theirs: [],
       home: { sound: "snakesLaddersHome", at: rollMs(home), variant: 2, volume: 0.65 },
     });

@@ -28,8 +28,8 @@ export interface SoundFileEntry {
   cooldownMs?: number;
   /** A loop of this many seconds (from the sound's start) instead of a one-shot. */
   loopSeconds?: number;
-  /** Which game it belongs to: fetched when that game starts. Left out: the platform's, fetched on every visit. */
-  game?: string;
+  /** Which games it belongs to (a shared die: more than one): fetched when one of them starts. Left out: the platform's, fetched on every visit. */
+  games?: string[];
 }
 
 /** Where a decoded file's sound starts (seconds), from its first channel at the rate it was decoded to. */

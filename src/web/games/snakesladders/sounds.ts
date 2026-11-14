@@ -1,28 +1,11 @@
 import { SNAKESLADDERS_CONFIG } from "../../../shared/games/snakesladders/config";
 import { defineSounds } from "../../sound/definition";
 import { bubble, mallet, thump, tine, woodTap } from "../../sound/kit";
-import { DIE_HITS } from "./dieMotion";
+import { DICE_BOARD_HZ } from "../dice/sounds";
 import { ARRIVE } from "./geometry";
 import { hz, PLAYER_NOTES, scaleStep, type ScaleNote } from "../../sound/pitch";
 
-/** The die's clack: a small, hard wooden toy die (owner's pick 2026-11-14, of three on a preview page). Untuned and quickly damped, so it never rings like glass. */
-const DIE_CLACK = { hz: 1_150, decay: 0.012, hardness: 0.75 } as const;
-/** How loud the board is under each clack. */
-const DIE_BOARD = 0.5;
-/** How much softer each landing (`DIE_HITS`) is than the one before: only softer, never a different sound. */
-const HIT_FADE = 0.1;
-/** The throw's first landing is a corner, then the face: the second this long after (s), this hard. */
-const FLAT = { after: 0.011, force: 0.55 } as const;
-/** Each clack is a hair higher or lower (a share), as a die lands on different faces. */
-const CLACK_SPREAD = 0.04;
-/** After the last landing it rocks to rest: two tiny clacks this long after it (s), this hard. */
-const ROCKS: readonly { after: number; force: number }[] = [
-  { after: 0.045, force: 0.25 },
-  { after: 0.075, force: 0.13 },
-];
 
-/** The hollow board under a pawn landing (its pitch). */
-const BOARD_HZ = 230;
 /** A pawn's hop: the first square's note, as a step up the scale from D4 (D5); each square after a step higher. */
 const FIRST_HOP_NOTE = 5;
 
@@ -42,26 +25,8 @@ function stepOf(note: ScaleNote): number {
   return step;
 }
 
-/** A wooden board game on a desk: a wooden die tumbling, a wooden pawn tapping up the scale, a ladder's run up, a snake's slide down. */
+/** A wooden board game on a desk (the die is the shared one, `dice/sounds.ts`): a wooden pawn tapping up the scale, a ladder's run up, a snake's slide down. */
 export const SNAKESLADDERS_SOUNDS = defineSounds({
-  snakesLaddersDieRoll: {
-    about:
-      "The die is rolled (anyone's roll): a small wooden toy die tumbling on the same hollow board the pawns hop on (owner's pick 2026-11-14: like a real die, matching the game; not glassy, not a drum, not thin, not real physics). A crisp wooden clack with the board under it on every landing you see (`DIE_HITS`: the throw's corner and face, then each tumble over an edge), the same clack each time, only softer, then rocking to rest. Takes differ a little, as real rolls do.",
-    level: "event",
-    room: 0.1,
-    variants: 3,
-    render(mix) {
-      const clack = (force: number, at: number) => {
-        mix.add(woodTap(mix, { ...DIE_CLACK, hz: DIE_CLACK.hz * (1 + mix.between(-CLACK_SPREAD, CLACK_SPREAD)) }), { at, gain: force });
-        mix.add(woodTap(mix, { hz: BOARD_HZ, decay: 0.05, hardness: 0.2 }), { at, gain: force * DIE_BOARD });
-      };
-      const seconds = SNAKESLADDERS_CONFIG.dieMs / 1000;
-      DIE_HITS.forEach(({ at }, hit) => clack(1 - HIT_FADE * hit, at * seconds));
-      clack(FLAT.force, FLAT.after);
-      const rest = DIE_HITS.at(-1)!.at * seconds;
-      ROCKS.forEach(({ after, force }) => clack(force, rest + after));
-    },
-  },
   snakesLaddersHop: {
     about:
       "A pawn lands on the next square (owner direction: wooden, like the die): a wooden knock tuned a step up the scale each square, with the hollow board soft under it. Take = which hop of the roll.",
@@ -70,16 +35,7 @@ export const SNAKESLADDERS_SOUNDS = defineSounds({
     variants: 6,
     render(mix, hop) {
       mix.add(woodTap(mix, { hz: hz(scaleStep(FIRST_HOP_NOTE + hop)), decay: 0.04, hardness: 0.4 }));
-      mix.add(woodTap(mix, { hz: BOARD_HZ, decay: 0.055, hardness: 0.2 }), { gain: 0.4 });
-    },
-  },
-  snakesLaddersSix: {
-    about: "The die lands on a 6: roll again! Two bright tines, the second higher.",
-    level: "event",
-    room: 0.16,
-    render(mix) {
-      mix.add(tine(mix, { note: "A5", ring: 0.14, hardness: 0.5 }), { gain: 0.7 });
-      mix.add(tine(mix, { note: "D6", ring: 0.2, hardness: 0.5 }), { at: 0.09, gain: 0.8 });
+      mix.add(woodTap(mix, { hz: DICE_BOARD_HZ, decay: 0.055, hardness: 0.2 }), { gain: 0.4 });
     },
   },
   snakesLaddersLadder: {

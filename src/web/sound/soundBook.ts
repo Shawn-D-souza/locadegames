@@ -1,6 +1,8 @@
 import type { GameId } from "../../shared/games/catalog";
+import { DICE_SOUNDS } from "../games/dice/sounds";
 import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
 import { HEADCRASH_SOUNDS } from "../games/headcrash/sounds";
+import { LUDO_SOUNDS } from "../games/ludo/sounds";
 import { SEABATTLE_SOUNDS } from "../games/seabattle/sounds";
 import { SNAKESLADDERS_SOUNDS } from "../games/snakesladders/sounds";
 import { TERRITORY_SOUNDS } from "../games/territory/sounds";
@@ -12,7 +14,10 @@ import { INTERFACE_SOUNDS } from "./library/interfaceSounds";
 import { PLAYING_SOUNDS } from "./library/playingSounds";
 import { ROOM_SOUNDS } from "./library/roomSounds";
 
-/** Each game's own sounds, made only when that game is played. A new game adds its `games/<game>/sounds.ts` here, and in `SOUNDS`. */
+/**
+ * Each game's own sounds, fetched only when that game is played. A new game adds its `games/<game>/sounds.ts` here, and in
+ * `SOUNDS`. Sounds two games share (the die) are in both.
+ */
 export const GAME_SOUNDS = {
   tictactoe: TICTACTOE_SOUNDS,
   ultimate: ULTIMATE_SOUNDS,
@@ -20,7 +25,8 @@ export const GAME_SOUNDS = {
   headcrash: HEADCRASH_SOUNDS,
   territory: TERRITORY_SOUNDS,
   dotsclash: DOTSCLASH_SOUNDS,
-  snakesladders: SNAKESLADDERS_SOUNDS,
+  snakesladders: { ...SNAKESLADDERS_SOUNDS, ...DICE_SOUNDS },
+  ludo: { ...LUDO_SOUNDS, ...DICE_SOUNDS },
 } as const satisfies Record<GameId, Record<string, SoundDefinition>>;
 
 /** Sounds every visit needs, in the order they get made in the background: what's needed soonest first, the big endings last. */
@@ -40,6 +46,8 @@ export const SOUNDS = {
   ...TERRITORY_SOUNDS,
   ...DOTSCLASH_SOUNDS,
   ...SNAKESLADDERS_SOUNDS,
+  ...LUDO_SOUNDS,
+  ...DICE_SOUNDS,
 };
 
 /** The plain name of any sound; a typo is a compile error. */

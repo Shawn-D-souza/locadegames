@@ -89,6 +89,8 @@ export const layout = {
   partyReserve: 270,
   /** Snakes & Ladders in portrait: the board fits the screen's height, less this (the players' row above it, the die and the turn bar under it, the corner ✕ and margins). */
   snakesReserve: 300,
+  /** Ludo in portrait: the same (the players' row above the board, the die and the turn bar under it, the corner ✕ and margins). */
+  ludoReserve: 300,
   /** Dots Clash's big boards (8×8 and up) in landscape: the column beside the board for the players' row and the banner. */
   partySide: 240,
   /** White disc holding a player's X or O on their match card. */

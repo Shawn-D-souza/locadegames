@@ -77,6 +77,13 @@ export const colors = {
   snake: "#4E479F",
   snakeBelly: "#D6D2F6",
 
+  /**
+   * Ludo: the board between the arms (white squares and the players' colors stand out on it), and the star on a safe
+   * square that isn't anyone's start (gold, like the platform's crowns: a good place to be).
+   */
+  ludoBoard: "#ECEAF8",
+  ludoStar: "#FFE04A",
+
   online: "#78C840",
   waiting: "#FFC02E",
   offline: "#8A94A6",

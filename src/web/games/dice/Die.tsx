@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { SNAKESLADDERS_CONFIG } from "../../../shared/games/snakesladders/config";
+import { DICE_CONFIG } from "../../../shared/games/dice";
 import { DIE_FLIPS, dieAt } from "./dieMotion";
 
 /** Where each face's pips sit on a 3 × 3 grid (0–8, reading order). */
@@ -27,7 +27,7 @@ interface DieProps {
  * the face rolled.
  */
 export function Die({ face, tumbleMs, className }: DieProps) {
-  const tumbling = tumbleMs !== null && tumbleMs < SNAKESLADDERS_CONFIG.dieMs;
+  const tumbling = tumbleMs !== null && tumbleMs < DICE_CONFIG.dieMs;
   const motion = tumbling ? dieAt(tumbleMs) : { lift: 0, turn: 0, flips: 0 };
   // A new face every quarter turn (the same on every phone), settling on the roll as it tips over for the last time.
   const shown = tumbling && motion.flips < DIE_FLIPS ? ((((face ?? 1) + DIE_FLIPS - motion.flips) % 6) + 1) : face;

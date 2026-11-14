@@ -1,6 +1,6 @@
 /**
- * Development only: a playtest can line up the next dice (`window.loadedDice = [6, 6, 3]`), so it reaches a ladder, a
- * snake or the finish at once instead of waiting on luck. The dev server (`npm run dev:server`) accepts them; production
+ * Development only: a playtest can line up the next dice (`window.loadedDice = [6, 6, 3]`), so it reaches its moments (a
+ * ladder, a capture, the finish) at once instead of waiting on luck. The dev server (`npm run dev:server`) accepts them; production
  * builds never send them and the production server ignores them.
  */
 declare global {

@@ -1,6 +1,7 @@
 import type { PartyGame } from "../types";
 import { rollMs } from "./config";
-import { applyMove, createGame, dieFrom, finalPlaces, isIn, parseMove, quitSeat, type RollMove } from "./rules";
+import { dieFrom } from "../dice";
+import { applyMove, createGame, finalPlaces, isIn, parseMove, quitSeat, type RollMove } from "./rules";
 import type { SnakesLaddersState } from "./types";
 
 /** Snakes & Ladders plugged into the party format. A move is a roll; the server's random number is the die. */

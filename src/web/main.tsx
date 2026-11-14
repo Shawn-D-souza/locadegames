@@ -8,7 +8,7 @@ import { installHaptics } from "./services/hapticPlayer";
 import { installSound } from "./services/soundPlayer";
 import "./styles/global.css";
 
-/** Dev-only tool pages (`?preview=celebrations`, `?preview=territory`, `?preview=headcrash`, `?preview=haptics`, `?preview=seabattle-sounds`); the production build drops this branch and its code entirely. */
+/** Dev-only tool pages (`?preview=celebrations`, `?preview=territory`, `?preview=headcrash`, `?preview=haptics`, `?preview=seabattle-sounds`, `?preview=ludo`); the production build drops this branch and its code entirely. */
 function devPreview(): ReactNode | null {
   if (!import.meta.env.DEV) return null;
   const page = new URLSearchParams(window.location.search).get("preview");
@@ -23,7 +23,9 @@ function devPreview(): ReactNode | null {
             ? lazy(() => import("./preview/HapticsPreview").then((m) => ({ default: m.HapticsPreview })))
             : page === "seabattle-sounds"
               ? lazy(() => import("./preview/SeaBattleSoundsPreview").then((m) => ({ default: m.SeaBattleSoundsPreview })))
-              : null;
+              : page === "ludo"
+                ? lazy(() => import("./preview/LudoPreview").then((m) => ({ default: m.LudoPreview })))
+                : null;
   return Preview ? (
     <Suspense>
       <Preview />
