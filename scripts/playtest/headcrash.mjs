@@ -7,6 +7,51 @@ const hud = (page) => page.evaluate(() => window.headcrash?.hud() ?? null);
 const stats = (page) => page.evaluate(() => ({ ...window.headcrash.stats }));
 const total = (view) => (view?.synced ? view.score[0] + view.score[1] : 0);
 
+/**
+ * Driving one way, most rounds end in a crash within seconds, but now and then a car gets stuck and the round waits
+ * for the water to rise (over half a minute). So once a round has gone this long without a hit, the host rocks
+ * (one way, then the other, every `ROCK_MS`): in the air the buttons turn the car, which flips it and ends the round.
+ */
+const STUCK_MS = 6_000;
+const ROCK_MS = 1_500;
+
+/** Drives the host's car right, rocking whenever a round gets stuck, until the returned stop is called (which lets go). */
+function driveUntilStopped(page) {
+  let stopped = false;
+  let held = "ArrowRight";
+  const hold = async (key) => {
+    if (key === held) return;
+    await page.keyboard.up(held);
+    held = key;
+    await page.keyboard.down(held);
+  };
+  const done = (async () => {
+    let round = -1;
+    let roundAt = Date.now();
+    let turnedAt = 0;
+    while (!stopped) {
+      await wait(100);
+      const view = await hud(page);
+      if (!view?.synced) continue;
+      const now = Date.now();
+      if (view.round !== round || view.countdown > 0) {
+        // A new round (or its countdown): back to driving right, the clock starts again.
+        round = view.round;
+        roundAt = now;
+        await hold("ArrowRight");
+      } else if (now - roundAt > STUCK_MS && now - turnedAt > ROCK_MS) {
+        turnedAt = now;
+        await hold(held === "ArrowRight" ? "ArrowLeft" : "ArrowRight");
+      }
+    }
+    await page.keyboard.up(held);
+  })().catch(() => undefined); // the page closed under it: a step failed and the run is ending
+  return async () => {
+    stopped = true;
+    await done;
+  };
+}
+
 async function until(check, what, timeout = 25_000) {
   const started = Date.now();
   while (!(await check())) {
@@ -18,6 +63,7 @@ async function until(check, what, timeout = 25_000) {
 export default async function headcrash(session) {
   let host, guest, late;
   let watchedFrom = 0;
+  let stopDriving = async () => undefined;
   await session.step("2 players in a room", async () => {
     [host, guest] = await session.room(2);
   });
@@ -57,6 +103,7 @@ export default async function headcrash(session) {
     await until(seen, "the other phone to see the car drive", 1_500);
   });
   await session.step("a head is hit: a point, the burst's sound, and the next round starts in a new arena", async () => {
+    stopDriving = driveUntilStopped(host);
     await until(async () => total(await hud(host)) > 0 || (await hud(host)).round > 0, "the first hit", 60_000);
     const view = await hud(host);
     if (total(view) > 0) {
@@ -94,7 +141,7 @@ export default async function headcrash(session) {
   });
   await session.step("the match is played to its end; each phone gets its own ending", async () => {
     await sees(host, /you win!|you lost|draw!/i, 240_000);
-    await host.keyboard.up("ArrowRight");
+    await stopDriving();
     await sees(guest, /you win!|you lost|draw!/i);
     await sees(late, /wins!|draw!/i);
     const won = (await host.getByText(/you win!/i).count()) > 0;

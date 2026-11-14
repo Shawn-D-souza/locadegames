@@ -16,7 +16,12 @@ export class Session {
     this.players = new Map();
     this.errors = [];
     this.failed = false;
-    /** Later steps still run after a failure: for flows whose steps don't depend on each other. */
+    /** What this game's run printed: kept, not printed at once, so games played side by side don't mix their lines. */
+    this.lines = [];
+  }
+
+  log(line) {
+    this.lines.push(line);
   }
 
   /** A new phone-sized player. */
@@ -49,19 +54,19 @@ export class Session {
 
   /** One step: passes, or fails with photos of every player (later steps are skipped). */
   async step(name, run) {
-    if (this.failed) return console.log(`  - ${name} (skipped)`);
+    if (this.failed) return this.log(`  - ${name} (skipped)`);
     const started = Date.now();
     try {
       await run();
-      console.log(`  ✓ ${name} (${((Date.now() - started) / 1000).toFixed(1)} s)`);
+      this.log(`  ✓ ${name} (${((Date.now() - started) / 1000).toFixed(1)} s)`);
     } catch (e) {
       this.failed = true;
-      console.log(`  ✗ ${name}\n      ${String(e.message ?? e).split("\n")[0]}`);
+      this.log(`  ✗ ${name}\n      ${String(e.message ?? e).split("\n")[0]}`);
       await mkdir(FAILURES, { recursive: true });
       for (const [who, page] of this.players) {
         await page.screenshot({ path: `${FAILURES}${this.game}-${who}.png` }).catch(() => undefined);
       }
-      console.log(`      photos: screenshots/playtest-failures/${this.game}-*.png`);
+      this.log(`      photos: screenshots/playtest-failures/${this.game}-*.png`);
     }
   }
 }

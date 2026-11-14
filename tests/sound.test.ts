@@ -25,6 +25,15 @@ import { bumpVolume, headCrashEndingSteps, hitSound, idleMotor, impactTake, land
 import { HEADCRASH_CONFIG } from "../src/shared/games/headcrash/config";
 
 
+/** Each take is made once and shared by every test that checks it (making them is most of this file's time). */
+const made = new Map<string, readonly [Float32Array, Float32Array]>();
+const make = (name: SoundName, take: number) => {
+  const key = `${name}:${take}`;
+  let sound = made.get(key);
+  if (!sound) made.set(key, (sound = renderSound(name, soundDefinition(name), take)));
+  return sound;
+};
+
 /** The first and, if it differs, the last take: the extremes of a sound with many. */
 const takesToCheck = (name: SoundName) => {
   const takes = soundDefinition(name).variants ?? 1;
@@ -41,17 +50,20 @@ describe("every sound", () => {
     const definition = soundDefinition(name);
     describe(name, () => {
       for (const take of takesToCheck(name)) {
-        const [left, right] = renderSound(name, definition, take);
+        const [left, right] = make(name, take);
         const seconds = left.length / SOUND_SAMPLE_RATE;
 
         it(`take ${take} is clean: numbers only, never over the limit, no DC`, () => {
           let peak = 0;
           let sum = 0;
+          // One check at the end, not one per sample: an expect per sample made this the slowest test by far.
+          let firstBad = -1;
           for (let i = 0; i < left.length; i++) {
-            expect(Number.isFinite(left[i]) && Number.isFinite(right[i])).toBe(true);
+            if (firstBad === -1 && !(Number.isFinite(left[i]) && Number.isFinite(right[i]))) firstBad = i;
             peak = Math.max(peak, Math.abs(left[i]!), Math.abs(right[i]!));
             sum += left[i]!;
           }
+          expect(firstBad, "first sample that isn't a number").toBe(-1);
           expect(peak).toBeLessThanOrEqual(0.9);
           expect(Math.abs(sum / left.length)).toBeLessThan(0.002);
         });
@@ -98,7 +110,7 @@ describe("every sound", () => {
   it("the hierarchy holds: quick sounds are short, only celebrations are huge", () => {
     for (const name of SOUND_NAMES) {
       const definition = soundDefinition(name);
-      const [left] = renderSound(name, definition, 0);
+      const [left] = make(name, 0);
       const seconds = left.length / SOUND_SAMPLE_RATE;
       if (definition.loopSeconds !== undefined) continue;
       if (definition.level === "tap") expect(seconds, name).toBeLessThan(1.1);
@@ -107,7 +119,7 @@ describe("every sound", () => {
 
   it("nothing is clearly louder than winning, even on headphones, where a short low hit can edge past the trumpets", () => {
     const fullRange = (name: SoundName) => {
-      const [left, right] = renderSound(name, soundDefinition(name), 0);
+      const [left, right] = make(name, 0);
       return loudestWindowDb(mono(left, right), SOUND_SAMPLE_RATE);
     };
     const HEADPHONE_ALLOWANCE_DB = 3;

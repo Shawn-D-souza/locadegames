@@ -1,5 +1,6 @@
 // Sea Battle: two players, one match (the whole tournament): both place their fleets at once (one shuffles and waits
-// for the other, who drags every ship out of the dock and turns one onto another and back), then they fire until a fleet is gone; each phone's result, the results, back to the room.
+// for the other, who drags every ship out of the dock and turns one onto another and back), then they fire until a fleet
+// is gone (the first misses once, then sinks the fleet it watched being placed); each phone's result, the results, back to the room.
 // Heard and felt along the way: placing (picked up, put down, turned, the shuffle), the cannons coming in and firing,
 // the splashes and blasts, your turn, and each phone's ending.
 import { felt, heard, sees } from "./session.mjs";
@@ -31,8 +32,20 @@ async function tap(page, name) {
   await page.mouse.click(at.x, at.y);
 }
 
-/** Whoever's turn it is fires at the first cell they still may, until the match ends (at most every cell of both boards). */
+/**
+ * The second player's fleet as the placing step leaves it: the 5 across from C1, then the 4, 3, 3 and 2 from A2–A5.
+ * Firing at these instead of every cell keeps the match (and the playtest) short.
+ */
+const PLACED_FLEET = ["C1", "D1", "E1", "F1", "G1", "A2", "B2", "C2", "D2", "A3", "B3", "C3", "A4", "B4", "C4", "A5", "B5"];
+/** Clear water on that board: the first player fires here once, so the turn passes and both get one (and a splash). */
+const PLACED_MISS = "H8";
+
+/**
+ * Whoever's turn it is fires until the match ends: the first player misses once on purpose, then sinks the fleet it
+ * knows; the second, who can't know the shuffled fleet, fires at the first cell it still may.
+ */
 async function fireUntilOver(players) {
+  const aims = [PLACED_MISS, ...PLACED_FLEET];
   for (let shot = 0; shot < 128; shot++) {
     for (const page of players) if (await page.getByText(ENDING).isVisible()) return;
     const mover = await Promise.any(
@@ -42,7 +55,10 @@ async function fireUntilOver(players) {
       }),
     ).catch(() => null);
     if (!mover) continue; // the last shot just ended it: the endings are coming
-    const cell = target(mover).getByRole("button").and(mover.locator(":enabled")).first();
+    const cell =
+      mover === players[0] && aims.length
+        ? target(mover).getByRole("button", { name: aims.shift(), exact: true })
+        : target(mover).getByRole("button").and(mover.locator(":enabled")).first();
     const name = await cell.getAttribute("aria-label");
     await cell.click();
     // The shot is in once its mark shows on both phones ("C3, miss"): on the shooter's target, on the other's own fleet
@@ -91,7 +107,7 @@ export default async function seabattle(session) {
     const results = await Promise.all(players.map(async (page) => (await page.getByText(ENDING).first().textContent())?.toUpperCase()));
     // There are no draws: whoever sinks the whole fleet first wins at once.
     if (!(results.includes("YOU WIN!") && results.includes("YOU LOST"))) throw new Error(`endings don't match: ${results.join(" / ")}`);
-    // Firing from the first cell on, both players missed at some point: the turn came round to each of them.
+    // Both players missed at some point (the first on purpose): the turn came round to each of them.
     for (const page of players) {
       await heard(page, "seaBattleCannonReady", "seaBattleCannonFire", "seaBattleSplash", "boardThump");
       await felt(page, "seaBattleYourTurn", "seaBattleFire", "thump");
