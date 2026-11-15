@@ -1,3 +1,4 @@
+import { CARROM_CONFIG } from "./carrom/config";
 import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { HEADCRASH_CONFIG } from "./headcrash/config";
 import { LUDO_CONFIG } from "./ludo/config";
@@ -13,7 +14,7 @@ interface BaseGameInfo {
   name: string;
   /** Fewest players in the room needed to start it. */
   minPlayers: number;
-  /** Most players it takes, when fewer than a full room (Pool: 4); the host can't start it with more in the room. */
+  /** Most players it takes, when fewer than a full room (Pool, Carrom: 4); the host can't start it with more in the room. */
   maxPlayers?: number;
 }
 
@@ -112,6 +113,14 @@ export const GAMES = [
     maxPlayers: POOL_CONFIG.maxPlayers,
     format: "party",
     turnTimeMs: POOL_CONFIG.turnTimeMs,
+  },
+  {
+    id: "carrom",
+    name: "Carrom",
+    minPlayers: CARROM_CONFIG.minPlayers,
+    maxPlayers: CARROM_CONFIG.maxPlayers,
+    format: "party",
+    turnTimeMs: CARROM_CONFIG.turnTimeMs,
   },
 ] as const satisfies readonly GameInfo[];
 

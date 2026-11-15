@@ -13,6 +13,8 @@ export interface StripPlayer {
   place?: number | null;
   /** How many pieces they have left (Pool: balls on the table), shown on their tile; 0 shows a small ink ball (Pool: on the black). */
   count?: number | null;
+  /** Their points (Carrom), shown on their tile, which widens to fit (may be below 0). */
+  score?: number | null;
 }
 
 interface TurnStripProps {
@@ -29,6 +31,7 @@ interface TurnStripProps {
 
 /** For screen readers: how many pieces a player has left. */
 const countText = (count: number | null | undefined) => (count === undefined || count === null ? "" : count === 0 ? ", none left" : `, ${count} left`);
+const scoreText = (score: number | null | undefined) => (score === undefined || score === null ? "" : `, ${score} points`);
 
 const SHAPE_CLASSES = { tile: "rounded-[22%]", disc: "rounded-pill border-thin border-ink" } as const;
 
@@ -48,18 +51,19 @@ export function TurnStrip({ players, activeIds, myId, wrap = false, shape = "til
             key={player.id}
             className={clsx("flex flex-col items-center gap-2", wrap && "landscape:basis-1/4")}
             style={player.quit ? quitStyle() : playerStyle(player.id)}
-            aria-label={`${player.name}${player.id === myId ? " (you)" : ""}${now ? ", playing now" : player.place ? `, finished ${player.place}` : player.out ? ", out" : ""}${countText(player.count)}`}
+            aria-label={`${player.name}${player.id === myId ? " (you)" : ""}${now ? ", playing now" : player.place ? `, finished ${player.place}` : player.out ? ", out" : ""}${countText(player.count)}${scoreText(player.score)}`}
             aria-current={now ? "step" : undefined}
           >
             <span
               className={clsx(
-                "flex size-6 items-center justify-center bg-player font-display text-caption font-black text-player-text transition-[scale,opacity] duration-slow ease-spring",
+                "flex h-6 items-center justify-center bg-player font-display text-caption font-black text-player-text tabular-nums transition-[scale,opacity] duration-slow ease-spring",
+                player.score === undefined || player.score === null ? "w-6" : "min-w-6 px-1",
                 SHAPE_CLASSES[shape],
                 now && "scale-(--transform-turn-scale) animate-turn-hop",
                 player.out && "scale-(--transform-pop-from-scale) opacity-disconnected",
               )}
             >
-              {player.place ?? (player.count === 0 ? <span className="size-2 rounded-pill bg-ink" /> : (player.count ?? null))}
+              {player.score ?? player.place ?? (player.count === 0 ? <span className="size-2 rounded-pill bg-ink" /> : (player.count ?? null))}
             </span>
             <span className={clsx("font-display text-caption font-black text-ink", player.id !== myId && "invisible")} aria-hidden="true">
               YOU

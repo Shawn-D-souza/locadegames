@@ -3,6 +3,7 @@ import type { GameId } from "../../shared/games/catalog";
 import { DotsClashArt } from "./dotsclash/DotsClashArt";
 import { HeadCrashArt } from "./headcrash/HeadCrashArt";
 import { LudoArt } from "./ludo/LudoArt";
+import { CarromArt } from "./carrom/CarromArt";
 import { PoolArt } from "./pool/PoolArt";
 import { SeaBattleArt } from "./seabattle/SeaBattleArt";
 import { SnakesLaddersArt } from "./snakesladders/SnakesLaddersArt";
@@ -26,4 +27,5 @@ export const GAME_LOOKS: Record<GameId, GameLook> = {
   snakesladders: { Art: SnakesLaddersArt },
   ludo: { Art: LudoArt },
   pool: { Art: PoolArt },
+  carrom: { Art: CarromArt },
 };

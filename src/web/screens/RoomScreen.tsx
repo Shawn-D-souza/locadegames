@@ -22,6 +22,7 @@ import { LudoScreen } from "../games/ludo/LudoScreen";
 import { SnakesLaddersScreen } from "../games/snakesladders/SnakesLaddersScreen";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
 import { MATCH_LOOKS } from "../games/matchLooks";
+import { loadCarrom } from "../games/carrom/loadCarrom";
 import { loadPool } from "../games/pool/loadPool";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { arenaName } from "../utils/arenaText";
@@ -45,6 +46,7 @@ interface RoomScreenProps {
 const TerritoryScreen = lazy(() => loadTerritory().then((m) => ({ default: m.TerritoryScreen })));
 const HeadCrashScreen = lazy(() => loadHeadCrash().then((m) => ({ default: m.HeadCrashScreen })));
 const PoolScreen = lazy(() => loadPool().then((m) => ({ default: m.PoolScreen })));
+const CarromScreen = lazy(() => loadCarrom().then((m) => ({ default: m.CarromScreen })));
 
 /** A match within a specific tournament (match ids restart each tournament). */
 type MatchRef = { startedAt: number; matchId: number };
@@ -66,6 +68,7 @@ const PARTY_QUIT_COST: Record<PartyGameId, string> = {
   snakesladders: "You'll be out of this game.",
   ludo: "You'll be out of this game. Your pawns leave the board.",
   pool: "You'll be out of this game. Your balls leave the table.",
+  carrom: "You'll be out of this game. Your points won't count.",
 };
 
 /** What quitting costs: one game with 2 players, the whole tournament with more. */
@@ -196,9 +199,13 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
           <SnakesLaddersScreen party={p} {...on} />
         ) : p.gameId === "ludo" ? (
           <LudoScreen party={p} {...on} />
-        ) : (
+        ) : p.gameId === "pool" ? (
           <Suspense fallback={<JoiningScreen code={code} onBack={requestLeave} />}>
             <PoolScreen party={p} {...on} />
+          </Suspense>
+        ) : (
+          <Suspense fallback={<JoiningScreen code={code} onBack={requestLeave} />}>
+            <CarromScreen party={p} lastError={lastError} {...on} />
           </Suspense>
         );
     } else if (leftResults !== p.startedAt) {

@@ -40,11 +40,13 @@ export interface PartyPlace {
   /** 1 = winner. Players out on the same move may share a place. */
   place: number;
   quit: boolean;
+  /** Their final points, in a game that counts them (Carrom). */
+  score?: number;
 }
 
 /**
  * What the room needs from a turn-based game everyone plays together on one board (the party format: Dots Clash,
- * Snakes & Ladders, Ludo, Pool). Pure functions only, so client and server agree. Seats are in turn order.
+ * Snakes & Ladders, Ludo, Pool, Carrom). Pure functions only, so client and server agree. Seats are in turn order.
  */
 export interface PartyGame<State, Move> {
   /** `seed`: the server's random number for this game (Pool's rack order). */

@@ -1,4 +1,5 @@
 import type { GameId } from "../../shared/games/catalog";
+import { CARROM_SOUNDS } from "../games/carrom/sounds";
 import { DICE_SOUNDS } from "../games/dice/sounds";
 import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
 import { HEADCRASH_SOUNDS } from "../games/headcrash/sounds";
@@ -29,6 +30,7 @@ export const GAME_SOUNDS = {
   snakesladders: { ...SNAKESLADDERS_SOUNDS, ...DICE_SOUNDS },
   ludo: { ...LUDO_SOUNDS, ...DICE_SOUNDS },
   pool: POOL_SOUNDS,
+  carrom: CARROM_SOUNDS,
 } as const satisfies Record<GameId, Record<string, SoundDefinition>>;
 
 /** Sounds every visit needs, in the order they get made in the background: what's needed soonest first, the big endings last. */
@@ -50,6 +52,7 @@ export const SOUNDS = {
   ...SNAKESLADDERS_SOUNDS,
   ...LUDO_SOUNDS,
   ...POOL_SOUNDS,
+  ...CARROM_SOUNDS,
   ...DICE_SOUNDS,
 };
 

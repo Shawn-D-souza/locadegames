@@ -9,6 +9,7 @@ import type { ClientMessage } from "../../../shared/protocol/messages";
 import type { PlayerId } from "../../../shared/rooms/types";
 import { IconButton } from "../../components/IconButton";
 import { ScreenLayout } from "../../components/ScreenLayout";
+import { StatusCard } from "../../components/StatusCard";
 import { TurnBanner } from "../../components/TurnBanner";
 import { TurnStrip } from "../../components/TurnStrip";
 import { CLIENT_CONFIG } from "../../config";
@@ -20,7 +21,6 @@ import { partyName, possessive } from "../../utils/partyText";
 import { playerStyle } from "../../utils/playerStyle";
 import { shotMove } from "./loadedShots";
 import { ballColor, POOL_LOOK, POOL_PAINT } from "./look";
-import { PoolStatus } from "./PoolStatus";
 import { PoolTable } from "./PoolTable";
 import { shotNotice } from "./shotNotice";
 import { aimedCue, sceneBalls, strikingCue, type BallPaint } from "./tableScene";
@@ -174,7 +174,7 @@ export function PoolScreen({ party, myId, clockOffsetMs, send, onQuit, onLeave, 
   const myText = shootingAgain ? "SHOOT AGAIN!" : mySeat !== null && onTheBlack(game, mySeat) ? "SINK THE BLACK!" : "YOUR SHOT!";
   const status =
     turnId === null ? null : (
-      <PoolStatus
+      <StatusCard
         text={turnId === myId ? myText : shootingAgain ? `${turnName} SHOOTS AGAIN` : `${possessive(turnName)} SHOT`}
         detail={detail}
         countdown={countdown}

@@ -1,4 +1,4 @@
-interface PoolStatusProps {
+interface StatusCardProps {
   /** Whose shot: YOUR SHOT!, ANA'S SHOT, ANA SHOOTS AGAIN. */
   text: string;
   /** A quieter second line: what just happened (a foul, someone out), how to shoot (until your first shot), that you're out, or watching. */
@@ -8,11 +8,11 @@ interface PoolStatusProps {
 }
 
 /**
- * Whose shot it is, under the players' row: a small white card with an ink outline (owner direction: no big box under
+ * Whose shot it is, under the players' row (Pool, Carrom): a small white card with an ink outline (owner direction: no big box under
  * the table, and readable on every player's color, never ink straight on the screen's wash), the last seconds in a
  * bubble beside the words, in a line as tall as the bubble so it never jumps.
  */
-export function PoolStatus({ text, detail, countdown }: PoolStatusProps) {
+export function StatusCard({ text, detail, countdown }: StatusCardProps) {
   return (
     <div className="flex max-w-full flex-col items-center self-center rounded-card border-thin border-ink bg-white px-4 py-1 text-center text-ink" role="status">
       <span className="flex h-avatar-small items-center gap-2">

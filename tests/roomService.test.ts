@@ -123,6 +123,23 @@ describe("RoomService", () => {
     });
   });
 
+  it("plays a Carrom shot sent over the wire (and refuses one from the wrong player)", () => {
+    const players = [join("Host"), join("B"), join("C")];
+    send(players[0]!, { type: "start", gameId: "carrom" });
+    const party = store.get(CODE)!.party as Party<"carrom">;
+    const shooter = players.find((p) => p.playerId === party.entrants[0]!.id)!;
+    const other = players.find((p) => p.playerId === party.entrants[1]!.id)!;
+    send(other, { type: "move", move: { at: 0, dx: 1, dy: 0, power: 1 } });
+    expect(other.received.at(-1)).toEqual({ type: "error", error: "NOT_YOUR_TURN" });
+    send(shooter, { type: "move", move: { at: 0, dx: 0, dy: -1, power: 1, table: [] } });
+    const after = store.get(CODE)!.party as Party<"carrom">;
+    expect({ entrants: party.entrants.length, moves: after.game.moves, turnStartsAfterShot: after.turnStartedAt > now }).toEqual({
+      entrants: 3,
+      moves: 1,
+      turnStartsAfterShot: true,
+    });
+  });
+
   it("plays a 2-player room as a single final and awards a trophy", () => {
     const host = join("Host");
     const guest = join("Guest");

@@ -13,7 +13,8 @@ interface PartyRankingTableProps {
 /**
  * Final order of a game everyone played together: a bar per player in their color with their place (gold, silver,
  * bronze) and name. No numbers (owner decision: the place is the result; everyone but the winner ends with nothing, so
- * a count would say nothing); only a quitter is marked, `QUIT`.
+ * a count would say nothing), except in a game played for points (Carrom: everyone's final points, which made the
+ * order); a quitter is marked, `QUIT`.
  */
 export function PartyRankingTable({ party, myId }: PartyRankingTableProps) {
   return (
@@ -28,6 +29,11 @@ export function PartyRankingTable({ party, myId }: PartyRankingTableProps) {
           <span className="min-w-0 flex-1 truncate max-phone:text-caption">{partyName(party, r.id)}</span>
           {r.id === myId && <Badge tone="ink">YOU</Badge>}
           {r.quit && <span className="flex-none font-display text-caption font-black">QUIT</span>}
+          {r.score !== undefined && (
+            <span className="flex-none font-display text-title font-black tabular-nums" aria-label={`${r.score} points`}>
+              {r.score}
+            </span>
+          )}
         </li>
       ))}
     </ol>

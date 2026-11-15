@@ -46,4 +46,8 @@ export const opacity = {
   targetWaiting: 0.55,
   /** Sea Battle: a puff of smoke at its thickest (quiet: it only looks good). */
   smoke: 0.6,
+  /** Carrom: the groove ring on a coin and the striker (a hint of their carving, never louder than the disc). */
+  groove: 0.45,
+  /** Carrom: the band behind the striker while you pull it back (subtle: owner direction). */
+  pullBand: 0.4,
 } as const;

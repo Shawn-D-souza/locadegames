@@ -1,4 +1,5 @@
 import type { PartyGameId } from "../games/catalog";
+import { carromGame } from "../games/carrom/game";
 import { dotsClashGame } from "../games/dotsclash/game";
 import { ludoGame } from "../games/ludo/game";
 import { poolGame } from "../games/pool/game";
@@ -15,6 +16,7 @@ export const PARTY_GAMES: { [K in PartyGameId]: PartyGame<PartyStates[K], unknow
   snakesladders: snakesLaddersGame as PartyGame<PartyStates["snakesladders"], unknown>,
   ludo: ludoGame as PartyGame<PartyStates["ludo"], unknown>,
   pool: poolGame as PartyGame<PartyStates["pool"], unknown>,
+  carrom: carromGame as PartyGame<PartyStates["carrom"], unknown>,
 };
 
 /** The rules of the game `gameId`, taking any party game's state (the party keeps the two together). */

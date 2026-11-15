@@ -95,6 +95,18 @@ export const colors = {
   poolBlack: "#221E4A",
   poolCueShaft: "#F3E4C4",
 
+  /**
+   * Carrom: a pale birch board in a darker wood frame, its lines in deep brown, four deep holes; the black coins (a deep
+   * indigo black, so they read against the holes with their ink outline) and the queen (magenta, the party accent:
+   * never a player's color; white coins are plain white).
+   */
+  carromBoard: "#F3DDB3",
+  carromFrame: "#8E5B34",
+  carromLine: "#6B4A2E",
+  carromPocket: "#17143A",
+  carromBlack: "#2B2752",
+  carromQueen: "#E0308F",
+
   online: "#78C840",
   waiting: "#FFC02E",
   offline: "#8A94A6",

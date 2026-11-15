@@ -96,6 +96,8 @@ export const layout = {
    * under it, or the ending's result), always this tall whatever it shows (owner direction: the table never changes size).
    */
   poolTop: 124,
+  /** Carrom in portrait: the same, above its board (the players' row with their points, the status card under it, or the ending's result). */
+  carromTop: 132,
   /** Dots Clash's big boards (8×8 and up) in landscape: the column beside the board for the players' row and the banner. */
   partySide: 240,
   /** White disc holding a player's X or O on their match card. */

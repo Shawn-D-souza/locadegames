@@ -213,7 +213,7 @@ function newArena(gameId: ArenaGameId, entrants: PlayerRecord[], now: number): A
 
 /** How a host runs its rooms. */
 export interface RoomOptions {
-  /** A dev server only (never in production): playtests may choose a die (Snakes & Ladders, Ludo) or place Pool's balls before a shot, so they reach their moments. */
+  /** A dev server only (never in production): playtests may choose a die (Snakes & Ladders, Ludo) or place Pool's balls or Carrom's coins before a shot, so they reach their moments. */
   loadedDice?: boolean;
 }
 

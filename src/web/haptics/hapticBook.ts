@@ -1,3 +1,4 @@
+import { CARROM_HAPTICS } from "../games/carrom/haptics";
 import { DICE_HAPTICS } from "../games/dice/haptics";
 import { DOTSCLASH_HAPTICS } from "../games/dotsclash/haptics";
 import { SNAKESLADDERS_HAPTICS } from "../games/snakesladders/haptics";
@@ -45,6 +46,7 @@ export const HAPTICS = {
   ...SNAKESLADDERS_HAPTICS,
   ...LUDO_HAPTICS,
   ...POOL_HAPTICS,
+  ...CARROM_HAPTICS,
   ...DICE_HAPTICS,
 };
 
