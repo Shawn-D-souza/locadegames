@@ -50,8 +50,12 @@ export type MatchLayout = "board" | "largeBoard" | "twoBoards";
 export interface MatchLook<State extends GameState> {
   Board: ComponentType<MatchBoardProps<State>>;
   layout: MatchLayout;
-  /** The cards show each player's X or O (or, false, their avatar: a game without those pieces). */
-  pieces: boolean;
+  /**
+   * The piece each player plays, drawn on their card to fill its box (X or O, 4 in a Row's disc), or null: their avatar
+   * shows (Sea Battle). `viewer`: whose phone it is (their seat, or null watching), for a piece that looks different
+   * when it's yours (4 in a Row's ring).
+   */
+  Piece: ComponentType<{ seat: Seat; viewer: Seat | null; className?: string }> | null;
   /** Big seat cards, or slim chips in one row beside the corner ✕ (a board that needs the screen's height: Sea Battle). */
   cards: "full" | "slim";
   /** Who must act now: whose turn it is, or both while both act at once (Sea Battle's placing); none once over. Their cards are lit. */
@@ -62,8 +66,8 @@ export interface MatchLook<State extends GameState> {
   movesPlayed(game: State): number;
   /** The sounds of the move that just landed (its mark, and anything it did), for `viewer`: your seat, or null watching. */
   moveSteps(previous: State, game: State, viewer: Seat | null): SoundStep[];
-  /** The mark of the last move, which the ending plays as it starts. */
-  lastMarkSound(game: State): { sound: SoundName; variant: number } | null;
+  /** The mark of the last move, which the ending plays as it starts, for `viewer`: your seat, or null watching. */
+  lastMarkSound(game: State, viewer: Seat | null): { sound: SoundName; variant: number } | null;
   /** Felt when the other player's mark lands: your turn (null: the board feels its own moves, Sea Battle's on its stage). */
   opponentMoved: HapticName | null;
   /**

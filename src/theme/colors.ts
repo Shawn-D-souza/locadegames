@@ -47,6 +47,8 @@ export const colors = {
 
   /** Dots Clash: the plain page under the board while it's someone else's turn (your own turn washes it in your color). */
   boardPage: "#E3E1F3",
+  /** 4 in a Row: the empty holes of the column you aim at; a pale indigo, never a player's color, so it can't be taken for discs. */
+  aimColumn: "#D3CFF3",
   /** Dots Clash: the faint edge of an empty tile, so white tiles read on the plain page (owner direction: just a little). */
   tileEdge: "#C9C6E6",
 

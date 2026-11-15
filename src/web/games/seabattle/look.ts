@@ -13,7 +13,7 @@ import { lastMarkSound } from "./seaBattleCues";
 export const SEABATTLE_LOOK: MatchLook<SeaBattleState> = {
   Board: SeaBattleBoard,
   layout: "twoBoards",
-  pieces: false,
+  Piece: null,
   cards: "slim",
   toMove: seatsToMove,
   winningLine: () => null,

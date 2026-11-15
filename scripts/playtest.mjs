@@ -19,11 +19,12 @@ import pool from "./playtest/pool.mjs";
 import seabattle from "./playtest/seabattle.mjs";
 import { Session } from "./playtest/session.mjs";
 import territory from "./playtest/territory.mjs";
+import fourinarow from "./playtest/fourinarow.mjs";
 import tictactoe from "./playtest/tictactoe.mjs";
 import ultimate from "./playtest/ultimate.mjs";
 
 /** One flow per game; a new game adds its file here. The longest come first, so they start at once. */
-const GAMES = { headcrash, seabattle, territory, ludo, pool, carrom, snakesladders, dotsclash, dotsboxes, ultimate, tictactoe };
+const GAMES = { headcrash, seabattle, territory, ludo, pool, carrom, snakesladders, dotsclash, dotsboxes, ultimate, fourinarow, tictactoe };
 const SERVER = "http://localhost:8787";
 const PORT = 5198;
 /**

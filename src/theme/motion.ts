@@ -36,6 +36,13 @@ export const durations = {
   boardSwap: 520,
   /** Sea Battle: one puff of smoke drifting off a hit or a wreck. */
   smoke: 3_600,
+  /**
+   * 4 in a Row: a disc falling the whole board (from above it to the bottom row); a shorter fall takes less, as under
+   * gravity. It lands before the ending's thump (`slow`), so the last disc is down when the board thumps.
+   */
+  discFall: 190,
+  /** 4 in a Row: once landed, a disc bounces up, lands again, bounces a little and settles (owner direction: it bounces at the bottom). */
+  discBounce: 420,
 } as const;
 
 export const easings = {
@@ -46,6 +53,8 @@ export const easings = {
   /** Sea Battle: a cannonball thrown up, slowing to the top of its arc, then falling faster and faster. */
   rise: "cubic-bezier(0.3, 0.6, 0.6, 1)",
   fall: "cubic-bezier(0.45, 0, 0.75, 0.45)",
+  /** 4 in a Row: a disc dropped from rest, faster and faster until it lands (gravity). */
+  drop: "cubic-bezier(0.55, 0.085, 0.68, 0.53)",
 } as const;
 
 export const transforms = {
@@ -96,4 +105,9 @@ export const transforms = {
   /** Sea Battle: how far a puff of smoke drifts off its wreck (a share of its own size: up and a little to the side). */
   smokeDriftX: "40%",
   smokeDriftY: "-170%",
+  /** 4 in a Row: a disc landing squashes this wide and flat, bounces up this far (a share of its size), then a smaller bounce, and settles. */
+  discSquashX: 1.1,
+  discSquashY: 0.88,
+  discBounce: "-24%",
+  discBounceSmall: "-8%",
 } as const;

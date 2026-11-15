@@ -1,16 +1,15 @@
 import { clsx } from "clsx";
-import type { Seat } from "../../shared/games/types";
+import type { ReactNode } from "react";
 import { playerStyle } from "../utils/playerStyle";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
-import { Mark } from "./Mark";
 
 type PieceMotion = "hop" | "droop" | "shrug";
 
 interface SeatCardProps {
   player: { id: number; name: string; connected: boolean };
-  /** The piece this player plays (X or O). Left out for a game without pieces (the round intro of a real-time game): their avatar shows. */
-  seat?: Seat;
+  /** The piece this player plays (an X or O, 4 in a Row's disc), drawn to fill its box. Left out for a game without pieces (the round intro of a real-time game): their avatar shows. */
+  piece?: ReactNode;
   isYou: boolean;
   /** Lit in the player's color: their turn, or the winner once decided. */
   active: boolean;
@@ -37,7 +36,7 @@ const PILL_CLASSES = "rounded-pill bg-ink px-2 py-1 text-badge tracking-badge te
  * One side of a match: piece (or avatar), name, YOU / AWAY tab on the top edge. Lit means "their turn" (or "winner"),
  * so no extra words. Not tappable, so no lip.
  */
-export function SeatCard({ player, seat, isYou, active, countdown, celebrate, defeated, pieceMotion = null }: SeatCardProps) {
+export function SeatCard({ player, piece, isYou, active, countdown, celebrate, defeated, pieceMotion = null }: SeatCardProps) {
   const tab = !player.connected ? "AWAY" : isYou ? "YOU" : null;
   return (
     <div
@@ -59,12 +58,12 @@ export function SeatCard({ player, seat, isYou, active, countdown, celebrate, de
           className="absolute top-0 left-0 size-mark-badge translate-x-[-30%] -translate-y-1/2 rotate-(--transform-badge-tilt) animate-crown fill-waiting stroke-ink"
         />
       )}
-      {seat === undefined ? (
+      {piece === undefined ? (
         <Avatar name={player.name} colorIndex={player.id} />
       ) : (
         // The piece on a white disc, so it reads on every player color.
         <span className={clsx("inline-flex size-mark-badge rounded-pill border-thin border-ink bg-white p-1", pieceMotion && PIECE_MOTION_CLASSES[pieceMotion])}>
-          <Mark seat={seat} className="size-full" />
+          {piece}
         </span>
       )}
       <span className="line-clamp-2 max-w-full text-center wrap-break-word">{player.name}</span>

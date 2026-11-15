@@ -1,3 +1,5 @@
+import type { ComponentType } from "react";
+import type { Seat } from "../../shared/games/types";
 import type { RoomView } from "../../shared/protocol/messages";
 import type { PlayerId } from "../../shared/rooms/types";
 import { currentRound, standings } from "../../shared/tournament/tournament";
@@ -21,22 +23,24 @@ interface RoundIntroScreenProps {
   startsAt: number;
   /** A real-time game: it counts its own 3, 2, 1 in the arena (here it only says to get ready). */
   live: boolean;
-  /** The game's players have X / O pieces; otherwise (a real-time game, Sea Battle) the cards show avatars. */
-  pieces: boolean;
+  /** The piece each player plays (X or O, 4 in a Row's disc); null: the cards show avatars (a real-time game, Sea Battle). */
+  Piece: ComponentType<{ seat: Seat; viewer: Seat | null; className?: string }> | null;
 }
 
 /** The break between rounds: round title, who you play (or that you sit out), a countdown to the shared start (or GET READY! before a real-time game's own countdown), and the points. */
-export function RoundIntroScreen({ room, tournament, myId, startsAt, live, pieces }: RoundIntroScreenProps) {
+export function RoundIntroScreen({ room, tournament, myId, startsAt, live, Piece }: RoundIntroScreenProps) {
   const now = useNow(CLIENT_CONFIG.timerTickMs);
   const seconds = Math.max(1, Math.ceil((startsAt - now) / 1000));
   useCountdownSounds(live ? 0 : seconds);
   const round = currentRound(tournament);
   const mine = round.matches.find((m) => m.players.includes(myId));
+  // Your seat in the coming match: a piece that looks different when it's yours (4 in a Row's ring) shows so.
+  const viewer = mine ? (mine.players.indexOf(myId) as Seat) : null;
 
   const card = (id: PlayerId, seat: 0 | 1) => (
     <SeatCard
       player={{ id, name: entrantName(tournament, id), connected: room.players.find((p) => p.id === id)?.connected ?? false }}
-      seat={pieces ? seat : undefined}
+      piece={Piece ? <Piece seat={seat} viewer={viewer} className="size-full" /> : undefined}
       isYou={id === myId}
       active={false}
     />

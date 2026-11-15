@@ -311,7 +311,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
           myId={playerId}
           startsAt={roundStart}
           live={ownCountdown}
-          pieces={!isLiveGame(t.gameId) && MATCH_LOOKS[t.gameId].pieces}
+          Piece={isLiveGame(t.gameId) ? null : MATCH_LOOKS[t.gameId].Piece}
         />
       );
     } else if (mine && !refersTo(dismissed, t, mine)) {

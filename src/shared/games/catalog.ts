@@ -1,6 +1,7 @@
 import { CARROM_CONFIG } from "./carrom/config";
 import { DOTSBOXES_CONFIG } from "./dotsboxes/config";
 import { DOTSCLASH_CONFIG } from "./dotsclash/config";
+import { FOURINAROW_CONFIG } from "./fourinarow/config";
 import { HEADCRASH_CONFIG } from "./headcrash/config";
 import { LUDO_CONFIG } from "./ludo/config";
 import { POOL_CONFIG } from "./pool/config";
@@ -64,6 +65,14 @@ export const GAMES = [
     format: "tournament",
     play: "turns",
     turnTimeMs: ULTIMATE_CONFIG.turnTimeMs,
+  },
+  {
+    id: "fourinarow",
+    name: "4 in a Row",
+    minPlayers: 2,
+    format: "tournament",
+    play: "turns",
+    turnTimeMs: FOURINAROW_CONFIG.turnTimeMs,
   },
   {
     id: "seabattle",

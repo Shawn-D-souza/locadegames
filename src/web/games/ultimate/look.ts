@@ -1,5 +1,6 @@
 import { CELL_COUNT } from "../../../shared/games/ultimate/config";
 import type { UltimateState } from "../../../shared/games/ultimate/types";
+import { Mark } from "../../components/Mark";
 import type { MatchLook } from "../matchLook";
 import { lastMarkSound } from "./sounds";
 import { UltimateBoard } from "./UltimateBoard";
@@ -8,7 +9,7 @@ import { ultimateMoveSteps } from "./ultimateCues";
 /** Ultimate Tic-tac-toe on the match screen: the big board, its marks, and its small boards being won. */
 export const ULTIMATE_LOOK: MatchLook<UltimateState> = {
   Board: UltimateBoard,
-  pieces: true,
+  Piece: Mark,
   cards: "full",
   toMove: (game) => (game.winner !== null || game.isDraw ? [] : [game.turn]),
   winningLine: (game) => game.winningLine,

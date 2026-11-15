@@ -3,6 +3,7 @@ import { CARROM_SOUNDS } from "../games/carrom/sounds";
 import { DICE_SOUNDS } from "../games/dice/sounds";
 import { DOTSBOXES_SOUNDS } from "../games/dotsboxes/sounds";
 import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
+import { FOURINAROW_SOUNDS } from "../games/fourinarow/sounds";
 import { HEADCRASH_SOUNDS } from "../games/headcrash/sounds";
 import { LUDO_SOUNDS } from "../games/ludo/sounds";
 import { POOL_SOUNDS } from "../games/pool/sounds";
@@ -24,6 +25,7 @@ import { ROOM_SOUNDS } from "./library/roomSounds";
 export const GAME_SOUNDS = {
   tictactoe: TICTACTOE_SOUNDS,
   ultimate: ULTIMATE_SOUNDS,
+  fourinarow: FOURINAROW_SOUNDS,
   seabattle: SEABATTLE_SOUNDS,
   headcrash: HEADCRASH_SOUNDS,
   territory: TERRITORY_SOUNDS,
@@ -47,6 +49,7 @@ export const SOUNDS = {
   ...PLATFORM_SOUNDS,
   ...TICTACTOE_SOUNDS,
   ...ULTIMATE_SOUNDS,
+  ...FOURINAROW_SOUNDS,
   ...SEABATTLE_SOUNDS,
   ...HEADCRASH_SOUNDS,
   ...TERRITORY_SOUNDS,

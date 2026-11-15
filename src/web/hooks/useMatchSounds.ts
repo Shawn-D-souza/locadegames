@@ -61,7 +61,7 @@ export function useMatchSounds({ matchKey, game, look, ending, leaver, yourTurn,
   const quit = leaver !== null;
   useEffect(() => {
     if (ending === null) return;
-    const mark = quit ? null : look.lastMarkSound(endingGame.current);
+    const mark = quit ? null : look.lastMarkSound(endingGame.current, viewer);
     const handle = playSoundSequence(
       matchEndingSteps(ending, {
         lastMove: mark && { sound: mark.sound, variant: mark.variant, volume: ending === "lose" ? OPPONENT_VOLUME : ending === "watch" ? WATCHING_VOLUME : 1 },

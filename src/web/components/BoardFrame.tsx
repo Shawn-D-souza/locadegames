@@ -30,6 +30,9 @@ const SPACING_CLASSES = {
     frame: "mx-auto w-[calc(round(down,100%-8*var(--stroke-thin),9px)+8*var(--stroke-thin))] rounded-small-board bg-white",
     line: "inset-0",
   },
+  // 4 in a Row's 7×6 holes: closer together than tic-tac-toe's cells, so 42 of them fit a small phone; a deeper base
+  // under them, so the result tag on the bottom edge leaves the bottom row (often the winning one) in sight.
+  rack: { frame: "w-full gap-1 rounded-card bg-white p-2 pb-6", line: "inset-x-2 top-2 bottom-6" },
   // Sea Battle's 8×8 waters: tiles floating a little apart on the water, its corners round the tiles'.
   sea: {
     frame: "w-full gap-(--sea-tile-gap) rounded-[calc(var(--sea-tile-radius)+var(--sea-tile-gap))] bg-sea p-(--sea-tile-gap)",
@@ -42,6 +45,8 @@ interface BoardFrameProps {
   label?: string;
   /** Squares per side; the frame's first children are its squares, in order (the win line and the sparks find them by position). */
   size: number;
+  /** Rows of squares, when the board isn't square (4 in a Row: 7 across, 6 down). */
+  rows?: number;
   spacing: keyof typeof SPACING_CLASSES;
   /** The squares that won, or null. */
   winningLine: readonly number[] | null;
@@ -60,7 +65,7 @@ interface BoardFrameProps {
  * the screen moves: the last move lands with a thump and a short freeze, then a win draws its line and the board fills
  * with the winner's color; a draw shakes. The result tag sits on its bottom edge.
  */
-export function BoardFrame({ label = "Board", size, spacing, winningLine, isDraw, ending, countUp, tagLandsAtMs, ref, children }: BoardFrameProps) {
+export function BoardFrame({ label = "Board", size, rows = size, spacing, winningLine, isDraw, ending, countUp, tagLandsAtMs, ref, children }: BoardFrameProps) {
   const winnerId = ending?.winnerId ?? null;
   return (
     <div
@@ -75,7 +80,7 @@ export function BoardFrame({ label = "Board", size, spacing, winningLine, isDraw
       aria-label={label}
     >
       {children}
-      {winningLine && <WinLine cells={winningLine} size={size} className={SPACING_CLASSES[spacing].line} />}
+      {winningLine && <WinLine cells={winningLine} size={size} rows={rows} className={SPACING_CLASSES[spacing].line} />}
       {ending && (
         <ResultTag
           tone={ending.tone}

@@ -3,6 +3,7 @@ import type { TicTacToeState } from "../../shared/games/tictactoe/types";
 import { playerColors } from "../../theme";
 import { Board, type BoardEnding } from "../components/Board";
 import { ScreenLayout } from "../components/ScreenLayout";
+import { Mark } from "../components/Mark";
 import { SeatCard } from "../components/SeatCard";
 import { SunRays } from "../components/SunRays";
 import { WinParticles } from "../components/WinParticles";
@@ -61,7 +62,7 @@ export function CelebrationStage({ look, outcome, colorId, controls }: Celebrati
     return (
       <SeatCard
         player={{ id, name: id === colorId ? "You" : "Ana", connected: true }}
-        seat={seat}
+        piece={<Mark seat={seat} className="size-full" />}
         isYou={id === colorId}
         active={id === winnerId}
         countdown={null}

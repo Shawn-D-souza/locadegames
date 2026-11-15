@@ -1,4 +1,5 @@
 import type { TicTacToeState } from "../../../shared/games/tictactoe/types";
+import { Mark } from "../../components/Mark";
 import type { MatchLook } from "../matchLook";
 import { TicTacToeBoard } from "./TicTacToeBoard";
 import { lastMarkSound } from "./sounds";
@@ -6,7 +7,7 @@ import { lastMarkSound } from "./sounds";
 /** Tic-tac-toe on the match screen: its board, and one mark sound per move. */
 export const TICTACTOE_LOOK: MatchLook<TicTacToeState> = {
   Board: TicTacToeBoard,
-  pieces: true,
+  Piece: Mark,
   cards: "full",
   toMove: (game) => (game.winner !== null || game.isDraw ? [] : [game.turn]),
   winningLine: (game) => game.winningLine,

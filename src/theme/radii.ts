@@ -50,4 +50,8 @@ export const opacity = {
   groove: 0.45,
   /** Carrom: the band behind the striker while you pull it back (subtle: owner direction). */
   pullBand: 0.4,
+  /** 4 in a Row: the ring pressed into the second player's discs, in their dark color (owner decision: subtle, only there to tell the discs apart without color). */
+  discRing: 0.7,
+  /** 4 in a Row: your disc's ghost in the hole it will land in while you aim. */
+  discGhost: 0.35,
 } as const;

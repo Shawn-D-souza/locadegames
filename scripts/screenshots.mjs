@@ -22,11 +22,12 @@ import headcrash from "./screenshots/headcrash.mjs";
 import platform from "./screenshots/platform.mjs";
 import seabattle from "./screenshots/seabattle.mjs";
 import territory from "./screenshots/territory.mjs";
+import fourinarow from "./screenshots/fourinarow.mjs";
 import tictactoe from "./screenshots/tictactoe.mjs";
 import ultimate from "./screenshots/ultimate.mjs";
 
 /** The platform, then one flow per game (a new game adds its file here); the longest come first, so they start at once. */
-const PARTS = { platform, seabattle, territory, ludo, pool, carrom, snakesladders, dotsclash, dotsboxes, headcrash, ultimate, tictactoe };
+const PARTS = { platform, seabattle, territory, ludo, pool, carrom, snakesladders, dotsclash, dotsboxes, headcrash, ultimate, fourinarow, tictactoe };
 /** Kept when everything is shot again: the playtests' photos of a failure. */
 const KEEP = new Set(["playtest-failures"]);
 const SERVER = "http://localhost:8787";

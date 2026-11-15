@@ -46,6 +46,7 @@ export const HAPTIC_OF_SOUND: Partial<Record<SoundName, HapticName>> = {
   championAnnounced: "smallNews",
   // Ultimate Tic-tac-toe: winning a small board (others winning one, or one filling up, isn't felt).
   ultimateYouClaimedBoard: "ultimateBoardClaimed",
+  // 4 in a Row: nothing here; a disc's sound starts as it's let go, and the board feels its landing on the fall's own time.
   // Sea Battle: your hands on your fleet while placing, and what your shots do and what's done to your ships (your
   // cannon firing and your turn are felt from the board; watchers hear the plain blasts, which aren't felt).
   seaBattleShipPickedUp: "seaBattleShipPickedUp",

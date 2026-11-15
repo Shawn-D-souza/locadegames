@@ -146,7 +146,7 @@ export function MatchScreen({ room, tournament, gameId, match, myId, clockOffset
     countdown: live && toMove.includes(myId) ? countdown : null,
   });
 
-  // The pieces on the cards react on your phone: your X or O jumps for joy or droops; a draw makes both shrug.
+  // The pieces on the cards react on your phone: your piece jumps for joy or droops; a draw makes both shrug.
   const pieceMotion = (id: PlayerId) =>
     ending === "draw" && !watching ? "shrug" : id !== myId ? null : ending === "win" ? "hop" : ending === "lose" ? "droop" : null;
 
@@ -171,7 +171,7 @@ export function MatchScreen({ room, tournament, gameId, match, myId, clockOffset
     return (
       <SeatCard
         player={seated}
-        seat={look.pieces ? seat : undefined}
+        piece={look.Piece ? <look.Piece seat={seat} viewer={watching ? null : (mySeat as Seat)} className="size-full" /> : undefined}
         isYou={id === myId}
         active={active}
         countdown={live && active ? countdown : null}

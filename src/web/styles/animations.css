@@ -58,6 +58,14 @@
     pop-in var(--duration-slow) var(--ease-spring),
     settle-back var(--duration-celebrate) var(--ease-out) var(--claim-at) forwards;
   --animate-slide-up: slide-up var(--duration-celebrate) var(--ease-out) var(--celebrate-at) both;
+  /*
+   * 4 in a Row: a disc falls into its hole from the row above the board where you aim (`--drop-rows`: how many holes
+   * down it lands, counting that row; `--fall-ms`: how long, shorter for a shorter fall), then squashes as it lands and
+   * bounces: up, down, a smaller one, settled.
+   */
+  --animate-disc-drop:
+    disc-fall var(--fall-ms) var(--ease-drop) both,
+    disc-bounce var(--duration-disc-bounce) linear var(--fall-ms);
   --animate-tick: bounce var(--duration-slow) var(--ease-spring);
   /* Seat cards: the winner's grows and a crown drops on; the loser's shakes and fades; the pieces jump, droop or shrug. */
   --animate-card-win: card-grow var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) forwards;
@@ -156,6 +164,39 @@
   @keyframes dot-hop {
     to {
       transform: translateY(var(--transform-dot-hop-height));
+    }
+  }
+
+  /*
+   * Up from its hole: a hole (the disc is the hole's size, outline and all) and the gap under it per row (the board's
+   * `rack` spacing: holes `space-1` apart), and the board's padding and outline to the aiming row, which sits the same gap above it.
+   */
+  @keyframes disc-fall {
+    from {
+      transform: translateY(calc(-1 * (var(--drop-rows) * (100% + var(--space-1)) + var(--space-2) + var(--stroke-thin))));
+    }
+  }
+
+  /* Lands again at 45% and 80% (`DISC_BOUNCE.landsAt` in drop.ts, where its clacks are timed): slowing on the way up, speeding up on the way down. */
+  @keyframes disc-bounce {
+    0% {
+      transform: scale(var(--transform-disc-squash-x), var(--transform-disc-squash-y));
+      animation-timing-function: var(--ease-out);
+    }
+    22% {
+      transform: translateY(var(--transform-disc-bounce));
+      animation-timing-function: var(--ease-drop);
+    }
+    45% {
+      transform: scale(var(--transform-disc-squash-x), var(--transform-disc-squash-y));
+      animation-timing-function: var(--ease-out);
+    }
+    62% {
+      transform: translateY(var(--transform-disc-bounce-small));
+      animation-timing-function: var(--ease-drop);
+    }
+    80% {
+      transform: none;
     }
   }
 

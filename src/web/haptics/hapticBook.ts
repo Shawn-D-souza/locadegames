@@ -2,6 +2,7 @@ import { CARROM_HAPTICS } from "../games/carrom/haptics";
 import { DICE_HAPTICS } from "../games/dice/haptics";
 import { DOTSBOXES_HAPTICS } from "../games/dotsboxes/haptics";
 import { DOTSCLASH_HAPTICS } from "../games/dotsclash/haptics";
+import { FOURINAROW_HAPTICS } from "../games/fourinarow/haptics";
 import { SNAKESLADDERS_HAPTICS } from "../games/snakesladders/haptics";
 import { HEADCRASH_HAPTICS } from "../games/headcrash/haptics";
 import { LUDO_HAPTICS } from "../games/ludo/haptics";
@@ -40,6 +41,7 @@ export const HAPTICS = {
   ...PLATFORM_HAPTICS,
   ...TICTACTOE_HAPTICS,
   ...ULTIMATE_HAPTICS,
+  ...FOURINAROW_HAPTICS,
   ...SEABATTLE_HAPTICS,
   ...HEADCRASH_HAPTICS,
   ...TERRITORY_HAPTICS,
