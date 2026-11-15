@@ -75,4 +75,11 @@ export interface MatchLook<State extends GameState> {
    * the screen holds its ending until the board says that move has been shown (`onLastMoveShown`).
    */
   playsMovesOut?: boolean;
+  /**
+   * Each seat's clock, in ms left as the turn now running began, in a game that keeps one for each player (Chess): the
+   * cards show them always, the mover's running down.
+   */
+  clocks?(game: State): readonly [number, number];
+  /** Why the match ended, when the game says more than who won ("Checkmate", "Stalemate"): shown under the result. */
+  endDetail?(game: State): string | null;
 }

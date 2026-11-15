@@ -15,17 +15,18 @@ export interface MatchGame<State, Move> {
   create(firstTurn: Seat): State;
   /** Validates an untrusted move from the wire; null if malformed. */
   parseMove(raw: unknown): Move | null;
-  applyMove(state: State, seat: Seat, move: Move): MoveResult<State>;
+  /** `spentMs`: how long the mover took over it, by the server's clock (a game that keeps a clock for each player: Chess). */
+  applyMove(state: State, seat: Seat, move: Move, spentMs: number): MoveResult<State>;
   turn(state: State): Seat;
   outcome(state: State): GameOutcome;
   /** Played for a player whose turn timer ran out. Deterministic, no luck. */
   autoMove(state: State): Move;
-  /** How long the turn now running lasts, when it isn't the catalog's `turnTimeMs` (Sea Battle: placing takes longer). */
+  /** How long the turn now running lasts, when it isn't the catalog's `turnTimeMs` (Sea Battle: placing takes longer; Chess: the mover's clock). */
   turnTimeMs?(state: State): number;
   /** Whether a move keeps the running clock instead of starting a new turn (both players placing at once: one getting ready doesn't restart the other's time). */
   keepsClock?(before: State, after: State): boolean;
   /**
-   * A turn ran out, when that is more than `autoMove` for whoever's turn it is (both players placing at once).
+   * A turn ran out, when that is more than `autoMove` for whoever's turn it is (both players placing at once; Chess: the mover loses).
    * `seed`: a fresh random number from the server, never shown to the players.
    */
   expire?(state: State, seed: number): State;

@@ -17,7 +17,7 @@ describe("parseClientMessage", () => {
       "[]",
       "null",
       '{"type":"move"}',
-      '{"type":"start","gameId":"chess"}',
+      '{"type":"start","gameId":"notagame"}',
       '{"type":"suggest"}',
       '{"type":"timeout","matchId":"1"}',
       '{"type":"hack"}',

@@ -1,5 +1,6 @@
 import { CARROM_CONFIG } from "./carrom/config";
 import { CHECKERS_CONFIG } from "./checkers/config";
+import { CHESS_CONFIG } from "./chess/config";
 import { DOTSBOXES_CONFIG } from "./dotsboxes/config";
 import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { FOURINAROW_CONFIG } from "./fourinarow/config";
@@ -82,6 +83,15 @@ export const GAMES = [
     format: "tournament",
     play: "turns",
     turnTimeMs: CHECKERS_CONFIG.turnTimeMs,
+  },
+  {
+    id: "chess",
+    name: "Chess",
+    minPlayers: 2,
+    format: "tournament",
+    play: "turns",
+    // The longest a turn can be; each turn's own is the mover's clock if less is left on it (the game's `turnTimeMs`).
+    turnTimeMs: CHESS_CONFIG.moveLimitMs,
   },
   {
     id: "seabattle",

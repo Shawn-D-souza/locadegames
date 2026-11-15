@@ -23,6 +23,7 @@ import { MATCH_LOOKS } from "../games/matchLooks";
 import { useAutoContinue } from "../hooks/useAutoContinue";
 import { useMatchSounds } from "../hooks/useMatchSounds";
 import { useNow } from "../hooks/useNow";
+import { formatClock } from "../utils/arenaText";
 import { CELEBRATION_TIMING } from "../utils/celebrationTiming";
 import { playerStyle } from "../utils/playerStyle";
 import { entrantName } from "../utils/tournamentText";
@@ -109,6 +110,16 @@ export function MatchScreen({ room, tournament, gameId, match, myId, clockOffset
   const turnEndsAt = turnDeadline(tournament, match) - clockOffsetMs;
   const msLeft = turnEndsAt - now;
   const countdown = live && msLeft <= CLIENT_CONFIG.countdownShowMs ? Math.max(0, Math.ceil(msLeft / 1000)) : null;
+  // A game with a clock for each player (Chess): each card shows its time left, the mover's running down. When the
+  // move's own limit will run out first, its last seconds show instead, marked MOVE.
+  const clocks = look.clocks?.(match.game) ?? null;
+  const clockOf = (seat: Seat) => {
+    if (!clocks) return undefined;
+    const moving = live && look.toMove(match.game).includes(seat);
+    const left = clocks[seat] - (moving ? Math.max(0, now - (match.turnStartedAt - clockOffsetMs)) : 0);
+    if (moving && msLeft < left && msLeft <= CLIENT_CONFIG.clockWarnMs) return { text: `MOVE ${formatClock(msLeft)}`, urgent: true };
+    return { text: formatClock(left), urgent: moving && left <= CLIENT_CONFIG.clockWarnMs };
+  };
   const leaver = match.result === "forfeit" ? match.players.find((id) => id !== match.winner)! : null;
   const ending: Ending | null = looksLive ? null : drawn ? "draw" : match.winner === myId ? "win" : watching ? "watch" : "lose";
   const endingText: Record<Ending, string> = {
@@ -130,7 +141,7 @@ export function MatchScreen({ room, tournament, gameId, match, myId, clockOffset
     tone: ending,
     label: endingText[ending],
     points: myPoints,
-    detail: leaver !== null ? `${entrantName(tournament, leaver)} quit` : null,
+    detail: leaver !== null ? `${entrantName(tournament, leaver)} quit` : (look.endDetail?.(match.game) ?? null),
     winnerId: match.winner,
   };
   // The result stays a moment, then the room moves on; a tap anywhere skips the wait.
@@ -175,6 +186,7 @@ export function MatchScreen({ room, tournament, gameId, match, myId, clockOffset
         isYou={id === myId}
         active={active}
         countdown={live && active ? countdown : null}
+        clock={clockOf(seat)}
         celebrate={ending === "win" && id === myId}
         defeated={ending === "lose" && id === myId}
         pieceMotion={pieceMotion(id)}

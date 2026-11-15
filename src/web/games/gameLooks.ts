@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { GameId } from "../../shared/games/catalog";
 import { CheckersArt } from "./checkers/CheckersArt";
+import { ChessArt } from "./chess/ChessArt";
 import { DotsBoxesArt } from "./dotsboxes/DotsBoxesArt";
 import { DotsClashArt } from "./dotsclash/DotsClashArt";
 import { FourInARowArt } from "./fourinarow/FourInARowArt";
@@ -25,6 +26,7 @@ export const GAME_LOOKS: Record<GameId, GameLook> = {
   ultimate: { Art: UltimateArt },
   fourinarow: { Art: FourInARowArt },
   checkers: { Art: CheckersArt },
+  chess: { Art: ChessArt },
   seabattle: { Art: SeaBattleArt },
   headcrash: { Art: HeadCrashArt },
   territory: { Art: TerritoryArt },

@@ -17,7 +17,7 @@ import { isOriginAllowed } from "../src/server/http/origins";
 describe("game catalog", () => {
   it("accepts only listed game ids", () => {
     expect(isGameId("tictactoe")).toBe(true);
-    expect(isGameId("chess")).toBe(false);
+    expect(isGameId("notagame")).toBe(false);
     expect(isGameId(null)).toBe(false);
   });
 });

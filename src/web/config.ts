@@ -15,6 +15,8 @@ export const CLIENT_CONFIG = {
   timerTickMs: 100,
   /** The turn countdown stays hidden until this much time is left, so it doesn't distract. */
   countdownShowMs: 5_000,
+  /** A player's clock (Chess) turns urgent with this much left on it, or on the move's own limit (then that shows, marked MOVE). */
+  clockWarnMs: 30_000,
   /** Pieces in the champion screen's confetti burst. */
   confettiPieces: 40,
   /** Canvas particles for celebrations (px, px/s, ms). One seeded pattern, so a replay looks the same. */

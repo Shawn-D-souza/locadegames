@@ -169,7 +169,8 @@ function replaceMatch(t: Tournament, match: Match): Tournament {
 function play(t: Tournament, match: Match, seat: Seat, move: unknown, now: number): TournamentUpdate {
   // A real-time match has no moves: it is played live and reported with `finishLiveMatch`.
   if (isLiveGame(t.gameId) || isLiveMatch(match)) return { ok: false, error: "INVALID_MOVE" };
-  const result = MATCH_GAMES[t.gameId].applyMove(match.game, seat, move);
+  // The time the move took, for a game that keeps each player's clock (Chess).
+  const result = MATCH_GAMES[t.gameId].applyMove(match.game, seat, move, Math.max(0, now - match.turnStartedAt));
   if (!result.ok) return { ok: false, error: result.error };
   return { ok: true, tournament: settle(t, match, result.state, now) };
 }

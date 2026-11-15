@@ -1,6 +1,7 @@
 import type { GameId } from "../../shared/games/catalog";
 import { CARROM_SOUNDS } from "../games/carrom/sounds";
 import { CHECKERS_SOUNDS } from "../games/checkers/sounds";
+import { CHESS_SOUNDS } from "../games/chess/sounds";
 import { DICE_SOUNDS } from "../games/dice/sounds";
 import { DOTSBOXES_SOUNDS } from "../games/dotsboxes/sounds";
 import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
@@ -28,6 +29,7 @@ export const GAME_SOUNDS = {
   ultimate: ULTIMATE_SOUNDS,
   fourinarow: FOURINAROW_SOUNDS,
   checkers: CHECKERS_SOUNDS,
+  chess: CHESS_SOUNDS,
   seabattle: SEABATTLE_SOUNDS,
   headcrash: HEADCRASH_SOUNDS,
   territory: TERRITORY_SOUNDS,
@@ -53,6 +55,7 @@ export const SOUNDS = {
   ...ULTIMATE_SOUNDS,
   ...FOURINAROW_SOUNDS,
   ...CHECKERS_SOUNDS,
+  ...CHESS_SOUNDS,
   ...SEABATTLE_SOUNDS,
   ...HEADCRASH_SOUNDS,
   ...TERRITORY_SOUNDS,

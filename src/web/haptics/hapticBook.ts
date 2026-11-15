@@ -1,5 +1,6 @@
 import { CARROM_HAPTICS } from "../games/carrom/haptics";
 import { CHECKERS_HAPTICS } from "../games/checkers/haptics";
+import { CHESS_HAPTICS } from "../games/chess/haptics";
 import { DICE_HAPTICS } from "../games/dice/haptics";
 import { DOTSBOXES_HAPTICS } from "../games/dotsboxes/haptics";
 import { DOTSCLASH_HAPTICS } from "../games/dotsclash/haptics";
@@ -44,6 +45,7 @@ export const HAPTICS = {
   ...ULTIMATE_HAPTICS,
   ...FOURINAROW_HAPTICS,
   ...CHECKERS_HAPTICS,
+  ...CHESS_HAPTICS,
   ...SEABATTLE_HAPTICS,
   ...HEADCRASH_HAPTICS,
   ...TERRITORY_HAPTICS,

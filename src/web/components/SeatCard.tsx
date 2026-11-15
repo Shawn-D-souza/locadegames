@@ -15,6 +15,8 @@ interface SeatCardProps {
   active: boolean;
   /** Seconds left on this player's turn, shown only near the end (null: not yet). Left out, the card has no timer row (round intro). */
   countdown?: number | null;
+  /** This player's clock, in a game that keeps one for each player (Chess): shown always in the timer row, coral once it's urgent. */
+  clock?: { text: string; urgent: boolean };
   /** On the winner's own phone: a crown drops on, the card bounces and stays a little bigger. */
   celebrate?: boolean;
   /** On the loser's own phone: a small sad shake, then the card fades a little. */
@@ -36,7 +38,7 @@ const PILL_CLASSES = "rounded-pill bg-ink px-2 py-1 text-badge tracking-badge te
  * One side of a match: piece (or avatar), name, YOU / AWAY tab on the top edge. Lit means "their turn" (or "winner"),
  * so no extra words. Not tappable, so no lip.
  */
-export function SeatCard({ player, piece, isYou, active, countdown, celebrate, defeated, pieceMotion = null }: SeatCardProps) {
+export function SeatCard({ player, piece, isYou, active, countdown, clock, celebrate, defeated, pieceMotion = null }: SeatCardProps) {
   const tab = !player.connected ? "AWAY" : isYou ? "YOU" : null;
   return (
     <div
@@ -67,8 +69,18 @@ export function SeatCard({ player, piece, isYou, active, countdown, celebrate, d
         </span>
       )}
       <span className="line-clamp-2 max-w-full text-center wrap-break-word">{player.name}</span>
-      {/* Always there in a match (hidden until the last seconds), so the card never jumps when it appears. */}
-      {countdown !== undefined && (
+      {/* A player's clock: always there, in the games' number font; coral and blinking once it's nearly out. */}
+      {clock ? (
+        <span
+          className={clsx(PILL_CLASSES, "border-thin border-ink font-display tabular-nums", clock.urgent && "animate-live bg-coral")}
+          role="timer"
+          aria-label={`${clock.text} left`}
+        >
+          {clock.text}
+        </span>
+      ) : (
+        // Always there in a match (hidden until the last seconds), so the card never jumps when it appears.
+        countdown !== undefined && (
         <span
           className={clsx(PILL_CLASSES, "border-thin border-ink", countdown === null && "invisible")}
           role={countdown === null ? undefined : "timer"}
@@ -77,6 +89,7 @@ export function SeatCard({ player, piece, isYou, active, countdown, celebrate, d
         >
           {countdown ?? 0}
         </span>
+        )
       )}
     </div>
   );

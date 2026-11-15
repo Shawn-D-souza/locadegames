@@ -47,6 +47,8 @@ export const durations = {
   checkerHop: 180,
   /** Checkers: a jumped piece shrinking away as the jumping piece passes over it. */
   checkerTaken: 220,
+  /** Chess: a piece sliding from its square to the one it moves to, however far (the castling rook alongside); a piece it takes shrinks away as it arrives (`checkerTaken`). */
+  chessSlide: 220,
 } as const;
 
 export const easings = {
