@@ -5,7 +5,7 @@ import { applyMove, cellAt, createGame, landingRow, leftmostOpenColumn } from ".
 import type { FourInARowState, Seat } from "../src/shared/games/fourinarow/types";
 import { seededRandom } from "../src/shared/random";
 import { durations } from "../src/theme";
-import { isRinged } from "../src/web/games/fourinarow/discMark";
+import { isRinged } from "../src/web/games/pieceMark";
 import { fallMs } from "../src/web/games/fourinarow/drop";
 import { lastDiscSound } from "../src/web/games/fourinarow/sounds";
 

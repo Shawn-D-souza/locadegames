@@ -43,6 +43,10 @@ export const durations = {
   discFall: 190,
   /** 4 in a Row: once landed, a disc bounces up, lands again, bounces a little and settles (owner direction: it bounces at the bottom). */
   discBounce: 420,
+  /** Checkers: a piece sliding one square, or jumping two (a chain of jumps takes one each). */
+  checkerHop: 180,
+  /** Checkers: a jumped piece shrinking away as the jumping piece passes over it. */
+  checkerTaken: 220,
 } as const;
 
 export const easings = {
@@ -59,6 +63,8 @@ export const easings = {
 
 export const transforms = {
   pressScale: 0.92,
+  /** Checkers: how much a jumping piece grows at the top of its jump, as if lifted off the board. */
+  checkerJumpLift: 1.18,
   popFromScale: 0.6,
   badgeTilt: "-15deg",
   celebrateScale: 1.15,

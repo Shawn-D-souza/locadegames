@@ -7,7 +7,7 @@ import { bandpass } from "../../sound/dsp/filters";
 import { ring } from "../../sound/dsp/modes";
 import { envelope, layer, noise, strike } from "../../sound/dsp/signal";
 import type { Mix } from "../../sound/mix";
-import { isRinged } from "./discMark";
+import { isRinged } from "../pieceMark";
 import { DISC_BOUNCE, fallMs } from "./drop";
 
 /**

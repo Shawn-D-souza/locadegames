@@ -54,4 +54,6 @@ export const opacity = {
   discRing: 0.7,
   /** 4 in a Row: your disc's ghost in the hole it will land in while you aim. */
   discGhost: 0.35,
+  /** Checkers: the dot on a square your picked piece can move to. */
+  checkerTarget: 0.4,
 } as const;

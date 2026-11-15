@@ -1,5 +1,6 @@
 import type { TurnGameId } from "../../shared/games/catalog";
 import type { GameState } from "../../shared/games/registry";
+import { CHECKERS_LOOK } from "./checkers/look";
 import { FOURINAROW_LOOK } from "./fourinarow/look";
 import { SEABATTLE_LOOK } from "./seabattle/look";
 import { TICTACTOE_LOOK } from "./tictactoe/look";
@@ -15,4 +16,5 @@ export const MATCH_LOOKS: Record<TurnGameId, MatchLook<GameState>> = {
   ultimate: anyState(ULTIMATE_LOOK),
   seabattle: anyState(SEABATTLE_LOOK),
   fourinarow: anyState(FOURINAROW_LOOK),
+  checkers: anyState(CHECKERS_LOOK),
 };

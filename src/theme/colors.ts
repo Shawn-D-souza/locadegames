@@ -49,6 +49,14 @@ export const colors = {
   boardPage: "#E3E1F3",
   /** 4 in a Row: the empty holes of the column you aim at; a pale indigo, never a player's color, so it can't be taken for discs. */
   aimColumn: "#D3CFF3",
+  /**
+   * Checkers: the dark squares the pieces stand on (a pale indigo: never a player's color, so every player's pieces
+   * read on it; the light squares are white), and the last move's squares, a little deeper, so you see what just moved.
+   */
+  checkerSquare: "#D6D2F1",
+  /** Checkers' tile art: its dark squares a step deeper, so the whole board reads as a checkerboard at that size. */
+  checkerArtSquare: "#B4ACE4",
+  checkerTrail: "#BDB6E8",
   /** Dots Clash: the faint edge of an empty tile, so white tiles read on the plain page (owner direction: just a little). */
   tileEdge: "#C9C6E6",
 

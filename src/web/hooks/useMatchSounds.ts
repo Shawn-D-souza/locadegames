@@ -9,8 +9,8 @@ import { matchEndingSteps, type EndingTone } from "../sound/cues/endingCues";
 import { timerTake, timerVolume } from "../sound/cues/clockCues";
 
 /** A mark you didn't place sits back a little; watching, a little more. */
-const OPPONENT_VOLUME = 0.8;
-const WATCHING_VOLUME = 0.65;
+export const OPPONENT_VOLUME = 0.8;
+export const WATCHING_VOLUME = 0.65;
 interface MatchSoundOptions {
   /** One match of one tournament. */
   matchKey: string;

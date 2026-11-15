@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 import type { Seat } from "../../../shared/games/types";
-import { isRinged } from "./discMark";
+import { isRinged } from "../pieceMark";
 
 /** Marks inside a disc, in a 100-unit box: the ring well inside, a winning disc's white band inside its edge. */
 const MARKS = { ring: 20, ringWidth: 6, band: 38, bandWidth: 10 } as const;

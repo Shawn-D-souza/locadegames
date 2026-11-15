@@ -1,4 +1,5 @@
 import { CARROM_CONFIG } from "./carrom/config";
+import { CHECKERS_CONFIG } from "./checkers/config";
 import { DOTSBOXES_CONFIG } from "./dotsboxes/config";
 import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { FOURINAROW_CONFIG } from "./fourinarow/config";
@@ -73,6 +74,14 @@ export const GAMES = [
     format: "tournament",
     play: "turns",
     turnTimeMs: FOURINAROW_CONFIG.turnTimeMs,
+  },
+  {
+    id: "checkers",
+    name: "Checkers",
+    minPlayers: 2,
+    format: "tournament",
+    play: "turns",
+    turnTimeMs: CHECKERS_CONFIG.turnTimeMs,
   },
   {
     id: "seabattle",

@@ -33,6 +33,8 @@ const SPACING_CLASSES = {
   // 4 in a Row's 7×6 holes: closer together than tic-tac-toe's cells, so 42 of them fit a small phone; a deeper base
   // under them, so the result tag on the bottom edge leaves the bottom row (often the winning one) in sight.
   rack: { frame: "w-full gap-1 rounded-card bg-white p-2 pb-6", line: "inset-x-2 top-2 bottom-6" },
+  // Checkers' 8×8 squares: touching one another and the outline, the corner squares rounded with it (like a flush board).
+  checker: { frame: "w-full rounded-small-board bg-white", line: "inset-0" },
   // Sea Battle's 8×8 waters: tiles floating a little apart on the water, its corners round the tiles'.
   sea: {
     frame: "w-full gap-(--sea-tile-gap) rounded-[calc(var(--sea-tile-radius)+var(--sea-tile-gap))] bg-sea p-(--sea-tile-gap)",

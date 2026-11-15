@@ -70,7 +70,7 @@ Like tic-tac-toe per move: each move is one WebSocket message (DO requests bill 
 | `src/web/games/fourinarow/FourInARowCell.tsx` | One hole: its disc falling in and bouncing, lit pale indigo while you aim at its column, the ghost, the winning band and jump |
 | `src/web/games/fourinarow/useDropAim.ts` | Aiming with a finger or the mouse: press, slide, let go; sliding off cancels |
 | `src/web/games/fourinarow/Disc.tsx` | A disc in its player's color with the hole's own outline (yours ringed), lying exactly over its hole; the winning band |
-| `src/web/games/fourinarow/discMark.ts` | Which discs carry the ring (`isRinged`): yours; watching, the second seat's |
+| `src/web/games/pieceMark.ts` | Which discs carry the ring (`isRinged`): yours; watching, the second seat's (shared with Checkers' pieces) |
 | `src/web/games/fourinarow/drop.ts` | How long a disc falls into a row (`fallMs`) and when its bounce lands again (`DISC_BOUNCE`): the animation, the clacks and the feel |
 | `src/web/games/fourinarow/FourInARowArt.tsx` | Tile art |
 | `src/web/games/fourinarow/sounds.ts` | Its sounds: `fourInARowDiscLands`, `fourInARowRingedDiscLands`; `lastDiscSound` |

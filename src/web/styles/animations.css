@@ -66,6 +66,12 @@
   --animate-disc-drop:
     disc-fall var(--fall-ms) var(--ease-drop) both,
     disc-bounce var(--duration-disc-bounce) linear var(--fall-ms);
+  /*
+   * Checkers: a jumped piece shrinks away as the jumping piece passes over it (`--taken-at`: when, from the start of the
+   * move), and a man reaching the far row has its crown pop on (`--crown-at`).
+   */
+  --animate-checker-taken: checker-taken var(--duration-checker-taken) var(--ease-out) var(--taken-at) forwards;
+  --animate-checker-crown: pop-in var(--duration-slow) var(--ease-spring) var(--crown-at) both;
   --animate-tick: bounce var(--duration-slow) var(--ease-spring);
   /* Seat cards: the winner's grows and a crown drops on; the loser's shakes and fades; the pieces jump, droop or shrug. */
   --animate-card-win: card-grow var(--duration-celebrate) var(--ease-spring) var(--celebrate-at) forwards;
@@ -178,6 +184,13 @@
   }
 
   /* Lands again at 45% and 80% (`DISC_BOUNCE.landsAt` in drop.ts, where its clacks are timed): slowing on the way up, speeding up on the way down. */
+  @keyframes checker-taken {
+    to {
+      transform: scale(0);
+      opacity: 0;
+    }
+  }
+
   @keyframes disc-bounce {
     0% {
       transform: scale(var(--transform-disc-squash-x), var(--transform-disc-squash-y));
