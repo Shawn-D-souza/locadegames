@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { GameId } from "../../shared/games/catalog";
+import { DotsBoxesArt } from "./dotsboxes/DotsBoxesArt";
 import { DotsClashArt } from "./dotsclash/DotsClashArt";
 import { HeadCrashArt } from "./headcrash/HeadCrashArt";
 import { LudoArt } from "./ludo/LudoArt";
@@ -24,6 +25,7 @@ export const GAME_LOOKS: Record<GameId, GameLook> = {
   headcrash: { Art: HeadCrashArt },
   territory: { Art: TerritoryArt },
   dotsclash: { Art: DotsClashArt },
+  dotsboxes: { Art: DotsBoxesArt },
   snakesladders: { Art: SnakesLaddersArt },
   ludo: { Art: LudoArt },
   pool: { Art: PoolArt },

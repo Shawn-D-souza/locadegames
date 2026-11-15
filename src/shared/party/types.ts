@@ -1,4 +1,5 @@
 import type { CarromState } from "../games/carrom/types";
+import type { DotsBoxesState } from "../games/dotsboxes/types";
 import type { DotsClashState } from "../games/dotsclash/types";
 import type { PartyGameId } from "../games/catalog";
 import type { LudoState } from "../games/ludo/types";
@@ -24,6 +25,7 @@ export interface PartyResult {
 /** Each party game's whole state, by catalog id. */
 export interface PartyStates {
   dotsclash: DotsClashState;
+  dotsboxes: DotsBoxesState;
   snakesladders: SnakesLaddersState;
   ludo: LudoState;
   pool: PoolState;
@@ -44,7 +46,7 @@ interface PartyCommon {
 }
 
 /**
- * A turn-based game everyone in the room plays together on one board (Dots Clash, Snakes & Ladders, Ludo, Pool, Carrom). The room holds its
+ * A turn-based game everyone in the room plays together on one board (Dots Clash, Dots & Boxes, Snakes & Ladders, Ludo, Pool, Carrom). The room holds its
  * whole state, like a tournament's turn-based match; the server needs no timers, so the room sleeps between turns.
  * `Party<"dotsclash">` is one game's; `Party` is any of them (narrowed by `gameId`).
  */

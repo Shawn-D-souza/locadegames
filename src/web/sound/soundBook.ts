@@ -1,6 +1,7 @@
 import type { GameId } from "../../shared/games/catalog";
 import { CARROM_SOUNDS } from "../games/carrom/sounds";
 import { DICE_SOUNDS } from "../games/dice/sounds";
+import { DOTSBOXES_SOUNDS } from "../games/dotsboxes/sounds";
 import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
 import { HEADCRASH_SOUNDS } from "../games/headcrash/sounds";
 import { LUDO_SOUNDS } from "../games/ludo/sounds";
@@ -27,6 +28,7 @@ export const GAME_SOUNDS = {
   headcrash: HEADCRASH_SOUNDS,
   territory: TERRITORY_SOUNDS,
   dotsclash: DOTSCLASH_SOUNDS,
+  dotsboxes: DOTSBOXES_SOUNDS,
   snakesladders: { ...SNAKESLADDERS_SOUNDS, ...DICE_SOUNDS },
   ludo: { ...LUDO_SOUNDS, ...DICE_SOUNDS },
   pool: POOL_SOUNDS,
@@ -49,6 +51,7 @@ export const SOUNDS = {
   ...HEADCRASH_SOUNDS,
   ...TERRITORY_SOUNDS,
   ...DOTSCLASH_SOUNDS,
+  ...DOTSBOXES_SOUNDS,
   ...SNAKESLADDERS_SOUNDS,
   ...LUDO_SOUNDS,
   ...POOL_SOUNDS,

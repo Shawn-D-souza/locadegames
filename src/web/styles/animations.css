@@ -86,6 +86,14 @@
   --animate-turn-hop: turn-hop var(--duration-hop) var(--ease-out) infinite alternate;
 
   /*
+   * Dots & Boxes. A new line draws in from its middle (as long as the next line's clock waits: `lineMs`), then the
+   * boxes it won fill in with their winner's color.
+   */
+  --animate-edge-draw-x: edge-draw-x var(--duration-normal) var(--ease-out) both;
+  --animate-edge-draw-y: edge-draw-y var(--duration-normal) var(--ease-out) both;
+  --animate-box-claim: claim var(--duration-slow) var(--ease-spring) var(--duration-normal) both;
+
+  /*
    * Sea Battle. A shot: the shooter's cannon comes in once the boards have traded places. As it fires (`--shot-delay`:
    * once it has swung onto the cell) it squashes and swells, its barrel kicks back, its muzzle flashes and puffs smoke,
    * and the ball flies (`--from-x` … `--to-y`): rising on screen and growing to the top of its arc, then dropping,
@@ -367,6 +375,18 @@
     to {
       scale: var(--transform-stamp-from-scale);
       opacity: 0;
+    }
+  }
+
+  @keyframes edge-draw-x {
+    from {
+      scale: 0 1;
+    }
+  }
+
+  @keyframes edge-draw-y {
+    from {
+      scale: 1 0;
     }
   }
 

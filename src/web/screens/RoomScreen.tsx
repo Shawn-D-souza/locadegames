@@ -17,6 +17,7 @@ import { useBackButtonGuard } from "../hooks/useBackButtonGuard";
 import { useBefore } from "../hooks/useBefore";
 import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
+import { DotsBoxesScreen } from "../games/dotsboxes/DotsBoxesScreen";
 import { DotsClashScreen } from "../games/dotsclash/DotsClashScreen";
 import { LudoScreen } from "../games/ludo/LudoScreen";
 import { SnakesLaddersScreen } from "../games/snakesladders/SnakesLaddersScreen";
@@ -65,6 +66,7 @@ const ARENA_QUIT_COST = "You'll be out of this match.";
 /** What quitting a game everyone plays together costs. */
 const PARTY_QUIT_COST: Record<PartyGameId, string> = {
   dotsclash: "You'll be out of this game. Your dots turn grey.",
+  dotsboxes: "You'll be out of this game. Your boxes turn grey.",
   snakesladders: "You'll be out of this game.",
   ludo: "You'll be out of this game. Your pawns leave the board.",
   pool: "You'll be out of this game. Your balls leave the table.",
@@ -195,6 +197,8 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
       content =
         p.gameId === "dotsclash" ? (
           <DotsClashScreen party={p} {...on} />
+        ) : p.gameId === "dotsboxes" ? (
+          <DotsBoxesScreen party={p} lastError={lastError} {...on} />
         ) : p.gameId === "snakesladders" ? (
           <SnakesLaddersScreen party={p} {...on} />
         ) : p.gameId === "ludo" ? (

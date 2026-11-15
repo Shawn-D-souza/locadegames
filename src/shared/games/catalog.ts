@@ -1,4 +1,5 @@
 import { CARROM_CONFIG } from "./carrom/config";
+import { DOTSBOXES_CONFIG } from "./dotsboxes/config";
 import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { HEADCRASH_CONFIG } from "./headcrash/config";
 import { LUDO_CONFIG } from "./ludo/config";
@@ -91,6 +92,13 @@ export const GAMES = [
     minPlayers: DOTSCLASH_CONFIG.minPlayers,
     format: "party",
     turnTimeMs: DOTSCLASH_CONFIG.turnTimeMs,
+  },
+  {
+    id: "dotsboxes",
+    name: "Dots & Boxes",
+    minPlayers: DOTSBOXES_CONFIG.minPlayers,
+    format: "party",
+    turnTimeMs: DOTSBOXES_CONFIG.turnTimeMs,
   },
   {
     id: "snakesladders",

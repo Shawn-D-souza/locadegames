@@ -12,6 +12,7 @@ import { availableParallelism } from "node:os";
 import { chromium } from "playwright";
 import { createServer } from "vite";
 import { Camera, OUT, SIZES } from "./screenshots/camera.mjs";
+import dotsboxes from "./screenshots/dotsboxes.mjs";
 import dotsclash from "./screenshots/dotsclash.mjs";
 import ludo from "./screenshots/ludo.mjs";
 import carrom from "./screenshots/carrom.mjs";
@@ -25,7 +26,7 @@ import tictactoe from "./screenshots/tictactoe.mjs";
 import ultimate from "./screenshots/ultimate.mjs";
 
 /** The platform, then one flow per game (a new game adds its file here); the longest come first, so they start at once. */
-const PARTS = { platform, seabattle, territory, ludo, pool, carrom, snakesladders, dotsclash, headcrash, ultimate, tictactoe };
+const PARTS = { platform, seabattle, territory, ludo, pool, carrom, snakesladders, dotsclash, dotsboxes, headcrash, ultimate, tictactoe };
 /** Kept when everything is shot again: the playtests' photos of a failure. */
 const KEEP = new Set(["playtest-failures"]);
 const SERVER = "http://localhost:8787";
