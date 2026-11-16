@@ -7,8 +7,8 @@ export const POOL_CONFIG = {
   minPlayers: 2,
   /** The first game with a cap (owner decision): at most 4 round one table. */
   maxPlayers: 4,
-  /** Each shot must be taken within this time, or the turn passes with no foul (owner decision: 30 s). */
-  turnTimeMs: 30_000,
+  /** Each shot must be taken within this time, or the turn passes with no foul (owner decision: 45 s). */
+  turnTimeMs: 45_000,
   /**
    * Run out of time this many turns in a row and you're out, as if you'd quit (owner decision: so a game can't go on
    * forever with someone away or stalling; one shot taken starts the count again).

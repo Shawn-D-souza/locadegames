@@ -7,8 +7,8 @@ export const CARROM_CONFIG = {
   minPlayers: 2,
   /** At most 4 round one board (owner decision): one side each. */
   maxPlayers: 4,
-  /** Each shot must be taken within this time, or the turn passes (owner decision: as in Pool, 30 s). */
-  turnTimeMs: 30_000,
+  /** Each shot must be taken within this time, or the turn passes (owner decision: as in Pool, 45 s). */
+  turnTimeMs: 45_000,
   /** Run out of time this many turns in a row and you're out, as if you'd quit (as in Pool). */
   missedTurnsOut: 3,
   /** Point carrom (owner decision): anyone may pocket any coin; a white is worth 20, a black 10, the queen 50 once covered. */

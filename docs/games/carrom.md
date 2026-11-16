@@ -19,7 +19,7 @@ Point carrom for 2, 3 or 4, each playing for themselves: anyone may pocket any c
 - **The striker** stands on your baseline, anywhere between its two end circles, but **not on a coin** (classic rule). **Shots go forward only** (owner decision): never back at coins behind you; at most nearly sideways.
 - **One board per game** (owner decision). It ends once **every coin is in**. **Most points wins; players level on top share the win** (and each gets the room trophy), as the platform's shared titles. If everyone else quits, the last one in ends it.
 - **A real flick** (owner direction, 2026-11-15: an arrow and a separate way to turn the aim felt like it only shot straight): pull back from the striker **in any direction** and let go; it shoots the opposite way to your pull, as hard as the pull is long. **No arrow, no aim line** (owner direction). **No spin, no thumbing** (simple controls).
-- **Timer: 30 s** a shot, as in Pool; the countdown shows only in the last 5 s. If it runs out, the turn passes. **3 run out in a row puts you out** (as quitting); any shot starts the count again.
+- **Timer: 45 s** a shot, as in Pool; the countdown shows only in the last 5 s. If it runs out, the turn passes. **3 run out in a row puts you out** (as quitting); any shot starts the count again.
 - **Quitting** (the ✕ or the back button after a confirm, or leaving the room) puts you out: the coins stay (they're everyone's), your points no longer count for a place, your turn passes on.
 - **Places:** most points first (level players share a place), then quitters (the latest first). Final points show on the results.
 - **Turn order (the platform's Fair starts rule):** whoever has gone first least in this room's party games breaks; then round the board.
