@@ -3,6 +3,7 @@ import { carromGame } from "../games/carrom/game";
 import { dotsBoxesGame } from "../games/dotsboxes/game";
 import { dotsClashGame } from "../games/dotsclash/game";
 import { ludoGame } from "../games/ludo/game";
+import { memoryGame } from "../games/memory/game";
 import { poolGame } from "../games/pool/game";
 import { snakesLaddersGame } from "../games/snakesladders/game";
 import type { PartyGame } from "../games/types";
@@ -15,6 +16,7 @@ export type PartyState = PartyStates[PartyGameId];
 export const PARTY_GAMES: { [K in PartyGameId]: PartyGame<PartyStates[K], unknown> } = {
   dotsclash: dotsClashGame as PartyGame<PartyStates["dotsclash"], unknown>,
   dotsboxes: dotsBoxesGame as PartyGame<PartyStates["dotsboxes"], unknown>,
+  memory: memoryGame as PartyGame<PartyStates["memory"], unknown>,
   snakesladders: snakesLaddersGame as PartyGame<PartyStates["snakesladders"], unknown>,
   ludo: ludoGame as PartyGame<PartyStates["ludo"], unknown>,
   pool: poolGame as PartyGame<PartyStates["pool"], unknown>,

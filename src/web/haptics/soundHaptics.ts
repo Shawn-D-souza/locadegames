@@ -81,6 +81,8 @@ export const HAPTIC_OF_SOUND: Partial<Record<SoundName, HapticName>> = {
   dotsClashYouAreOut: "dotsClashOut",
   // Dots & Boxes: a box you win (your line is felt as your finger lands, your turn from the screen; others' lines and boxes aren't felt).
   dotsBoxesYourBox: "dotsBoxesYourBox",
+  // Memory: a pair you find (your card is felt as your finger lands, your turn from the screen; others' cards and pairs aren't felt).
+  memoryYourPair: "memoryYourPair",
   // Snakes & Ladders: nothing here; only your own roll is felt, so its feels come with its cues (`rollCues`), not its sounds (everyone hears every roll).
 };
 

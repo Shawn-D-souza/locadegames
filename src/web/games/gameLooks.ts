@@ -7,6 +7,7 @@ import { DotsClashArt } from "./dotsclash/DotsClashArt";
 import { FourInARowArt } from "./fourinarow/FourInARowArt";
 import { HeadCrashArt } from "./headcrash/HeadCrashArt";
 import { LudoArt } from "./ludo/LudoArt";
+import { MemoryArt } from "./memory/MemoryArt";
 import { CarromArt } from "./carrom/CarromArt";
 import { PoolArt } from "./pool/PoolArt";
 import { SeaBattleArt } from "./seabattle/SeaBattleArt";
@@ -32,6 +33,7 @@ export const GAME_LOOKS: Record<GameId, GameLook> = {
   territory: { Art: TerritoryArt },
   dotsclash: { Art: DotsClashArt },
   dotsboxes: { Art: DotsBoxesArt },
+  memory: { Art: MemoryArt },
   snakesladders: { Art: SnakesLaddersArt },
   ludo: { Art: LudoArt },
   pool: { Art: PoolArt },

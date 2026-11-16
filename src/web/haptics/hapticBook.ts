@@ -3,6 +3,7 @@ import { CHECKERS_HAPTICS } from "../games/checkers/haptics";
 import { CHESS_HAPTICS } from "../games/chess/haptics";
 import { DICE_HAPTICS } from "../games/dice/haptics";
 import { DOTSBOXES_HAPTICS } from "../games/dotsboxes/haptics";
+import { MEMORY_HAPTICS } from "../games/memory/haptics";
 import { DOTSCLASH_HAPTICS } from "../games/dotsclash/haptics";
 import { FOURINAROW_HAPTICS } from "../games/fourinarow/haptics";
 import { SNAKESLADDERS_HAPTICS } from "../games/snakesladders/haptics";
@@ -51,6 +52,7 @@ export const HAPTICS = {
   ...TERRITORY_HAPTICS,
   ...DOTSCLASH_HAPTICS,
   ...DOTSBOXES_HAPTICS,
+  ...MEMORY_HAPTICS,
   ...SNAKESLADDERS_HAPTICS,
   ...LUDO_HAPTICS,
   ...POOL_HAPTICS,

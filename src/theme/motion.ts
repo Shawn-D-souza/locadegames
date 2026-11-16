@@ -54,6 +54,8 @@ export const durations = {
 export const easings = {
   spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
   out: "cubic-bezier(0.22, 1, 0.36, 1)",
+  /** Memory: a card squeezing toward its edge as it turns, slow then fast (it opens out the other side with `out`). */
+  in: "cubic-bezier(0.5, 0, 0.75, 0)",
   /** Dots Clash: a dot flying to the next tile, launching quickly and easing into its landing. */
   flight: "cubic-bezier(0.4, 0, 0.2, 1)",
   /** Sea Battle: a cannonball thrown up, slowing to the top of its arc, then falling faster and faster. */
@@ -87,6 +89,9 @@ export const transforms = {
   stampFromScale: 2.2,
   /** A small board's big mark stamps on from this size (Ultimate Tic-tac-toe): smaller than a result's, it happens often. */
   claimFromScale: 1.6,
+  /** Memory: a card turning over, at its thinnest (seen side on), and how far a missed pair's cards wobble before turning back. */
+  cardEdgeScale: 0.08,
+  cardMissTilt: "4deg",
   /** YOU WIN! sits slightly tilted, like a stamp. */
   stampTilt: "-6deg",
   confettiSpin: "720deg",

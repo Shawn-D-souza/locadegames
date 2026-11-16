@@ -15,6 +15,7 @@ import { Camera, OUT, SIZES } from "./screenshots/camera.mjs";
 import dotsboxes from "./screenshots/dotsboxes.mjs";
 import dotsclash from "./screenshots/dotsclash.mjs";
 import ludo from "./screenshots/ludo.mjs";
+import memory from "./screenshots/memory.mjs";
 import carrom from "./screenshots/carrom.mjs";
 import pool from "./screenshots/pool.mjs";
 import snakesladders from "./screenshots/snakesladders.mjs";
@@ -29,7 +30,7 @@ import tictactoe from "./screenshots/tictactoe.mjs";
 import ultimate from "./screenshots/ultimate.mjs";
 
 /** The platform, then one flow per game (a new game adds its file here); the longest come first, so they start at once. */
-const PARTS = { platform, seabattle, territory, ludo, pool, carrom, snakesladders, dotsclash, dotsboxes, headcrash, chess, checkers, ultimate, fourinarow, tictactoe };
+const PARTS = { platform, seabattle, territory, ludo, pool, carrom, snakesladders, dotsclash, dotsboxes, memory, headcrash, chess, checkers, ultimate, fourinarow, tictactoe };
 /** Kept when everything is shot again: the playtests' photos of a failure. */
 const KEEP = new Set(["playtest-failures"]);
 const SERVER = "http://localhost:8787";

@@ -108,6 +108,20 @@
   --animate-box-claim: claim var(--duration-slow) var(--ease-spring) var(--duration-normal) both;
 
   /*
+   * Memory. A card turns over as half a turn seen side on (`--flip-ms`, the game's `flipMs`, set on the board): the side
+   * it shows squeezes thin, then the other side opens out; the two sides swap at the middle (opacity in two steps, so
+   * only the compositor works). Your tapped card starts squeezing at once (`lift`) and opens out (`open`) when the
+   * server has said what it is. A pair found bounces once it has turned; a miss wobbles before turning back.
+   */
+  --animate-card-flip: card-flip var(--flip-ms) linear both;
+  --animate-card-side-out: card-side-out var(--flip-ms) steps(2, jump-none) both;
+  --animate-card-side-in: card-side-in var(--flip-ms) steps(2, jump-none) both;
+  --animate-card-lift: card-lift calc(var(--flip-ms) / 2) var(--ease-out) forwards;
+  --animate-card-open: card-open calc(var(--flip-ms) / 2) var(--ease-out) both;
+  --animate-card-pair: bounce var(--duration-celebrate) var(--ease-spring) var(--flip-ms) both;
+  --animate-card-miss: card-miss var(--duration-celebrate) var(--ease-out) var(--flip-ms) both;
+
+  /*
    * Sea Battle. A shot: the shooter's cannon comes in once the boards have traded places. As it fires (`--shot-delay`:
    * once it has swung onto the cell) it squashes and swells, its barrel kicks back, its muzzle flashes and puffs smoke,
    * and the ball flies (`--from-x` … `--to-y`): rising on screen and growing to the top of its arc, then dropping,
@@ -441,6 +455,51 @@
   @keyframes edge-draw-y {
     from {
       scale: 1 0;
+    }
+  }
+
+  /* Squeezing in fast-then-slow toward the edge, then opening out slow-then-fast: like a card really turning. */
+  @keyframes card-flip {
+    from {
+      animation-timing-function: var(--ease-in);
+    }
+    50% {
+      scale: var(--transform-card-edge-scale) 1;
+      animation-timing-function: var(--ease-out);
+    }
+  }
+
+  @keyframes card-side-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes card-side-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes card-lift {
+    to {
+      scale: var(--transform-card-edge-scale) 1;
+    }
+  }
+
+  @keyframes card-open {
+    from {
+      scale: var(--transform-card-edge-scale) 1;
+    }
+  }
+
+  @keyframes card-miss {
+    25%,
+    75% {
+      rotate: calc(-1 * var(--transform-card-miss-tilt));
+    }
+    50% {
+      rotate: var(--transform-card-miss-tilt);
     }
   }
 

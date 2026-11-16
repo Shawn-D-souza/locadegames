@@ -6,6 +6,7 @@ import { DOTSCLASH_CONFIG } from "./dotsclash/config";
 import { FOURINAROW_CONFIG } from "./fourinarow/config";
 import { HEADCRASH_CONFIG } from "./headcrash/config";
 import { LUDO_CONFIG } from "./ludo/config";
+import { MEMORY_CONFIG } from "./memory/config";
 import { POOL_CONFIG } from "./pool/config";
 import { SEABATTLE_CONFIG } from "./seabattle/config";
 import { SNAKESLADDERS_CONFIG } from "./snakesladders/config";
@@ -127,6 +128,13 @@ export const GAMES = [
     minPlayers: DOTSBOXES_CONFIG.minPlayers,
     format: "party",
     turnTimeMs: DOTSBOXES_CONFIG.turnTimeMs,
+  },
+  {
+    id: "memory",
+    name: "Memory",
+    minPlayers: MEMORY_CONFIG.minPlayers,
+    format: "party",
+    turnTimeMs: MEMORY_CONFIG.turnTimeMs,
   },
   {
     id: "snakesladders",

@@ -8,6 +8,8 @@ export const radii = {
   artCell: 6,
   /** One small board inside Ultimate Tic-tac-toe's big one. */
   smallBoard: 12,
+  /** A Memory card (about 50–80px across on a phone). */
+  memoryCard: 10,
   card: 28,
   panel: 40,
 } as const;

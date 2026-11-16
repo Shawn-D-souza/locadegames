@@ -4,6 +4,7 @@ import { CHECKERS_SOUNDS } from "../games/checkers/sounds";
 import { CHESS_SOUNDS } from "../games/chess/sounds";
 import { DICE_SOUNDS } from "../games/dice/sounds";
 import { DOTSBOXES_SOUNDS } from "../games/dotsboxes/sounds";
+import { MEMORY_SOUNDS } from "../games/memory/sounds";
 import { DOTSCLASH_SOUNDS } from "../games/dotsclash/sounds";
 import { FOURINAROW_SOUNDS } from "../games/fourinarow/sounds";
 import { HEADCRASH_SOUNDS } from "../games/headcrash/sounds";
@@ -35,6 +36,7 @@ export const GAME_SOUNDS = {
   territory: TERRITORY_SOUNDS,
   dotsclash: DOTSCLASH_SOUNDS,
   dotsboxes: DOTSBOXES_SOUNDS,
+  memory: MEMORY_SOUNDS,
   snakesladders: { ...SNAKESLADDERS_SOUNDS, ...DICE_SOUNDS },
   ludo: { ...LUDO_SOUNDS, ...DICE_SOUNDS },
   pool: POOL_SOUNDS,
@@ -61,6 +63,7 @@ export const SOUNDS = {
   ...TERRITORY_SOUNDS,
   ...DOTSCLASH_SOUNDS,
   ...DOTSBOXES_SOUNDS,
+  ...MEMORY_SOUNDS,
   ...SNAKESLADDERS_SOUNDS,
   ...LUDO_SOUNDS,
   ...POOL_SOUNDS,

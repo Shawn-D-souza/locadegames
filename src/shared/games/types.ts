@@ -47,7 +47,7 @@ export interface PartyPlace {
 
 /**
  * What the room needs from a turn-based game everyone plays together on one board (the party format: Dots Clash,
- * Dots & Boxes, Snakes & Ladders, Ludo, Pool, Carrom). Pure functions only, so client and server agree. Seats are in turn order.
+ * Dots & Boxes, Memory, Snakes & Ladders, Ludo, Pool, Carrom). Pure functions only, so client and server agree. Seats are in turn order.
  */
 export interface PartyGame<State, Move> {
   /** `seed`: the server's random number for this game (Pool's rack order). */

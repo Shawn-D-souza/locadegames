@@ -119,6 +119,13 @@ export const colors = {
   carromBlack: "#2B2752",
   carromQueen: "#E0308F",
 
+  /**
+   * Memory: a card's back, a deep indigo (never a player's color, so every card's picture stands out once it turns),
+   * with a paler question mark pressed into it.
+   */
+  memoryBack: "#4E479F",
+  memoryBackMark: "#6E67C2",
+
   online: "#78C840",
   waiting: "#FFC02E",
   offline: "#8A94A6",
