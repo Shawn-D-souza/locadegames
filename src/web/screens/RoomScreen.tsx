@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { isLiveGame, type PartyGameId } from "../../shared/games/catalog";
+import { isLiveGame, type PartyGameId, type TurnGameId } from "../../shared/games/catalog";
 import { CLOSE_CODES } from "../../shared/protocol/errors";
 import type { PlayerId } from "../../shared/rooms/types";
 import { currentRound, isLive, isLiveMatch, standings } from "../../shared/tournament/tournament";
@@ -17,13 +17,13 @@ import { useBackButtonGuard } from "../hooks/useBackButtonGuard";
 import { useBefore } from "../hooks/useBefore";
 import { useRoomSounds } from "../hooks/useRoomSounds";
 import { useTimeoutClaims } from "../hooks/useTimeoutClaims";
-import { DotsBoxesScreen } from "../games/dotsboxes/DotsBoxesScreen";
-import { DotsClashScreen } from "../games/dotsclash/DotsClashScreen";
-import { LudoScreen } from "../games/ludo/LudoScreen";
-import { MemoryScreen } from "../games/memory/MemoryScreen";
-import { SnakesLaddersScreen } from "../games/snakesladders/SnakesLaddersScreen";
+import { loadDotsBoxes } from "../games/dotsboxes/loadDotsBoxes";
+import { loadDotsClash } from "../games/dotsclash/loadDotsClash";
+import { loadLudo } from "../games/ludo/loadLudo";
+import { loadMemory } from "../games/memory/loadMemory";
+import { loadSnakesLadders } from "../games/snakesladders/loadSnakesLadders";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
-import { MATCH_LOOKS } from "../games/matchLooks";
+import { useMatchLook } from "../games/matchLooks";
 import { loadCarrom } from "../games/carrom/loadCarrom";
 import { loadPool } from "../games/pool/loadPool";
 import { loadTerritory } from "../games/territory/loadTerritory";
@@ -47,6 +47,11 @@ interface RoomScreenProps {
 
 const TerritoryScreen = lazy(() => loadTerritory().then((m) => ({ default: m.TerritoryScreen })));
 const HeadCrashScreen = lazy(() => loadHeadCrash().then((m) => ({ default: m.HeadCrashScreen })));
+const DotsBoxesScreen = lazy(() => loadDotsBoxes().then((m) => ({ default: m.DotsBoxesScreen })));
+const DotsClashScreen = lazy(() => loadDotsClash().then((m) => ({ default: m.DotsClashScreen })));
+const LudoScreen = lazy(() => loadLudo().then((m) => ({ default: m.LudoScreen })));
+const MemoryScreen = lazy(() => loadMemory().then((m) => ({ default: m.MemoryScreen })));
+const SnakesLaddersScreen = lazy(() => loadSnakesLadders().then((m) => ({ default: m.SnakesLaddersScreen })));
 const PoolScreen = lazy(() => loadPool().then((m) => ({ default: m.PoolScreen })));
 const CarromScreen = lazy(() => loadCarrom().then((m) => ({ default: m.CarromScreen })));
 
@@ -107,6 +112,8 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
   const [partyEndSeen, setPartyEndSeen] = useState<number | null>(null);
   const [confirmPartyQuit, setConfirmPartyQuit] = useState<number | null>(null);
   useTimeoutClaims(room, playerId, clockOffsetMs, send);
+  const turnGameId = room?.tournament && !isLiveGame(room.tournament.gameId) ? (room.tournament.gameId as TurnGameId) : null;
+  const matchLook = useMatchLook(turnGameId);
 
   const liveArena = room?.phase === "playing" && room.arena && !room.arena.finished ? room.arena : null;
   if (liveArena && arenaSeenLive !== liveArena.startedAt) setArenaSeenLive(liveArena.startedAt);
@@ -196,26 +203,25 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
     // A finished game stays on screen for its ending (if you saw it live), then the results, then the room.
     if (!p.finished || (partySeenLive === p.startedAt && partyEndSeen !== p.startedAt)) {
       const on = { myId: playerId, clockOffsetMs, send, onQuit: askPartyQuit, onLeave: requestLeave, onContinue: () => setPartyEndSeen(p.startedAt) };
-      content =
-        p.gameId === "dotsclash" ? (
-          <DotsClashScreen party={p} {...on} />
-        ) : p.gameId === "dotsboxes" ? (
-          <DotsBoxesScreen party={p} lastError={lastError} {...on} />
-        ) : p.gameId === "memory" ? (
-          <MemoryScreen party={p} lastError={lastError} {...on} />
-        ) : p.gameId === "snakesladders" ? (
-          <SnakesLaddersScreen party={p} {...on} />
-        ) : p.gameId === "ludo" ? (
-          <LudoScreen party={p} {...on} />
-        ) : p.gameId === "pool" ? (
-          <Suspense fallback={<JoiningScreen code={code} onBack={requestLeave} />}>
+      content = (
+        <Suspense fallback={<JoiningScreen code={code} onBack={requestLeave} />}>
+          {p.gameId === "dotsclash" ? (
+            <DotsClashScreen party={p} {...on} />
+          ) : p.gameId === "dotsboxes" ? (
+            <DotsBoxesScreen party={p} lastError={lastError} {...on} />
+          ) : p.gameId === "memory" ? (
+            <MemoryScreen party={p} lastError={lastError} {...on} />
+          ) : p.gameId === "snakesladders" ? (
+            <SnakesLaddersScreen party={p} {...on} />
+          ) : p.gameId === "ludo" ? (
+            <LudoScreen party={p} {...on} />
+          ) : p.gameId === "pool" ? (
             <PoolScreen party={p} {...on} />
-          </Suspense>
-        ) : (
-          <Suspense fallback={<JoiningScreen code={code} onBack={requestLeave} />}>
+          ) : (
             <CarromScreen party={p} lastError={lastError} {...on} />
-          </Suspense>
-        );
+          )}
+        </Suspense>
+      );
     } else if (leftResults !== p.startedAt) {
       content = (
         <ResultsScreen
@@ -299,8 +305,10 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
             {...on}
           />
         </Suspense>
-      ) : isLiveGame(t.gameId) ? null : (
-        <MatchScreen room={room} tournament={t} gameId={t.gameId} match={match} myId={playerId} clockOffsetMs={clockOffsetMs} send={send} {...on} />
+      ) : isLiveGame(t.gameId) ? null : !matchLook ? (
+        <JoiningScreen code={code} onBack={requestLeave} />
+      ) : (
+        <MatchScreen look={matchLook} room={room} tournament={t} match={match} myId={playerId} clockOffsetMs={clockOffsetMs} send={send} {...on} />
       );
     if (justPlayed) {
       content = matchScreen(justPlayed, { onContinue: () => setDismissed({ startedAt: t.startedAt, matchId: justPlayed.id }) });
@@ -315,7 +323,7 @@ export function RoomScreen({ code, name, onExit }: RoomScreenProps) {
           myId={playerId}
           startsAt={roundStart}
           live={ownCountdown}
-          Piece={isLiveGame(t.gameId) ? null : MATCH_LOOKS[t.gameId].Piece}
+          Piece={matchLook?.Piece ?? null}
         />
       );
     } else if (mine && !refersTo(dismissed, t, mine)) {

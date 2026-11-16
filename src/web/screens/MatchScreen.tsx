@@ -5,7 +5,6 @@ import type { ClientMessage, RoomView } from "../../shared/protocol/messages";
 import type { PlayerId } from "../../shared/rooms/types";
 import { isLive, turnDeadline } from "../../shared/tournament/tournament";
 import { TOURNAMENT_CONFIG } from "../../shared/tournament/config";
-import type { TurnGameId } from "../../shared/games/catalog";
 import type { Tournament, TurnMatch } from "../../shared/tournament/types";
 import { Badge } from "../components/Badge";
 import type { BoardEnding } from "../components/BoardFrame";
@@ -18,8 +17,8 @@ import { SeatChip } from "../components/SeatChip";
 import { SunRays } from "../components/SunRays";
 import { WinParticles } from "../components/WinParticles";
 import { CLIENT_CONFIG } from "../config";
-import type { MatchLayout } from "../games/matchLook";
-import { MATCH_LOOKS } from "../games/matchLooks";
+import type { MatchLayout, MatchLook } from "../games/matchLook";
+import type { GameState } from "../../shared/games/registry";
 import { useAutoContinue } from "../hooks/useAutoContinue";
 import { useMatchSounds } from "../hooks/useMatchSounds";
 import { useNow } from "../hooks/useNow";
@@ -31,8 +30,8 @@ import { entrantName } from "../utils/tournamentText";
 interface MatchScreenProps {
   room: RoomView;
   tournament: Tournament;
-  /** The turn-based game being played (real-time games have their own screens). */
-  gameId: TurnGameId;
+  /** The turn-based game's board, layout and sounds (loaded by the room). */
+  look: MatchLook<GameState>;
   match: TurnMatch;
   myId: PlayerId;
   clockOffsetMs: number;
@@ -66,9 +65,8 @@ const LAYOUT_CLASSES: Record<MatchLayout, { column: string; side: string; cards:
 };
 
 /** One 1v1 match: both players side by side (you on the left; the lit card is whose turn, then the winner), then the board. Also used to watch others. */
-export function MatchScreen({ room, tournament, gameId, match, myId, clockOffsetMs, send, onBack, onContinue, onQuit }: MatchScreenProps) {
+export function MatchScreen({ look, room, tournament, match, myId, clockOffsetMs, send, onBack, onContinue, onQuit }: MatchScreenProps) {
   const boardRef = useRef<HTMLDivElement>(null);
-  const look = MATCH_LOOKS[gameId];
   const layout = LAYOUT_CLASSES[look.layout];
   const live = isLive(match);
   const now = useNow(CLIENT_CONFIG.timerTickMs, live);

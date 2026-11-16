@@ -12,6 +12,12 @@ import { GAME_LOOKS } from "../games/gameLooks";
 import { loadHeadCrash } from "../games/headcrash/loadHeadCrash";
 import { loadCarrom } from "../games/carrom/loadCarrom";
 import { loadPool } from "../games/pool/loadPool";
+import { loadDotsBoxes } from "../games/dotsboxes/loadDotsBoxes";
+import { loadDotsClash } from "../games/dotsclash/loadDotsClash";
+import { loadLudo } from "../games/ludo/loadLudo";
+import { loadMemory } from "../games/memory/loadMemory";
+import { loadSnakesLadders } from "../games/snakesladders/loadSnakesLadders";
+import { preloadMatchLooks } from "../games/matchLooks";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { playSound } from "../services/soundPlayer";
 import { gameFit, orderGames } from "../utils/gameOrder";
@@ -28,12 +34,18 @@ export function LobbyScreen({ room, myId, send, onLeave }: LobbyScreenProps) {
   const isHost = room.hostId === myId;
   const me = room.players.find((p) => p.id === myId);
   const online = room.players.filter((p) => p.connected).length;
-  // Fetch the real-time games' code (and Pool's and Carrom's boards) while friends gather, so they start without a wait.
+  // Fetch every game's code (each is its own download) while friends gather, so they start without a wait.
   useEffect(() => {
     void loadTerritory();
     void loadHeadCrash();
     void loadPool();
     void loadCarrom();
+    void loadDotsClash();
+    void loadDotsBoxes();
+    void loadLudo();
+    void loadMemory();
+    void loadSnakesLadders();
+    preloadMatchLooks();
   }, []);
 
   const pick = (gameId: GameId) => {

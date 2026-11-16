@@ -87,6 +87,7 @@ Built from Dots & Boxes' party screen (my calls, for the owner to change):
 | `src/shared/games/memory/types.ts` | `MemoryState`, `MemoryFace`, `MemoryMove`, `MemoryTimeout`, `MemorySeat` |
 | `src/shared/games/memory/rules.ts` | Pure rules: `createGame`, `parseMove` (loaded deals on a dev server), `canTurn`, `applyMove` (a pair: turn again), `expire` (no card; 3 in a row: out), `quitSeat`, `finalPlaces`, `winners`, `pairsOf`, `view` (only cards face up) |
 | `src/shared/games/memory/game.ts` | The `PartyGame` (`memoryGame`) for `PARTY_GAMES` |
+| `src/web/games/memory/loadMemory.ts` | Memory's screen as its own download (preloaded by the room hub) |
 | `src/web/games/memory/MemoryScreen.tsx` | The screen: players' row, banner, board, a miss showing, your card turning, quit notice, ending |
 | `src/web/games/memory/MemoryBoard.tsx` | The grid of cards, the same way round on every screen |
 | `src/web/games/memory/MemoryCard.tsx` | One card (memoized): its turns (whole, or the second half after your tap), a pair's bounce, a miss's wobble |

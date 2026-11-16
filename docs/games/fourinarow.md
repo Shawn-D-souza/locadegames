@@ -24,7 +24,7 @@ Drop discs into a standing board of 7 columns and 6 rows; they fall to the lowes
 ## How it works
 
 - **State** (`FourInARowState`): the 42 cells, whose turn, the winner and their run end to end, `isDraw`, and the cell the last disc landed in. It travels in the room view as JSON like tic-tac-toe's (one message per move).
-- **Client:** the match screen is the shared one; the game's look (`look.ts`, in `MATCH_LOOKS`) hands it the board, the `largeBoard` layout (seven columns need the width; in landscape the board sits beside the stacked cards, sized to the screen's height), the disc for the seat cards (`Piece`) and the sound each disc makes.
+- **Client:** the match screen is the shared one; the game's look (`look.ts`, its own download through `matchLooks.ts`) hands it the board, the `largeBoard` layout (seven columns need the width; in landscape the board sits beside the stacked cards, sized to the screen's height), the disc for the seat cards (`Piece`) and the sound each disc makes.
 - **Dropping** (owner decision: a tap and a drag are one gesture; `useDropAim`): a finger down on the board shows your disc in the row above it, over the column under the finger, lights that column's empty holes and shows a faint ghost in the hole it would fill; sliding sideways moves it column by column (a tick each); letting go drops it there. A tap is a press and a let-go in the same column. **Sliding off the board before letting go drops nothing** (my call, so a half-made drag never forces a move). With a mouse the disc also follows the pointer before the click. Your disc stays over its column until the server's answer brings it down. A button per column (only on your turn) serves screen readers, keyboards (a key press drops at once) and the iPhone's tap tick; fingers and the mouse are handled by the board's area.
 
 ## Cost (free tier)
@@ -65,7 +65,7 @@ Like tic-tac-toe per move: each move is one WebSocket message (DO requests bill 
 | `src/shared/games/fourinarow/types.ts` | Cells, column (the move), state |
 | `src/shared/games/fourinarow/rules.ts` | Pure `createGame` / `applyMove`, where a disc lands (`landingRow`), the run through a disc (`lineThrough`), the timeout's column (`leftmostOpenColumn`) |
 | `src/shared/games/fourinarow/game.ts` | `MatchGame` adapter |
-| `src/web/games/fourinarow/look.ts` | Its look on the match screen (`MATCH_LOOKS`): board, large layout, the disc for the cards, the sound of each disc |
+| `src/web/games/fourinarow/look.ts` | Its look on the match screen (its own download through `matchLooks.ts`): board, large layout, the disc for the cards, the sound of each disc |
 | `src/web/games/fourinarow/FourInARowBoard.tsx` | The aiming row, the holes in the shared `BoardFrame`, the column buttons, the landings' feel |
 | `src/web/games/fourinarow/FourInARowCell.tsx` | One hole: its disc falling in and bouncing, lit pale indigo while you aim at its column, the ghost, the winning band and jump |
 | `src/web/games/fourinarow/useDropAim.ts` | Aiming with a finger or the mouse: press, slide, let go; sliding off cancels |

@@ -79,6 +79,7 @@ Built from Dots Clash's party screen (my calls, for the owner to change):
 | `src/shared/games/dotsboxes/board.ts` | Line and box numbering: `lineCount`, `lineAt`, `sidesOf`, `boxesBeside`, `sidesDrawn` |
 | `src/shared/games/dotsboxes/rules.ts` | Pure rules: `createGame`, `applyMove` (a box won: draw again), `canDraw`, `autoMove`, `boxesHandedOver`, `quitSeat`, `finalPlaces`, `winners`, `boxesOf` |
 | `src/shared/games/dotsboxes/game.ts` | Plugged into the party format (`PartyGame`): a line, a timeout's auto line, the line drawing in timing the next turn |
+| `src/web/games/dotsboxes/loadDotsBoxes.ts` | Dots & Boxes's screen as its own download (preloaded by the room hub) |
 | `src/web/games/dotsboxes/DotsBoxesScreen.tsx` | The game screen: players' row with boxes, turn banner, board (your line drawn at once, taken back if refused), quit notices, ✕, ending |
 | `src/web/games/dotsboxes/BoxesBoard.tsx` | The board: card, won boxes, open and drawn lines (the latest in its drawer's color), dots, the lines' tap areas |
 | `src/web/games/dotsboxes/LineTarget.tsx` | One open line's tap area: a diamond around it, the line previewed on hover and press, felt as your finger lands |

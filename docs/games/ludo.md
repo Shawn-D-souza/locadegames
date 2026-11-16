@@ -90,6 +90,7 @@ Built from the shared language: ink on paper, players as colors, one coral actio
 | `src/shared/games/ludo/board.ts` | The board for the rules: `boardFor` (by player count), each seat's arm, start squares, `trackSquare`, `homeProgress`, safe squares |
 | `src/shared/games/ludo/rules.ts` | Pure rules: `createGame`, `applyMove` (a roll with its die, or a pick), `expire` (the timeout), `parseMove`, `destination`, `movablePawns`, `autoPawn` (the fixed rule), `quitSeat`, `finalPlaces` |
 | `src/shared/games/ludo/game.ts` | Plugged into the party format (`PartyGame`): the die from the server's number |
+| `src/web/games/ludo/loadLudo.ts` | Ludo's screen as its own download (preloaded by the room hub) |
 | `src/web/games/ludo/LudoScreen.tsx` | The game screen: players' row, board, roll bar (the shared die's), notices, picking, ✕, ending |
 | `src/web/games/ludo/LudoBoard.tsx`, `BoardArt.tsx` | The board: its drawing, the pawns on it, the tap targets while you choose; the drawing itself (yards, bases, squares, arrows, home triangles, outlines; drawn once) |
 | `src/web/games/ludo/BoardMarks.tsx` | What hides under a pawn: the stars and the bases' sockets; the white pad under pawns home |

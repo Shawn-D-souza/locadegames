@@ -6,6 +6,7 @@ import "@fontsource/roboto-mono/700.css";
 import { App } from "./App";
 import { installHaptics } from "./services/hapticPlayer";
 import { installSound } from "./services/soundPlayer";
+import { installStaleBuildReload } from "./services/staleBuildReload";
 import "./styles/global.css";
 
 /** Dev-only tool pages (`?preview=celebrations`, `?preview=territory`, `?preview=headcrash`, `?preview=haptics`, `?preview=seabattle-sounds`, `?preview=ludo`); the production build drops this branch and its code entirely. */
@@ -33,6 +34,7 @@ function devPreview(): ReactNode | null {
   ) : null;
 }
 
+installStaleBuildReload();
 installSound();
 installHaptics();
 // Tool pages skip StrictMode: its double effects would double every sound, and they're there to judge those.

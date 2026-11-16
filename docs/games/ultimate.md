@@ -28,7 +28,7 @@ Tic-tac-toe played on a 3×3 board of small tic-tac-toe boards: the cell you pla
 
 - **State** (`UltimateState`): the 81 cells, the 9 small boards (`null` open, a seat for won, `"draw"` for full with no line), whose turn, `next` (the small board the player to move must play in, or `null` for any open board), the winner and their line of three small boards, `isDraw`, and the last cell played. It travels in the room view as JSON like tic-tac-toe's (one message per move; about 400 bytes more per room view).
 - **Rules** reuse tic-tac-toe's line finding for both the small boards and the big one.
-- **Client:** the match screen is the shared one; the game's look (`look.ts`, in `MATCH_LOOKS`) hands it the board, a larger layout, and the sounds each move makes (`ultimateCues.ts`).
+- **Client:** the match screen is the shared one; the game's look (`look.ts`, its own download through `matchLooks.ts`) hands it the board, a larger layout, and the sounds each move makes (`ultimateCues.ts`).
 
 ## Cost (free tier)
 
@@ -70,7 +70,7 @@ Like tic-tac-toe per move: each move is one WebSocket message (DO requests bill 
 | `src/shared/games/ultimate/types.ts` | Cells, small boards, state |
 | `src/shared/games/ultimate/rules.ts` | Pure `createGame` / `applyMove`, where you may play (`isPlayableBoard`), small boards judged and their lines, the auto move (`firstPlayableCell`) |
 | `src/shared/games/ultimate/game.ts` | `MatchGame` adapter |
-| `src/web/games/ultimate/look.ts` | Its look on the match screen (`MATCH_LOOKS`): board, large layout, move sounds |
+| `src/web/games/ultimate/look.ts` | Its look on the match screen (its own download through `matchLooks.ts`): board, large layout, move sounds |
 | `src/web/games/ultimate/UltimateBoard.tsx` | The big board in the shared `BoardFrame` (flush: one continuous grid) |
 | `src/web/games/ultimate/UltimateSmallBoard.tsx` | One small board: its half of the thick lines, where to play (tint, dark outline, the whole highlight blinking), the won board's fill and big mark |
 | `src/web/games/ultimate/UltimateCell.tsx` | One cell: thin ink lines, the mark, tap + haptic |

@@ -93,6 +93,7 @@ Built from the shared language: ink on paper, players as colors, one coral actio
 | `src/shared/games/snakesladders/board.ts` | The board: `LADDERS`, `SNAKES`, `jumpFrom`, `squareCell` (a square's column and row) |
 | `src/shared/games/snakesladders/rules.ts` | Pure rules: `createGame`, `applyMove` (a die), `rollFrom` (what a die does), `parseMove` (`"roll"`, or `{ die }` on a dev server), `quitSeat`, `finalPlaces`, `isIn`, `hasQuit`, `hasFinished` |
 | `src/shared/games/snakesladders/game.ts` | Plugged into the party format (`PartyGame`): the die from the server's number, a timeout rolls |
+| `src/web/games/snakesladders/loadSnakesLadders.ts` | Snakes & Ladders's screen as its own download (preloaded by the room hub) |
 | `src/web/games/snakesladders/SnakesLaddersScreen.tsx` | The game screen: players' row, board, roll bar, notices, ✕, ending |
 | `src/web/games/snakesladders/SnakesBoard.tsx`, `BoardArt.tsx`, `Piece.tsx` | The board (squares, numbers (never past the caption size), crowned 100, pawns huddling per square), its ladders and snakes (SVG, drawn once), a piece on the board (squashing onto its base as it lands; the pawn itself is the shared `components/Pawn.tsx`, also in the tile art) |
 | `src/web/games/snakesladders/geometry.ts` | Board units: square centers, a snake's swaying spine, body (slim neck, long tail), a ladder's rails and rungs, where a rolled piece is at any moment and how squashed (`pieceAt`), pieces sharing a square |

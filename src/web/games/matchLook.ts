@@ -46,7 +46,7 @@ export interface MatchBoardProps<State> {
  */
 export type MatchLayout = "board" | "largeBoard" | "twoBoards";
 
-/** A turn-based game's look and sound on the match screen. Each game adds one to `MATCH_LOOKS`. */
+/** A turn-based game's look and sound on the match screen. Each game adds a loader for one to `matchLooks.ts`. */
 export interface MatchLook<State extends GameState> {
   Board: ComponentType<MatchBoardProps<State>>;
   layout: MatchLayout;
