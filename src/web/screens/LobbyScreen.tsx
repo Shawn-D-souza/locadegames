@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { GAMES, type GameId } from "../../shared/games/catalog";
+import { GAMES, type GameId, type GameInfo } from "../../shared/games/catalog";
 import type { ClientMessage, RoomView } from "../../shared/protocol/messages";
 import type { PlayerId } from "../../shared/rooms/types";
 import { GameTile } from "../components/GameTile";
@@ -14,6 +14,7 @@ import { loadCarrom } from "../games/carrom/loadCarrom";
 import { loadPool } from "../games/pool/loadPool";
 import { loadTerritory } from "../games/territory/loadTerritory";
 import { playSound } from "../services/soundPlayer";
+import { gameFit, orderGames } from "../utils/gameOrder";
 
 interface LobbyScreenProps {
   room: RoomView;
@@ -69,16 +70,15 @@ export function LobbyScreen({ room, myId, send, onLeave }: LobbyScreenProps) {
 
       <SectionCard label="Games">
         <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(min(var(--layout-game-tile),40%),1fr))] gap-4">
-          {GAMES.map((game) => {
-            const tooFew = online < game.minPlayers;
-            const tooMany = "maxPlayers" in game && online > game.maxPlayers;
+          {orderGames(GAMES, online).map((game) => {
+            const fit = gameFit(game, online);
             return (
               <GameTile
                 key={game.id}
                 game={game}
                 look={GAME_LOOKS[game.id]}
-                disabled={isHost && (tooFew || tooMany)}
-                needs={tooFew ? `NEEDS ${game.minPlayers}+` : tooMany ? `MAX ${game.maxPlayers}` : undefined}
+                disabled={isHost && fit !== "fits"}
+                needs={fit === "tooFew" ? `NEEDS ${game.minPlayers}+` : fit === "tooMany" ? `MAX ${(game as GameInfo).maxPlayers}` : undefined}
                 // Your own vote first, so it always shows before "+n".
                 suggesters={room.players.filter((p) => p.suggestion === game.id).sort((a, b) => Number(b.id === myId) - Number(a.id === myId))}
                 selected={me?.suggestion === game.id}
