@@ -33,7 +33,8 @@ export function GameTile({ game, look, disabled, needs, suggesters = [], selecte
       type="button"
       className={clsx(
         "relative flex aspect-square w-full cursor-pointer flex-col items-center gap-1 rounded-card border-outline bg-white p-2 disabled:cursor-not-allowed disabled:opacity-disabled",
-        "shadow-lip-small transition-[translate,box-shadow] duration-fast ease-spring enabled:active:translate-y-lip-small enabled:active:shadow-pressed",
+        // Flat, no lip (owner decision: the shadows didn't look nice); a tap shrinks it a little instead.
+        "transition-transform duration-fast ease-spring enabled:active:scale-(--transform-press-scale)",
         // Coral marks the game you suggested.
         selected ? "border-coral" : "border-ink",
       )}
