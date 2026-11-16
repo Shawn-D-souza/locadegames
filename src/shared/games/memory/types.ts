@@ -20,6 +20,17 @@ export interface MemoryMove {
   matched: boolean;
 }
 
+/** A turn that ran out (no card is turned for anyone): it passed on, and the `missedTurnsOut`th in a row put them out. */
+export interface MemoryTimeout {
+  seat: MemorySeat;
+  /** Their turns run out in a row, this one included. */
+  missed: number;
+  /** That was one too many: they're out, as if they'd quit. */
+  out: boolean;
+  /** The card they had face up this turn, turned back; null if they hadn't turned one. */
+  card: number | null;
+}
+
 export interface MemoryState {
   /** Cards across and down. Cards are numbered row by row. */
   cols: number;
@@ -40,12 +51,17 @@ export interface MemoryState {
   open: number | null;
   /** Whose turn it is; -1 once the game is over. */
   turn: MemorySeat;
-  /** Cards turned so far: tells one card from the next (a timeout names it). */
+  /** Cards turned and turns run out so far: tells one card from the next (a timeout claim names it). */
   moves: number;
   /** Per seat: quit (✕ or left the room). Their pairs stay, grey; they are skipped and can't place above anyone who stayed. */
   quit: boolean[];
   /** Seats in the order they quit (the last to quit ranks highest of the quitters). */
   quitOrder: MemorySeat[];
+  /** The last card turned (kept through a timeout, which turns no card). */
   lastMove: MemoryMove | null;
+  /** Per seat: turns run out in a row; turning any card starts it again at 0. */
+  missed: number[];
+  /** The latest thing that happened was a turn running out; null once a card is turned. */
+  timeout: MemoryTimeout | null;
   over: boolean;
 }

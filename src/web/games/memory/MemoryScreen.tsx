@@ -27,6 +27,7 @@ import { faceName } from "./cardText";
 import { MemoryBoard, type CardShown } from "./MemoryBoard";
 import type { CardMoment } from "./MemoryCard";
 import { turnMove } from "./loadedCards";
+import { timeoutNotice } from "./timeoutNotice";
 import { useMemorySounds } from "./useMemorySounds";
 
 interface MemoryScreenProps {
@@ -76,7 +77,8 @@ export function MemoryScreen({ party, myId, clockOffsetMs, send, lastError, onQu
   const now = useNow(CLIENT_CONFIG.timerTickMs, !party.finished);
   // The latest card plays out (it turns; a pair pops; a miss shows, then turns back) before the next one can be turned.
   const playingOut = useBefore(turnKey, party.turnStartedAt - clockOffsetMs);
-  const last = game.lastMove;
+  // The latest card turned; nothing while the latest thing was a turn running out (it turns no card).
+  const last = game.timeout === null ? game.lastMove : null;
   const missed = last !== null && last.cards.length === 2 && !last.matched;
   const missShowing = useBefore(missed ? turnKey : null, party.turnStartedAt - clockOffsetMs - MEMORY_CONFIG.flipMs);
   const over = party.finished && !playingOut;
@@ -101,14 +103,19 @@ export function MemoryScreen({ party, myId, clockOffsetMs, send, lastError, onQu
   useAutoContinue(tone !== null, CLIENT_CONFIG.resultShowMs, onContinue);
   useMemorySounds({ gameKey: party.startedAt, game, mySeat, countdown: myTurn ? countdown : null, ending: tone });
 
-  // Someone quit: a short notice (with no list on screen, this is how everyone learns it).
-  const [seenQuits, setSeenQuits] = useState({ key: party.startedAt, quits: game.quitOrder.length });
+  // A turn ran out (or put someone out), or someone quit: a short notice (with no list on screen, this is how everyone learns it).
+  const [seen, setSeen] = useState({ key: party.startedAt, moves: game.moves, quits: game.quitOrder.length });
   const [notice, setNotice] = useState<{ text: string; id: number } | null>(null);
-  if (seenQuits.key !== party.startedAt || seenQuits.quits !== game.quitOrder.length) {
+  if (seen.key !== party.startedAt || seen.moves !== game.moves || seen.quits !== game.quitOrder.length) {
+    const sameGame = seen.key === party.startedAt;
+    const timedOut = game.timeout;
     const gone = game.quitOrder.at(-1);
-    setSeenQuits({ key: party.startedAt, quits: game.quitOrder.length });
-    if (seenQuits.key === party.startedAt && gone !== undefined && seatIds[gone] !== myId) {
-      setNotice({ text: `${partyName(party, seatIds[gone]!).toUpperCase()} QUIT`, id: game.quitOrder.length });
+    setSeen({ key: party.startedAt, moves: game.moves, quits: game.quitOrder.length });
+    if (sameGame && timedOut !== null && seen.moves !== game.moves) {
+      const who = seatIds[timedOut.seat]!;
+      setNotice({ text: timeoutNotice(timedOut, who === myId, partyName(party, who).toUpperCase()), id: game.moves });
+    } else if (sameGame && seen.quits !== game.quitOrder.length && gone !== undefined && seatIds[gone] !== myId) {
+      setNotice({ text: `${partyName(party, seatIds[gone]!).toUpperCase()} QUIT`, id: -game.quitOrder.length });
     }
   }
   useEffect(() => {

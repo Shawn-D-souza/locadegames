@@ -1,6 +1,5 @@
-import { mixSeed, seededRandom } from "../../random";
 import type { MoveError, MoveResult, PartyPlace } from "../types";
-import { gridFor } from "./config";
+import { gridFor, MEMORY_CONFIG } from "./config";
 import { dealFace, pickFaces } from "./deal";
 import type { MemorySeat, MemoryState } from "./types";
 
@@ -36,6 +35,8 @@ export function createGame(players: number, seed: number): MemoryState {
     quit: Array<boolean>(players).fill(false),
     quitOrder: [],
     lastMove: null,
+    missed: Array<number>(players).fill(0),
+    timeout: null,
     over: false,
   };
 }
@@ -108,7 +109,9 @@ export function applyMove(state: MemoryState, seat: MemorySeat, flip: MemoryFlip
   const face = known ?? faceFor(state, flip.deal, seed);
   const cards = state.cards.map((f, i) => (i === card ? face : f));
   const undealt = known === null ? state.undealt.map((n, f) => (f === face ? n - 1 : n)) : state.undealt;
-  const moved = { ...state, cards, undealt, moves: state.moves + 1 };
+  // Turning a card starts the count of turns run out again.
+  const missed = state.missed.map((m, s) => (s === seat ? 0 : m));
+  const moved = { ...state, cards, undealt, missed, timeout: null, moves: state.moves + 1 };
   if (state.open === null) {
     return { ok: true, state: { ...moved, open: card, lastMove: { seat, cards: [card], faces: [face], matched: false } } };
   }
@@ -122,14 +125,23 @@ export function applyMove(state: MemoryState, seat: MemorySeat, flip: MemoryFlip
 }
 
 /**
- * The turn ran out: a card is turned for whoever's turn it is, picked at random from the cards in play with the
- * server's fresh number (owner: a card is turned for you). No help from the server: it may be any card.
+ * The turn ran out: no card is turned for them (owner decision, like Pool); a card they had face up turns back and
+ * the turn passes on. The `missedTurnsOut`th in a row puts them out as if they'd quit (owner decision: so nobody away
+ * keeps a game going; if everyone is away, they drop out one by one and the last one left wins).
  */
-export function expire(state: MemoryState, seed: number): MoveResult<MemoryState> {
-  const cards = state.taken.flatMap((_, card) => (canTurn(state, card) ? [card] : []));
-  if (state.over || cards.length === 0) return { ok: false, error: "GAME_OVER" };
-  const card = cards[Math.floor(seededRandom(seed)() * cards.length)]!;
-  return applyMove(state, state.turn, { card, deal: null }, mixSeed(seed, card));
+export function expire(state: MemoryState): MoveResult<MemoryState> {
+  if (state.over) return { ok: false, error: "GAME_OVER" };
+  const seat = state.turn;
+  const missed = state.missed[seat]! + 1;
+  const out = missed >= MEMORY_CONFIG.missedTurnsOut;
+  const timedOut: MemoryState = {
+    ...state,
+    moves: state.moves + 1,
+    missed: state.missed.map((m, s) => (s === seat ? missed : m)),
+    timeout: { seat, missed, out, card: state.open },
+  };
+  if (out) return { ok: true, state: quitSeat(timedOut, seat) };
+  return { ok: true, state: settle({ ...timedOut, open: null, turn: nextInSeat(timedOut, seat) ?? seat }) };
 }
 
 /** `seat` quit (✕, or left the room): skipped from now on; a card they had face up turns back; their pairs stay, grey. */

@@ -1,8 +1,10 @@
 /** Gameplay numbers for Memory. */
 export const MEMORY_CONFIG = {
   minPlayers: 2,
-  /** Each card must be turned within this time, or one is turned for you (owner decision: 30 s). */
+  /** Each card must be turned within this time (owner decision: 30 s), or the turn passes on with no card turned for you (owner decision, like Pool). */
   turnTimeMs: 30_000,
+  /** This many turns run out in a row puts you out, as if you'd quit (owner decision, like Pool: nobody away keeps a game going for hours). */
+  missedTurnsOut: 3,
   /**
    * Cards across × down by how many play (owner decision: 8 pairs for 2 players was far too short, 18–24 a little too
    * long): 2 → 6 × 5 (15 pairs), 3–4 → 6 × 6 (18), 5–8 → 6 × 7 (21 pairs, 2–3 each with 8). Six across everywhere, so a

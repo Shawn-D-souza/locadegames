@@ -34,11 +34,18 @@ export function useMemorySounds({ gameKey, game, mySeat, countdown, ending }: Me
   const seen = useRef({ gameKey, game, run: 0 });
   useEffect(() => {
     const before = seen.current;
+    // A turn that ran out turns no card: only a card they had face up turning back is heard.
+    const timedOut = before.gameKey === gameKey && game.moves === before.game.moves + 1 ? game.timeout : null;
+    if (timedOut !== null) {
+      seen.current = { gameKey, game, run: 0 };
+      if (timedOut.card !== null) playSound("memoryTurnBack", { volume: watching ? WATCHING_VOLUME : timedOut.seat === mySeat ? 1 : OTHERS_VOLUME });
+      return;
+    }
     const move = game.lastMove;
     const next = before.gameKey === gameKey && game.moves === before.game.moves + 1 && move !== null;
     const second = next && move.cards.length === 2;
     // Pairs found in a row by the same player: the run climbs (a first card keeps it, a miss ends it).
-    const sameRun = next && before.game.lastMove?.seat === move.seat && (before.game.lastMove.matched || before.game.lastMove.cards.length === 1);
+    const sameRun = next && before.game.timeout === null && before.game.lastMove?.seat === move.seat && (before.game.lastMove.matched || before.game.lastMove.cards.length === 1);
     const run = !next ? 0 : !second ? (sameRun ? before.run : 0) : move.matched ? (sameRun ? before.run : 0) + 1 : 0;
     seen.current = { gameKey, game, run };
     if (!next) return;

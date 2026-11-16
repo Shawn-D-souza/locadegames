@@ -169,11 +169,43 @@ describe("memory rules", () => {
     ]);
   });
 
-  it("a timeout turns a card in play for whoever's turn it is", () => {
-    const state = play(laidOut(2, PAIRED), [0, 1, 2]);
-    const results = Array.from({ length: 40 }, (_, seed) => expire(state, seed));
-    const turned = results.map((r) => (r.ok ? r.state.lastMove!.cards[1]! : -1));
-    expect([turned.every((card) => card > 2), new Set(turned).size > 4]).toEqual([true, true]);
+  it("a turn that runs out turns no card: a card face up turns back and the turn passes on", () => {
+    const state = play(laidOut(3, paired(36)), [0, 1, 2]);
+    const late = expire(state);
+    expect(late.ok && [late.state.open, late.state.turn, late.state.moves, late.state.timeout, late.state.cards.filter((f) => f !== null).length]).toEqual([
+      null,
+      1,
+      state.moves + 1,
+      { seat: 0, missed: 1, out: false, card: 2 },
+      36,
+    ]);
+  });
+
+  it("three turns run out in a row put you out, like quitting; turning a card starts the count again", () => {
+    const out = (state: MemoryState) => {
+      const r = expire(state);
+      if (!r.ok) throw new Error(r.error);
+      return r.state;
+    };
+    // Two players away: their turns run out in turn, two each, and neither is out yet.
+    let state = out(out(out(out(createGame(2, 4)))));
+    expect([state.missed, state.quit, state.turn]).toEqual([[2, 2], [false, false], 0]);
+    // Seat 0 comes back and turns a card: their count starts again; then their turn runs out, only once.
+    expect([play(state, [7]).missed, out(play(state, [7])).missed]).toEqual([
+      [0, 2],
+      [1, 2],
+    ]);
+    // Seat 0 runs out a third time in a row: out; the one left wins.
+    state = out(state);
+    expect([state.over, state.timeout, winners(state), finalPlaces(state).map((p) => [p.seat, p.place, p.quit])]).toEqual([
+      true,
+      { seat: 0, missed: 3, out: true, card: null },
+      [1],
+      [
+        [1, 1, false],
+        [0, 2, true],
+      ],
+    ]);
   });
 
   it("shows phones only the cards face up, and nothing of what's left to turn", () => {
