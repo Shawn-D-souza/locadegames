@@ -1,0 +1,236 @@
+{
+ "bpm": 120,
+ "beat": 0.5,
+ "bar": 2,
+ "seconds": 53,
+ "cues": [
+  {
+   "name": "bubble1",
+   "t": 0
+  },
+  {
+   "name": "bubble2",
+   "t": 1
+  },
+  {
+   "name": "bubble3",
+   "t": 2.5
+  },
+  {
+   "name": "bubble4",
+   "t": 3.5
+  },
+  {
+   "name": "bubble5",
+   "t": 4.75
+  },
+  {
+   "name": "inviteCard",
+   "t": 5.75
+  },
+  {
+   "name": "cameraPush",
+   "t": 6
+  },
+  {
+   "name": "roomOpens",
+   "t": 8
+  },
+  {
+   "name": "phone1",
+   "t": 10
+  },
+  {
+   "name": "phone2",
+   "t": 10.5
+  },
+  {
+   "name": "phone3",
+   "t": 11
+  },
+  {
+   "name": "phone4",
+   "t": 11.5
+  },
+  {
+   "name": "textOwnPhone",
+   "t": 12
+  },
+  {
+   "name": "tapTerritory",
+   "t": 13.5
+  },
+  {
+   "name": "count3",
+   "t": 14
+  },
+  {
+   "name": "count2",
+   "t": 14.5
+  },
+  {
+   "name": "count1",
+   "t": 15
+  },
+  {
+   "name": "go",
+   "t": 15.5
+  },
+  {
+   "name": "matchFourViews",
+   "t": 16
+  },
+  {
+   "name": "textNoBots",
+   "t": 17
+  },
+  {
+   "name": "dive",
+   "t": 18
+  },
+  {
+   "name": "silence",
+   "t": 19.75
+  },
+  {
+   "name": "poolBreak",
+   "t": 20
+  },
+  {
+   "name": "carrom",
+   "t": 22
+  },
+  {
+   "name": "dotsClash",
+   "t": 24
+  },
+  {
+   "name": "chainWave1",
+   "t": 24
+  },
+  {
+   "name": "chainWave2",
+   "t": 24.5
+  },
+  {
+   "name": "chainWave3",
+   "t": 25
+  },
+  {
+   "name": "chainWave4",
+   "t": 25.5
+  },
+  {
+   "name": "chainWave5",
+   "t": 26
+  },
+  {
+   "name": "chainWave6",
+   "t": 26.5
+  },
+  {
+   "name": "chainWave7",
+   "t": 27
+  },
+  {
+   "name": "chainWave8",
+   "t": 27.5
+  },
+  {
+   "name": "headCrash",
+   "t": 28
+  },
+  {
+   "name": "chess",
+   "t": 30
+  },
+  {
+   "name": "flash_memory",
+   "t": 32
+  },
+  {
+   "name": "flash_ludo",
+   "t": 32.5
+  },
+  {
+   "name": "flash_snakesLadders",
+   "t": 33
+  },
+  {
+   "name": "flash_fourInARow",
+   "t": 33.5
+  },
+  {
+   "name": "flash_seaBattle",
+   "t": 34
+  },
+  {
+   "name": "flash_checkers",
+   "t": 34.5
+  },
+  {
+   "name": "flash_dotsBoxes",
+   "t": 35
+  },
+  {
+   "name": "flash_ticTacToeToUltimate",
+   "t": 35.5
+  },
+  {
+   "name": "gamesGrid",
+   "t": 36
+  },
+  {
+   "name": "text15Games",
+   "t": 36.5
+  },
+  {
+   "name": "backToPhones",
+   "t": 38
+  },
+  {
+   "name": "territoryWin",
+   "t": 40
+  },
+  {
+   "name": "championCard",
+   "t": 42
+  },
+  {
+   "name": "textPlayWithFriends",
+   "t": 44
+  },
+  {
+   "name": "textAnytime",
+   "t": 45
+  },
+  {
+   "name": "textAnywhere",
+   "t": 45.5
+  },
+  {
+   "name": "logoX",
+   "t": 46
+  },
+  {
+   "name": "logoO",
+   "t": 46.5
+  },
+  {
+   "name": "logoPawn",
+   "t": 47
+  },
+  {
+   "name": "logoDie",
+   "t": 47.5
+  },
+  {
+   "name": "logoName",
+   "t": 48
+  },
+  {
+   "name": "end",
+   "t": 50.5
+  }
+ ]
+}

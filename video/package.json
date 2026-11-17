@@ -1,0 +1,25 @@
+{
+  "name": "locadegames-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "music": "node music/track.mjs",
+    "studio": "remotion studio",
+    "stills": "node scripts/stills.mjs",
+    "render": "remotion render LaunchVideo out/launch-video.mp4",
+    "preview": "remotion render LaunchVideo out/preview.mp4 --scale=0.5 --crf=26 --image-format=jpeg",
+    "sfx": "node scripts/sfx.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clips": "node scripts/clips.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.539",
+    "@remotion/cli": "4.0.539",
+    "@remotion/renderer": "4.0.539",
+    "@remotion/tailwind-v4": "4.0.539",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.539",
+    "tailwindcss": "4.3.3"
+  }
+}

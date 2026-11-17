@@ -1,0 +1,4 @@
+/* The app's own styles (Tailwind with its theme), with the app's code and the video's added as class sources. */
+@import "../../src/web/styles/global.css";
+@source "../../src/web";
+@source "./";

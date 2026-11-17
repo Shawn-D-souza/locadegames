@@ -9,3 +9,9 @@ dist/
 
 # npm run screenshots output (local reference, replaced on every run)
 /screenshots/
+
+# The launch video's renders and generated files (npm run music / stills / render in video/)
+/video/out/
+/video/public/screens/
+/video/public/music.wav
+/video/public/sfx/

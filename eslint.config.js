@@ -8,7 +8,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  globalIgnores(["dist", ".wrangler", "node_modules"]),
+  globalIgnores(["dist", ".wrangler", "node_modules", "video"]),
   js.configs.recommended,
   tseslint.configs.recommended,
   {
