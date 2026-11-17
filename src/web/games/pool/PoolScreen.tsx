@@ -72,7 +72,8 @@ export function PoolScreen({ party, myId, clockOffsetMs, send, onQuit, onLeave, 
   const playing = playback !== null;
   const shooting = playback?.shot ?? null;
   const over = party.finished && !playing;
-  // While a shot plays out, who is out stays as it was before it.
+  // While a shot plays out, who is out stays as it was before it, and so do the balls each player has left.
+  const shownGame = shooting ? { ...game, balls: shooting.before } : game;
   const outShown = (s: number) => isOut(game, s) && !(shooting?.out && shooting.seat === s);
   const stillIn = mySeat !== null && !over && !outShown(mySeat) && !hasQuit(game, mySeat);
   const now = useNow(CLIENT_CONFIG.timerTickMs, !party.finished);
@@ -147,7 +148,7 @@ export function PoolScreen({ party, myId, clockOffsetMs, send, onQuit, onLeave, 
         ? aimedCue(cueBall, aim, pull ?? 0, myColor, twitch)
         : null;
   const tableLabel = party.entrants
-    .flatMap((e, s) => (hasQuit(game, s) || isOut(game, s) ? [] : [`${e.name}: ${onTheBlack(game, s) ? "on the black" : `${ballsLeft(game, s)} left`}`]))
+    .flatMap((e, s) => (hasQuit(game, s) || isOut(game, s) ? [] : [`${e.name}: ${onTheBlack(shownGame, s) ? "on the black" : `${ballsLeft(shownGame, s)} left`}`]))
     .join("; ");
 
   const washId = over ? winnerId : turnId;
@@ -157,7 +158,7 @@ export function PoolScreen({ party, myId, clockOffsetMs, send, onQuit, onLeave, 
     name: e.name,
     out: hasQuit(game, s) || outShown(s),
     quit: hasQuit(game, s),
-    count: hasQuit(game, s) || outShown(s) ? null : ballsLeft(game, s),
+    count: hasQuit(game, s) || outShown(s) ? null : ballsLeft(shownGame, s),
   }));
   // What just happened (a foul, someone out) takes the card's second line for a moment: every message in one place.
   const detail =
@@ -171,7 +172,7 @@ export function PoolScreen({ party, myId, clockOffsetMs, send, onQuit, onLeave, 
           ? "Drag to aim · hold & pull back to shoot"
           : null;
   const turnName = turnId === null ? "" : partyName(party, turnId);
-  const myText = shootingAgain ? "SHOOT AGAIN!" : mySeat !== null && onTheBlack(game, mySeat) ? "SINK THE BLACK!" : "YOUR SHOT!";
+  const myText = shootingAgain ? "SHOOT AGAIN!" : mySeat !== null && onTheBlack(shownGame, mySeat) ? "SINK THE BLACK!" : "YOUR SHOT!";
   const status =
     turnId === null ? null : (
       <StatusCard
