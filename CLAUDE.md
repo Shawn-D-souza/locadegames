@@ -57,7 +57,7 @@ Each game has its own doc in `docs/games/`: rules and owner decisions, numbers, 
 - **Who we write for (owner decision):** the United States first, then the UK, Canada and Australia (the same English pages): they earn the most per player, and a player costs the same free-tier share wherever they are. Players from anywhere are still welcome.
 - **The app stays as it is (owner decision):** search work only changes the page's head and files in `public/`, and adds **pages made for search** beside the app. Nothing in the app links to them (Google finds them through the sitemap; they link to each other); their PLAY NOW leads to the normal home.
 - **Pages made for search** (`src/web/search/`): plain HTML with no JavaScript, made when the site is built (`scripts/searchPagesPlugin.ts`), in the app's look (its stylesheet and components). Each is a folder's `index.html`, so addresses end in `/`: `/games/` (every game), `/games/<slug>/` (one per game: what it is, how to start it with friends, its rules, questions people search for, more games), and topic pages for searches picked from keyword research: `/game-pigeon-for-android/`, `/2-player-games-on-different-phones/`, `/games-with-room-codes/`. Each has its own title, description, canonical, link preview and structured data (`WebPage`, `BreadcrumbList`, and `VideoGame` or `ItemList`). Their game pictures are the tiles' art photographed into `src/web/public/art/` (`npm run search-art`; some tiles draw on a canvas, which plain pages can't run); the build fails if one is missing.
-- **Naming other games (owner decision):** GamePigeon, Connect 4 and Battleship are named only in plain words, to compare truthfully ("Battleship-style"), each with a line saying Locade isn't affiliated: never their logos or art, never as if Locade were them. Our games keep their own names.
+- **Naming other games (owner decisions):** never their logos or art, never as if Locade were them or connected to them; our games keep their own names. **GamePigeon** is named in plain words on its topic page, to say truthfully what it is and isn't, with a line saying Locade isn't affiliated. **Connect 4 and Battleship** (Hasbro's, which protects its brands) appear only in one question on their game's page ("Is this the same as Connect 4?"), whose answer says Locade isn't affiliated: never in a page's title, description or main heading.
 - Google Search Console: a URL-prefix property for `https://locade.pages.dev/`, verified by its file `src/web/public/google41163a22c8bd3fa1.html` (never delete it: the site would lose its verification).
 
 ---
@@ -271,7 +271,7 @@ Each game has its own doc in `docs/games/`: rules and owner decisions, numbers, 
 | Domain | `locadegames.com` | — | Not bought (using `pages.dev`) | — |
 | GitHub | Source code | Free | Pages and the Worker deploy from `main` | — |
 
-No public launch until there are more games (owner decision); the site is online for private testing.
+The site is public (owner decision): open to everyone and made to be found (see [Search](#search-seo)).
 
 ### Next to migrate (once revenue covers it)
 

@@ -86,7 +86,7 @@ export const GAME_COPY: Record<GameId, GamePageCopy> = {
       "Play 4 in a Row with a friend on your phones: drop discs, get four in a line to win. The classic drop-four game, free in the browser, no sign-up.",
     heading: "4 in a Row online with friends",
     intro: [
-      "The drop-four game many people know as Connect 4, played with a friend on your own phones. Take turns dropping discs into a standing board; the first to line up four wins.",
+      "The classic drop-four game, played with a friend on your own phones. Take turns dropping discs into a standing board; the first to line up four wins.",
       "Make a room, share its code, and play in the browser. No app, no account, and it works on iPhone and Android together.",
     ],
     rules: [
@@ -117,12 +117,12 @@ export const GAME_COPY: Record<GameId, GamePageCopy> = {
 
   seabattle: {
     slug: "sea-battle",
-    title: "Sea Battle Online With Friends – Battleship-Style | Locade",
+    title: "Sea Battle Online With Friends – Free, No App | Locade",
     description:
-      "Play Sea Battle with a friend on your phones: hide your fleet, fire at theirs, sink every ship first. A Battleship-style game, free in the browser.",
+      "Play Sea Battle with a friend on your phones: hide your fleet, fire at theirs, sink every ship first. Free in the browser, no app, no sign-up.",
     heading: "Sea Battle online with friends",
     intro: [
-      "The classic hidden-fleet game, Battleship-style, played on two phones. You each place your ships in secret, then take turns firing at each other's waters. A hit fires again.",
+      "The classic hidden-fleet game, played on two phones. You each place your ships in secret, then take turns firing at each other's waters. A hit fires again.",
       "Because each player has their own phone, nobody can peek. Make a room, share the code and play in the browser, with no app and no sign-up.",
     ],
     rules: [
@@ -136,9 +136,13 @@ export const GAME_COPY: Record<GameId, GamePageCopy> = {
     ],
     faq: [
       {
-        question: "How do I play Battleship online with a friend?",
+        question: "How do I play Sea Battle online with a friend?",
+        answer: "Tap CREATE ROOM on Locade, send your friend the code or link, then tap Sea Battle. Each of you plays on your own phone.",
+      },
+      {
+        question: "Is this the same as Battleship?",
         answer:
-          "Locade's Sea Battle is a Battleship-style game you play on two phones: tap CREATE ROOM, send your friend the code, then tap Sea Battle. Locade isn't affiliated with Battleship or its owners.",
+          "It's the classic hidden-fleet game many people know by that name, with its own name, rules and look. Locade isn't affiliated with Battleship or its owners.",
       },
       {
         question: "Can my friend see where my ships are?",
