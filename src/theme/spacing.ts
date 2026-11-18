@@ -64,6 +64,8 @@ export const layout = {
   qrReserve: 232,
   /** Widest the content column gets. */
   content: 560,
+  /** A game's tile art photographed for the pages made for search (`npm run search-art`, at 2× this). */
+  artImage: 192,
   /** Widest it gets for a board of small boards beside the seat cards (landscape: laptops, tablets). */
   contentWide: 960,
   /** Widest the game board gets. */

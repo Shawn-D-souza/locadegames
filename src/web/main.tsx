@@ -9,7 +9,7 @@ import { installSound } from "./services/soundPlayer";
 import { installStaleBuildReload } from "./services/staleBuildReload";
 import "./styles/global.css";
 
-/** Dev-only tool pages (`?preview=celebrations`, `?preview=territory`, `?preview=headcrash`, `?preview=haptics`, `?preview=seabattle-sounds`, `?preview=ludo`); the production build drops this branch and its code entirely. */
+/** Dev-only tool pages (`?preview=celebrations`, `?preview=territory`, `?preview=headcrash`, `?preview=haptics`, `?preview=seabattle-sounds`, `?preview=ludo`, `?preview=tiles`); the production build drops this branch and its code entirely. */
 function devPreview(): ReactNode | null {
   if (!import.meta.env.DEV) return null;
   const page = new URLSearchParams(window.location.search).get("preview");
@@ -26,7 +26,9 @@ function devPreview(): ReactNode | null {
               ? lazy(() => import("./preview/SeaBattleSoundsPreview").then((m) => ({ default: m.SeaBattleSoundsPreview })))
               : page === "ludo"
                 ? lazy(() => import("./preview/LudoPreview").then((m) => ({ default: m.LudoPreview })))
-                : null;
+                : page === "tiles"
+                  ? lazy(() => import("./preview/TilesPreview").then((m) => ({ default: m.TilesPreview })))
+                  : null;
   return Preview ? (
     <Suspense>
       <Preview />

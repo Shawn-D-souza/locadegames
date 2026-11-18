@@ -18,6 +18,8 @@ export const typeScale = {
   /** Room code input: big spaced digits. */
   code: { size: 26, lineHeight: 1, tracking: "0.12em" },
   caption: { size: 14, lineHeight: 1.3, tracking: "0.06em" },
+  /** Reading text: the paragraphs of the pages made for search (Mono Medium). */
+  body: { size: 16, lineHeight: 1.6, tracking: "0" },
   /** Small pills on player bars (YOU, HOST, trophies). */
   badge: { size: 12, lineHeight: 1, tracking: "0.06em" },
   numeral: { size: 96, lineHeight: 1, tracking: "0" },

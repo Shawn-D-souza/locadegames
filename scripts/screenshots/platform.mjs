@@ -1,10 +1,22 @@
-// The platform's screens, shared by every game: home, joining, errors, the room (every game's tile: shoot again after
+// The platform's screens, shared by every game: the pages made for search, home, joining, errors, the room (every game's tile: shoot again after
 // adding a game or changing a tile), settings, the tournament's screens (played with tic-tac-toe, the simplest), the
 // results and the connection's troubles. Each game's own screens are in its own file.
 import { sees, wait } from "../playtest/session.mjs";
 import { board, playCells, roomCode, whoever } from "./camera.mjs";
 
 export default async function platform(camera) {
+  // The pages made for search (plain pages beside the app): every game, one game's page, and a topic page with its table.
+  const search = await camera.player();
+  for (const [path, name] of [
+    ["games/", "search-all-games"],
+    ["games/chess/", "search-game"],
+    ["game-pigeon-for-android/", "search-topic"],
+  ]) {
+    await search.goto(camera.base + path);
+    await search.getByRole("link", { name: /play now/i }).first().waitFor();
+    await camera.shoot(search, name);
+  }
+
   // Home, then a room link, joining (the server never answers), a room that doesn't exist, and servers full (faked).
   const home = await camera.player();
   await home.goto(camera.base);

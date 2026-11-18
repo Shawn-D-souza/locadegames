@@ -20,7 +20,8 @@
     "playtest": "node scripts/playtest.mjs",
     "sounds": "node scripts/sounds.mjs",
     "deploy:server": "wrangler deploy",
-    "icons": "node scripts/icons.mjs"
+    "icons": "node scripts/icons.mjs",
+    "search-art": "node scripts/searchArt.mjs"
   },
   "dependencies": {
     "@fontsource/roboto-condensed": "5.3.0",
