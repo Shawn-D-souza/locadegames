@@ -49,7 +49,7 @@ The camera pushes into the code.
 > **Ana:** same link, join from there
 > **Zoe:** wait really?? joining now!
 
-Text, one part per beat: **PLAY WITH YOUR FRIENDS.** → **ANYTIME.** → **ANYWHERE.** The logo builds piece by piece on the beats, then **LOCADE GAMES**, *Free · In your browser · No download* and `locadegames.pages.dev`.
+Text, one part per beat: **PLAY WITH YOUR FRIENDS.** → **ANYTIME.** → **ANYWHERE.** The logo builds piece by piece on the beats, then **LOCADE GAMES**, *Free · In your browser · No download* and `locade.pages.dev`.
 
 ## Music
 

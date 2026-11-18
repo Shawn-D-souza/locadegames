@@ -100,7 +100,7 @@ export function Act4Logo() {
             letterSpacing: "0.04em",
           }}
         >
-          locadegames.pages.dev
+          locade.pages.dev
         </div>
       </div>
     </AbsoluteFill>

@@ -17,6 +17,6 @@
   "triggers": { "crons": ["*/10 * * * *"] },
   "vars": {
     // Comma-separated. "*" matches one subdomain label (Pages preview deployments).
-    "ALLOWED_ORIGINS": "https://locadegames.pages.dev,https://*.locadegames.pages.dev"
+    "ALLOWED_ORIGINS": "https://locade.pages.dev,https://*.locade.pages.dev,https://locadegames.pages.dev,https://*.locadegames.pages.dev"
   }
 }

@@ -43,9 +43,9 @@ Each game has its own doc in `docs/games/`: rules and owner decisions, numbers, 
 
 ## Domain
 
-- **Now:** the free Cloudflare Pages subdomain (`<project>.pages.dev`).
+- **Now:** the free Cloudflare Pages subdomain `locade.pages.dev` (the address we advertise; owner decision). The first project, `locadegames.pages.dev`, stays up as it is (owner decision: don't delete or change it); both deploy from `main` and the Worker accepts both.
 - **Later:** buy `locadegames.com` once the platform earns enough, then point it at Cloudflare.
-- **Plan for the domain (owner decision):** players only ever see the `pages.dev` address; the game server's `workers.dev` address is never shown. Once the domain is bought, the site moves onto the Worker as static assets (Cloudflare's recommendation; one deploy, one origin, free asset requests) under `locadegames.com`, and `locadegames.pages.dev` redirects every path there (`_redirects`: `/* https://locadegames.com/:splat 301`). Then also change the `og:url` / `og:image` addresses in `src/web/index.html`. The Worker already accepts requests from its own origin, so that move needs no origin settings.
+- **Plan for the domain (owner decision):** players only ever see the `pages.dev` address; the game server's `workers.dev` address is never shown. Once the domain is bought, the site moves onto the Worker as static assets (Cloudflare's recommendation; one deploy, one origin, free asset requests) under `locadegames.com`, and both `pages.dev` addresses redirect every path there (`_redirects`: `/* https://locadegames.com/:splat 301`). Then also change the `og:url` / `og:image` addresses in `src/web/index.html`. The Worker already accepts requests from its own origin, so that move needs no origin settings.
 
 ---
 
@@ -245,7 +245,7 @@ Each game has its own doc in `docs/games/`: rules and owner decisions, numbers, 
 
 | Service | Used for | Plan | Setup | Free-plan limits (approximate; confirm in the dashboard) |
 |---|---|---|---|---|
-| Cloudflare Pages | Frontend hosting | Free | `https://locadegames.pages.dev`; deploys on every push to `main` (GitHub connected); built with `VITE_SERVER_URL=https://locade-server.bringuonline.workers.dev` | 500 builds/month |
+| Cloudflare Pages | Frontend hosting | Free | Two projects built the same way from the same repo: `locade` → `https://locade.pages.dev` (the one we advertise) and the first one, `locadegames` → `https://locadegames.pages.dev` (kept as it is); each deploys on every push to `main` (GitHub connected); built with `VITE_SERVER_URL=https://locade-server.bringuonline.workers.dev` | 500 builds/month (per account, so each push uses two) |
 | Cloudflare Workers | `locade-server`: matchmaking + usage cron | Free | `https://locade-server.bringuonline.workers.dev` (the owner's existing account subdomain; players never see it); Workers Builds deploys on every push to `main`, preview builds off | 100,000 requests/day; resets 00:00 UTC |
 | Cloudflare Durable Objects | `RegionServer`, one per region, SQLite-backed | Free | In `wrangler.jsonc` | 100,000 requests/day, 13,000 GB-s/day, 5M rows read/day, 100k rows written/day, 5 GB storage |
 | Workers KV | `USAGE` namespace: free-tier status | Free | Id in `wrangler.jsonc` | 100,000 reads/day, 1,000 writes/day (the cron uses ≤144 writes/day) |

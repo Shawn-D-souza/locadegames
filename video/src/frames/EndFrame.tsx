@@ -20,7 +20,7 @@ export function EndFrame() {
           Free · In your browser · No download
         </div>
         <div style={{ background: colors.coral, color: "#fff", border: `4px solid ${colors.ink}`, borderRadius: 28, boxShadow: `0 10px 0 ${colors.ink}`, padding: "20px 56px", fontFamily: fonts.body, fontWeight: 700, fontSize: 52, letterSpacing: "0.04em" }}>
-          locadegames.pages.dev
+          locade.pages.dev
         </div>
       </div>
     </Page>

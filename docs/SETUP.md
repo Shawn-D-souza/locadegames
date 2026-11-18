@@ -4,7 +4,7 @@ What gets deployed:
 
 | Piece | Where | Name |
 |---|---|---|
-| Web client (`src/web`) | Cloudflare Pages | `locadegames` → `https://locadegames.pages.dev` |
+| Web client (`src/web`) | Cloudflare Pages | `locade` → `https://locade.pages.dev` (advertised), and the first project `locadegames` → `https://locadegames.pages.dev` (kept as it is) |
 | Matchmaking Worker + `RegionServer` Durable Object + usage cron (`src/server`) | Cloudflare Workers | `locade-server` → `https://locade-server.<your-subdomain>.workers.dev` |
 | Usage status | Workers KV | namespace bound as `USAGE` |
 
@@ -65,7 +65,7 @@ The pictures land in `screenshots/` (one folder per size); open `screenshots/ind
 1. Push the repo to GitHub.
 2. Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git** → choose the repo.
 3. Build settings:
-   - **Project name:** `locadegames`. If that name is taken, pick another and do step 5.
+   - **Project name:** `locade`. If that name is taken, pick another and do step 5.
    - **Production branch:** `main`
    - **Framework preset:** None
    - **Build command:** `npm run build`
@@ -74,7 +74,7 @@ The pictures land in `screenshots/` (one folder per size); open `screenshots/ind
 4. **Environment variables** (set them for both Production and Preview):
    - `VITE_SERVER_URL` = the Worker URL from step 2.3, with no trailing slash.
 5. **Save and Deploy.** Your site goes live at `https://<project>.pages.dev`.
-   - If the project name isn't `locadegames`, edit `ALLOWED_ORIGINS` in `wrangler.jsonc` to `https://<project>.pages.dev,https://*.<project>.pages.dev`, then run `npm run deploy:server` again.
+   - If the project name isn't `locade`, add `https://<project>.pages.dev,https://*.<project>.pages.dev` to `ALLOWED_ORIGINS` in `wrangler.jsonc` and push (Workers Builds redeploys the Worker).
 6. Test it: open the site on two devices, create a room on one, and join from the other with the code or the INVITE link.
 
 From now on, every push to `main` redeploys the site, and other branches get preview URLs.
