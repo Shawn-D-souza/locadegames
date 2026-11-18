@@ -6,6 +6,8 @@
     <meta name="description" content="Play quick online games with friends in private rooms." />
     <meta name="theme-color" content="#F1F5F9" />
     <title>Locade Games</title>
+    <!-- Search engines: the one address to show, whichever pages.dev project or ?room= link was opened. Change it (and robots.txt, sitemap.xml, the structured data below) when the site moves to locadegames.com. -->
+    <link rel="canonical" href="https://locade.pages.dev/" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/logo.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -21,6 +23,36 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Locade Games logo: an X, an O, a pawn and a die" />
     <meta name="twitter:card" content="summary_large_image" />
+    <!-- Structured data: the site's name in Google results, and that it's a free game played in the browser. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://locade.pages.dev/#website",
+            "name": "Locade Games",
+            "alternateName": "Locade",
+            "url": "https://locade.pages.dev/",
+            "inLanguage": "en"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://locade.pages.dev/#app",
+            "name": "Locade Games",
+            "url": "https://locade.pages.dev/",
+            "description": "Play quick online games with friends in private rooms.",
+            "image": "https://locade.pages.dev/og-image.png",
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Any",
+            "browserRequirements": "Requires a modern web browser with JavaScript",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "isPartOf": { "@id": "https://locade.pages.dev/#website" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
